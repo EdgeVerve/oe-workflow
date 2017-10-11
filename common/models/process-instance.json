@@ -1,0 +1,137 @@
+
+{
+  "name": "ProcessInstance",
+  "base": "WorkflowBaseEntity",
+  "description" : "Stores Process level instance data of workflows in oe-workflow engine",
+  "idInjection": true,
+  "cacheable" : false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "processDefinitionName" : {
+      "type" : "string",
+      "required" : true
+    },
+    "processDefinitionId" : {
+      "type" : "string",
+      "required" : true
+    },
+    "processDefinitionBpmnId" : {
+      "type" : "string",
+      "required" : false
+    },
+    "workflowInstanceId" : {
+      "type" : "string",
+      "required" : true
+    },
+    "_processTokens" : {
+      "type" : "object",
+      "required" : false
+    },
+    "parentToken" : {
+      "type" : "object",
+      "required" : false
+    },
+    "processVariables": {
+      "type": "object",
+      "required": false
+    },
+    "_processVariables" : {
+      "type" : "object",
+      "required" : false
+    },
+    "_parentProcessVariables": {
+      "type": "object",
+      "required": false
+    },
+    "message": {
+      "type": "object",
+      "required": false
+    },
+    "_processTimerEvents" :{ 
+      "type" : "object",
+      "required" : false
+    },
+    "_synchronizeFlow" :{ 
+      "type" : "object",
+      "required" : false
+    },
+    "_poolInfo" : {
+      "type" : "string",
+      "required" : false
+    },
+    "_workflowCtx" : {
+      "type" : "object",
+      "hidden" : true,
+      "required" : false
+    },
+    "_status" : {
+      "type" : "string",
+      "required" : false
+    }
+},
+  "validations": [],
+  "relations": {
+    "processDefinition": {
+      "type": "belongsTo",
+      "model": "ProcessDefinition",
+      "foreignKey": "processDefinitionId"
+    },
+    "tasks": {
+      "type": "hasMany",
+      "model": "Task"
+    },
+    "subProcesses": {
+      "type": "hasMany",
+      "model": "ProcessInstance",
+      "foreignKey": "parentProcessInstanceId"
+    },
+    "parentProcess": {
+      "type": "belongsTo",
+      "model": "ProcessInstance",
+      "foreignKey": "parentProcessInstanceId"
+    },
+    "workflowInstance": {
+      "type": "belongsTo",
+      "model": "WorkflowInstance",
+      "foreignKey": "workflowInstanceId"
+    },
+    "signals": {
+      "type": "hasMany",
+      "model": "WorkflowSignal"
+    }
+  },
+  "acls": [
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "create"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$admin",
+      "permission": "ALLOW",
+      "property": "deleteById"
+    }
+  ],
+  "methods": {}
+}

@@ -1,0 +1,16 @@
+
+{
+  "name": "WorkflowBaseEntity",
+  "base": "BaseEntity",
+  "strict" : true,
+  "idInjection": false,
+  "cacheable" : false,
+  "mixins": {
+    "DataPersonalizationMixin": true
+  },
+  "properties": {},
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

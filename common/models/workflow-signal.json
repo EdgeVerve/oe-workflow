@@ -1,0 +1,32 @@
+
+{
+  "name": "WorkflowSignal",
+  "base": "WorkflowBaseEntity",
+  "description" : "Manages workflow signal execution in oe-workflow engine",
+  "idInjection": true,
+  "properties": {
+    "signalRef": {
+      "type": "string",
+      "index": true,
+      "required": true
+    },
+    "tokenId": {
+      "type" : "string",
+      "required" : true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "workflowInstance": {
+      "type": "belongsTo",
+      "model": "WorkflowInstance",
+      "foreignKey": "workflowInstanceId"
+    },
+    "processInstance": {
+      "type": "belongsTo",
+      "model": "ProcessInstance",
+      "foreignKey": "processInstanceId"
+    }
+  },
+  "acls": []
+}

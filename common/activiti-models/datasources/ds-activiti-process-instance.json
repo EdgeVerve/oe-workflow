@@ -1,0 +1,391 @@
+[
+  {
+    "_meta": {
+      "id": "15.5.16.",
+      "description": "Update an existing binary variable on a process-instance"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/process-instances/{!processInstanceId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "multipart/form-data"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "createVariables": [
+        "processInstanceId",
+        "variables"
+      ]
+    },
+    "description": "Update an existing binary variable on a process-instance (15.5.16.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.15.",
+      "description": "Create a new binary variable on a process-instance"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/process-instances/{!processInstanceId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "multipart/form-data"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "createVariables": [
+        "processInstanceId",
+        "variables"
+      ]
+    },
+    "description": "Create a new binary variable on a process-instance (15.5.15.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.14.",
+      "description": "Update a single variable on a process instance"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/process-instances/{!processInstanceId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "updateVariable": [
+        "processInstanceId",
+        "variableName",
+        "variables"
+      ]
+    },
+    "description": "Update a single variable on a process instance (15.5.14.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.13.",
+      "description": "Update variables on a process instance"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/process-instances/{!processInstanceId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "createVariables": [
+        "processInstanceId",
+        "variables"
+      ]
+    },
+    "description": "Update variables on a process instance (15.5.13.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.13.",
+      "description": "Create variables on a process instance"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/process-instances/{!processInstanceId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "createVariables": [
+        "processInstanceId",
+        "variables"
+      ]
+    },
+    "description": "Create variables on a process instance (15.5.13.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.12.",
+      "description": "Get a variable for a process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances/{!processInstanceId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getVariable": [
+        "processInstanceId",
+        "variableName"
+      ]
+    },
+    "description": "Get a variable for a process instance (15.5.12.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.11.",
+      "description": "List of variables for a process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances/{!processInstanceId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getVariables": [
+        "processInstanceId"
+      ]
+    },
+    "description": "List of variables for a process instance (15.5.11.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.10.",
+      "description": "Remove an involved user from process instance"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/process-instances/{!processInstanceId}/identitylinks/users/{!userId}/{!type}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteInvolvedUser": [
+        "processInstanceId",
+        "userId",
+        "type"
+      ]
+    },
+    "description": "Remove an involved user from process instance (15.5.10.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.9.",
+      "description": "Add an involved user to a process instance"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/process-instances/{!processInstanceId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "user": "{!user:String}",
+        "type": "{!type:String}"
+      }
+    },
+    "functions": {
+      "createInvolvedUser": [
+        "processInstanceId",
+        "user",
+        "type"
+      ]
+    },
+    "description": "Add an involved user to a process instance (15.5.9.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.8.",
+      "description": "Get involved people for process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances/{!processInstanceId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getInvolvedPeople": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Get involved people for process instance (15.5.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.7.",
+      "description": "Get diagram for a process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances/{!processInstanceId}/diagram",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getDiagram": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Get diagram for a process instance (15.5.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.6.",
+      "description": "Query process instances"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "query": [
+        "variables"
+      ]
+    },
+    "description": "Query process instances (15.5.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.5.",
+      "description": "List of process instances"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "get": [
+        "query"
+      ]
+    },
+    "description": "List of process instances (15.5.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.4.",
+      "description": "Start a process instance"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/process-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "start": [
+        "variables"
+      ]
+    },
+    "description": "Start a process instance (15.5.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.3.",
+      "description": "Suspend a process instance"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/process-instances/{!processInstanceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "suspend"
+      }
+    },
+    "functions": {
+      "suspend": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Suspend a process instance (15.5.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.3.",
+      "description": "Activate a process instance"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/process-instances/{!processInstanceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "activate"
+      }
+    },
+    "functions": {
+      "activate": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Activate a process instance (15.5.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.2.",
+      "description": "Delete a process instance"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/process-instances/{!processInstanceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteById": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Delete a process instance (15.5.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.5.1.",
+      "description": "Get a process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/process-instances/{!processInstanceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Get a process instance (15.5.1.)"
+  }
+]

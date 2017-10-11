@@ -1,0 +1,498 @@
+[
+  {
+    "_meta": {
+      "id": "15.8.23.",
+      "description": "Get the binary data for a historic detail variable"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-detail/{!detailId}/data",
+      "headers": {
+        "accept": "application/octet-stream,application/x-java-serialized-object",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getBinaryDataHistoricVariable": [
+        "detailId"
+      ]
+    },
+    "description": "Get the binary data for a historic detail variable (15.8.23.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.22.",
+      "description": "Query for historic details"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/historic-variable-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "queryHistoricDetails": [
+        "variables"
+      ]
+    },
+    "description": "Query for historic details (15.8.22.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.21.",
+      "description": "Get historic detail"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-detail",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getHistoricDetails": [
+        "query"
+      ]
+    },
+    "description": "Get historic detail (15.8.21.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.20.",
+      "description": "Get the binary data for a historic task instance variable"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-variable-instances/{!varInstanceId}/data",
+      "headers": {
+        "accept": "application/octet-stream,application/x-java-serialized-object",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getBinaryDataVariable": [
+        "varInstanceId"
+      ]
+    },
+    "description": "Get the binary data for a historic task instance variable (15.8.20.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.20.",
+      "description": "Query for historic variable instances"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/historic-variable-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "queryVariableInstance": [
+        "variables"
+      ]
+    },
+    "description": "Query for historic variable instances (15.8.20.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.19.",
+      "description": "List of historic variable instances"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-variable-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getVariableInstances": [
+        "query"
+      ]
+    },
+    "description": "List of historic variable instances (15.8.19.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.18.",
+      "description": "Query for historic activity instances"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/historic-activity-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "queryActivityInstance": [
+        "variables"
+      ]
+    },
+    "description": "Query for historic activity instances (15.8.18.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.17.",
+      "description": "Get historic activity instances"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-activity-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getActivityInstances": [
+        "query"
+      ]
+    },
+    "description": "Get historic activity instances (15.8.17.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.16.",
+      "description": "Get the binary data for a historic task instance variable"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-task-instances/{!taskId}/variables/{!variableName}/data",
+      "headers": {
+        "accept": "application/octet-stream,application/x-java-serialized-object",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getBinaryDataTaskVariable": [
+        "taskId",
+        "variableName"
+      ]
+    },
+    "description": "Get the binary data for a historic task instance variable (15.8.16.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.15.",
+      "description": "Get the identity links of a historic task instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-task-instance/{!taskId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getTaskIdentityLinksById": [
+        "taskId"
+      ]
+    },
+    "description": "Get the identity links of a historic task instance (15.8.15.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.14.",
+      "description": "Delete a historic task instance"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "history/historic-task-instances/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteTaskById": [
+        "taskId"
+      ]
+    },
+    "description": "Delete a historic task instance (15.8.14.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.13.",
+      "description": "Query for historic task instances"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/historic-task-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "queryTask": [
+        "variables"
+      ]
+    },
+    "description": "Query for historic task instances (15.8.13.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.12.",
+      "description": "Get historic task instances"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-task-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getTasks": [
+        "query"
+      ]
+    },
+    "description": "Get historic task instances (15.8.12.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.11.",
+      "description": "Get a single historic task instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-task-instances/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getTaskById": [
+        "taskId"
+      ]
+    },
+    "description": "Get a single historic task instance (15.8.11.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.10.",
+      "description": "Delete a comment on a historic process instance"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "history/historic-process-instances/{!processInstanceId}/comments/{!commentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteComment": [
+        "processInstanceId",
+        "commentId"
+      ]
+    },
+    "description": "Delete a comment on a historic process instance (15.8.10.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.9.",
+      "description": "Get a comment on a historic process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-process-instances/{!processInstanceId}/comments/{!commentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getComments": [
+        "processInstanceId",
+        "commentId"
+      ]
+    },
+    "description": "Get a comment on a historic process instance (15.8.9.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.8.",
+      "description": "Get all comments on a historic process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-process-instances/{!processInstanceId}/comments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getCommentsById": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Get all comments on a historic process instance (15.8.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.7.",
+      "description": "Create a new comment on a historic process instance"
+    },
+    "template": {
+      "method": "POST",
+      "url": "history/historic-process-instances/{!processInstanceId}/comments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createCommentById": [
+        "processInstanceId",
+        "variables"
+      ]
+    },
+    "description": "Create a new comment on a historic process instance (15.8.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.6.",
+      "description": "Get the binary data for a historic process instance variable"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-process-instances/{!processInstanceId}/variables/{!variableName}/data",
+      "headers": {
+        "accept": "application/octet-stream,application/x-java-serialized-object",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getBinaryDataProcessInstanceVariable": [
+        "processInstanceId",
+        "variableName"
+      ]
+    },
+    "description": "Get the binary data for a historic process instance variable (15.8.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.5.",
+      "description": "Get the identity links of a historic process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-process-instance/{!processInstanceId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getProcessInstanceIdentityLinksById": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Get the identity links of a historic process instance (15.8.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.4.",
+      "description": "Delete a historic process instance"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "history/historic-process-instances/{!processInstanceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteProcessInstanceById": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Delete a historic process instance (15.8.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.3.",
+      "description": "Query for historic process instances"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/historic-process-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "queryProcessInstance": [
+        "variables"
+      ]
+    },
+    "description": "Query for historic process instances (15.8.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.2.",
+      "description": "List of historic process instances"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-process-instances",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getProcessInstances": [
+        "query"
+      ]
+    },
+    "description": "List of historic process instances (15.8.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.8.1.",
+      "description": "Get a historic process instance"
+    },
+    "template": {
+      "method": "GET",
+      "url": "history/historic-process-instances/{!processInstanceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getProcessInstanceById": [
+        "processInstanceId"
+      ]
+    },
+    "description": "Get a historic process instance (15.8.1.)"
+  }
+]

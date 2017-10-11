@@ -1,0 +1,12 @@
+{
+    "logStreams": [{
+        "type": "pretty"
+    }],
+
+    "levels": {
+        "default": "error",
+        "admin": "error"
+    },
+
+    "enableContextLogging": 1
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Activiti_Account",
+  "base": "BaseEntity",
+  "description" : "Stores Activiti Account Info",
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {   
+    "username": {
+      "type": "string",
+      "required": true
+    },
+    "password": {
+      "type": "string",
+      "encrypt": true,
+      "required": true
+    } 
+  },
+  "mixins" : {
+    "HistoryMixin" : false
+  },
+  "acls": [{
+    "accessType": "*",
+    "permission": "DENY",
+    "principalType": "ROLE",
+    "principalId": "$everyone"
+  },{
+    "accessType": "*",
+    "permission": "ALLOW",
+    "principalType": "ROLE",
+    "principalId": "$authenticated"
+  }]
+}

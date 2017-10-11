@@ -1,0 +1,826 @@
+[
+  {
+    "_meta": {
+      "id": "15.7.32.",
+      "description": "Delete an attachment on a task"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/tasks/{!taskId}/attachments/{!attachmentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteAttachment": [
+        "taskId",
+        "attachmentId"
+      ]
+    },
+    "description": "Delete an attachment on a task (15.7.32.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.31.",
+      "description": "Get the content for an attachment"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/attachment/{!attachmentId}/content",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getAttachmentContent": [
+        "taskId",
+        "attachmentId"
+      ]
+    },
+    "description": "Get the content for an attachment (15.7.31.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.30.",
+      "description": "Get an attachment on a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/attachments/{!attachmentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getAttachment": [
+        "taskId",
+        "attachmentId"
+      ]
+    },
+    "description": "Get an attachment on a task (15.7.30.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.29.",
+      "description": "Get all attachments on a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/attachments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getAttachmentsById": [
+        "taskId"
+      ]
+    },
+    "description": "Get all attachments on a task (15.7.29.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.28.",
+      "description": "Create a new attachment on a task, with an attached file"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}/attachments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createAttachmentWithFile": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Create a new attachment on a task, with an attached file (15.7.28.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.27.",
+      "description": "Create a new attachment on a task, containing a link to an external resource"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}/attachments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createAttachmentWithLink": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Create a new attachment on a task, containing a link to an external resource (15.7.27.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.26.",
+      "description": "Get an event on a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/events/{!eventId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getEvent": [
+        "taskId",
+        "eventId"
+      ]
+    },
+    "description": "Get an event on a task (15.7.26.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.25.",
+      "description": "Get all events for a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/events",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getEventsById": [
+        "taskId"
+      ]
+    },
+    "description": "Get all events for a task (15.7.25.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.24.",
+      "description": "Delete a comment on a task"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/tasks/{!taskId}/comments/{!commentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteComment": [
+        "taskId",
+        "commentId"
+      ]
+    },
+    "description": "Delete a comment on a task (15.7.24.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.23.",
+      "description": "Get a comment on a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/comments/{!commentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getComments": [
+        "taskId",
+        "commentId"
+      ]
+    },
+    "description": "Get a comment on a task (15.7.23.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.22.",
+      "description": "Get all comments on a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/comments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getCommentsById": [
+        "taskId"
+      ]
+    },
+    "description": "Get all comments on a task (15.7.22.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.21.",
+      "description": "Create a new comment on a task"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}/comments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createCommentById": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Create a new comment on a task (15.7.21.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.20.",
+      "description": "Delete an identity link on a task"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/tasks/{!taskId}/identitylinks/{!family}/{!identityId}/{!type}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteIdentityLink": [
+        "taskId",
+        "family",
+        "identityId",
+        "type"
+      ]
+    },
+    "description": "Delete an identity link on a task (15.7.20.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.19.",
+      "description": "Create an identity link on a task"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createIdentityLink": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Create an identity link on a task (15.7.19.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.18.",
+      "description": "Get a single identity link on a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/identitylinks/{!family}/{!identityId}/{!type}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getIdentityLink": [
+        "taskId",
+        "family",
+        "identityId",
+        "type"
+      ]
+    },
+    "description": "Get a single identity link on a task (15.7.18.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.17.",
+      "description": "Get all identitylinks for a task for groups"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/identitylinks/groups",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getIdentityLinksGroupsById": [
+        "taskId"
+      ]
+    },
+    "description": "Get all identitylinks for a task for groups (15.7.17.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.17.",
+      "description": "Get all identitylinks for a task for users"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/identitylinks/users",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getIdentityLinksUsersById": [
+        "taskId"
+      ]
+    },
+    "description": "Get all identitylinks for a task for users (15.7.17.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.16.",
+      "description": "Get all identity links for a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getIdentityLinksById": [
+        "taskId"
+      ]
+    },
+    "description": "Get all identity links for a task (15.7.16.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.15.",
+      "description": "Delete all local variables on a task"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/tasks/{!taskId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "deleteVariables": [
+        "taskId",
+        "scope"
+      ]
+    },
+    "description": "Delete all local variables on a task (15.7.15.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.14.",
+      "description": "Delete a variable on a task"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/tasks/{!taskId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "deleteVariable": [
+        "taskId",
+        "variableName",
+        "scope"
+      ]
+    },
+    "description": "Delete a variable on a task (15.7.14.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.13.",
+      "description": "Updating a binary variable on a task"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/tasks/{!taskId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "multipart/form-data"
+      },
+      "body": {
+        "variables": "{!variables}"
+      }
+    },
+    "functions": {
+      "updateBinaryVariable": [
+        "taskId",
+        "variableName",
+        "variables"
+      ]
+    },
+    "description": "Updating a binary variable on a task (15.7.13.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.12.",
+      "description": "Update an existing variable on a task"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/tasks/{!taskId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "updateVariable": [
+        "taskId",
+        "variableName",
+        "variables"
+      ]
+    },
+    "description": "Update an existing variable on a task (15.7.12.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.11.",
+      "description": "Create a new binary variable on a task"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "multipart/form-data"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createBinaryVariable": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Create a new binary variable on a task (15.7.11.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.10.",
+      "description": "Update variables on a task"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "updateVariables": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Update variables on a task (15.7.10.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.10.",
+      "description": "Create variables on a task"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "createVariables": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Create variables on a task (15.7.10.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.9.",
+      "description": "Get the binary data for a variable"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/variables/{!variableName}/data",
+      "headers": {
+        "accept": "application/octet-stream,application/x-java-serialized-object",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "getBinaryData": [
+        "taskId",
+        "variableName",
+        "scope"
+      ]
+    },
+    "description": "Get the binary data for a variable (15.7.9.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.8.",
+      "description": "Get a variable from a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "getVariable": [
+        "taskId",
+        "variableName",
+        "scope"
+      ]
+    },
+    "description": "Get a variable from a task (15.7.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.7.",
+      "description": "Get all variables for a task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "getVariables": [
+        "taskId",
+        "scope"
+      ]
+    },
+    "description": "Get all variables for a task (15.7.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.6.",
+      "description": "Delete a task"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "cascadeHistory": "{cascadeHistory}",
+        "deleteReason": "{deleteReason:String}"
+      }
+    },
+    "functions": {
+      "deleteById": [
+        "taskId",
+        "cascadeHistory",
+        "deleteReason"
+      ]
+    },
+    "description": "Delete a task (15.7.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.5.",
+      "description": "Task actions - resolve"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "resolve"
+      }
+    },
+    "functions": {
+      "resolve": [
+        "taskId"
+      ]
+    },
+    "description": "Task actions - resolve (15.7.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.5.",
+      "description": "Task actions - delegate"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "delegate",
+        "assignee": "{!assignee:string}"
+      }
+    },
+    "functions": {
+      "delegate": [
+        "taskId",
+        "assignee"
+      ]
+    },
+    "description": "Task actions - delegate (15.7.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.5.",
+      "description": "Task actions - claim"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "claim",
+        "assignee": "{assignee:string}"
+      }
+    },
+    "functions": {
+      "claim": [
+        "taskId",
+        "assignee"
+      ]
+    },
+    "description": "Task actions - claim (15.7.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.5.",
+      "description": "Task actions - complete"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "complete",
+        "variables": "{variables:object}"
+      }
+    },
+    "functions": {
+      "complete": [
+        "taskId",
+        "variables"
+      ]
+    },
+    "description": "Task actions - complete (15.7.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.4.",
+      "description": "Update a task"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "updateById": [
+        "variables"
+      ]
+    },
+    "description": "Update a task (15.7.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.3.",
+      "description": "Query for tasks"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/tasks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "query": [
+        "variables"
+      ]
+    },
+    "description": "Query for tasks (15.7.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.2.",
+      "description": "List of tasks"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "get": [
+        "query"
+      ]
+    },
+    "description": "List of tasks (15.7.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.7.1",
+      "description": "Get a Task"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/tasks/{!taskId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "taskId"
+      ]
+    },
+    "description": "Get a Task (15.7.1)"
+  }
+]

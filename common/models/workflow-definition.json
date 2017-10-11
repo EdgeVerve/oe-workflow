@@ -1,0 +1,42 @@
+
+{
+  "name": "WorkflowDefinition",
+  "base": "WorkflowBaseEntity",
+  "description" : "Manages deployment of workflows in oe-workflow engine",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "xmldata": {
+      "type": "string",
+      "required": false
+    },
+    "isCollaborationDefinition": {
+      "type": "boolean",
+      "required": false
+    },
+    "participants": {
+      "type": "object",
+      "required": false
+    }
+  },
+  "validations": [],
+  "relations": {
+    "workflowInstances": {
+      "type": "hasMany",
+      "model": "WorkflowInstance"
+    },
+    "processDefinitions" : {
+      "type": "hasMany",
+      "model": "ProcessDefinition"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

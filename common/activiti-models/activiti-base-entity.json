@@ -1,0 +1,9 @@
+
+{
+  "name": "Activiti_BaseEntity",
+  "base": "Model",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  }
+}

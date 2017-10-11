@@ -1,0 +1,23 @@
+[
+  {
+    "_meta": {
+      "id": "15.12.1.",
+      "description": "Signal event received"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/signals",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{variables:object}"
+    },
+    "functions": {
+      "query": [
+        "variables"
+      ]
+    },
+    "description": "Signal event received (15.12.1.)"
+  }
+]

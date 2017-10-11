@@ -1,0 +1,22 @@
+#©2016-2017 EdgeVerve Systems Limited (a fully owned Infosys subsidiary),
+#Bangalore, India. All Rights Reserved.
+
+buildlinux:
+  stage: build
+  script:
+    - "source ~/.bash_profile"
+    - "export ACTIVITI_HOST=10.73.53.206:8080"
+    - "npm config set registry http://10.188.25.62:9009"
+    - "npm config set fetch-retries 0"
+    - "npm install --no-optional"
+    - "mongo server/dropdb.js"
+    - "status_unittest=0"
+    - "if ./node_modules/.bin/grunt eslint-test-coverage;then status_unittest=0; else status_unittest=1;fi"
+    - "mongo server/dropdb.js"
+    - "exit_status=0"
+    - "if [ $status_unittest == 1 ]; then exit_status=1 && echo \"Test cases are failing\"; fi"
+    - "exit $exit_status"
+  only:
+    - master
+  tags:
+    - evf-workflow

@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "sources": [
+      "../common/models",
+      "loopback/common/models",
+      "loopback/server/models",
+      "./models",
+      "../common/activiti-models"
+    ],
+    "mixins": [
+      "loopback/common/mixins",
+      "loopback/server/mixins",
+      "../common/mixins",
+      "./mixins"
+    ]
+  },
+  "ProcessDefinition": {
+    "dataSource": "db",
+    "public": true
+  },
+  "ProcessInstance": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Task": {
+    "dataSource": "db",
+    "public": true
+  },
+  "WorkflowBaseEntity": {
+    "dataSource": "db",
+    "public": false
+  },
+  "bpmndata": {
+    "dataSource": "db",
+    "public": true
+  },
+  "WorkflowDefinition": {
+    "dataSource": "db",
+    "public": true
+  },
+  "WorkflowInstance": {
+    "dataSource": "db",
+    "public": true
+  },
+  "WorkflowRequest": {
+    "dataSource": "db",
+    "public": true
+  },
+  "WorkflowManager": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Activiti_Manager": {
+    "dataSource": "db",
+    "public": true
+  },  
+  "Activiti_BaseEntity": {
+    "dataSource": "db",
+    "public": false
+  },
+  "Activiti_Account": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Activiti_WorkflowRequest": {
+    "dataSource": "db",
+    "public": true
+  },
+  "WorkflowMapping" :{
+    "dataSource": "db",
+    "public": false
+  },
+  "WorkflowSignal" :{
+    "dataSource": "db",
+    "public": false
+  }
+}

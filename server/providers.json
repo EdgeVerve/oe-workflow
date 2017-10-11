@@ -1,0 +1,23 @@
+{
+    "local": {
+        "provider": "local",
+        "module": "passport-local",
+        "usernameField": "username",
+        "passwordField": "password",
+        "authPath": "/auth/local",
+        "successRedirect": "/auth/account",
+        "successReturnToOrRedirect": "/auth/account",
+        "failureRedirect": "/local",
+        "failureFlash": true,
+        "setAccessToken": true,
+        "session": false,
+        "forceDefaultCallback": true,
+        "cookie": true,
+        "json": true,
+        "failWithError": true,
+        "authOptions": {
+            "json": true,
+            "failWithError": true
+        }
+    }
+}

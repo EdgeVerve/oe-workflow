@@ -1,0 +1,16 @@
+{
+  "name": "Activiti_Manager",
+  "base": "BaseEntity",
+  "description" : "Manages interaction with Activiti Workflow engine",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+  	"status": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": []
+}

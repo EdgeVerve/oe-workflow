@@ -1,0 +1,170 @@
+[
+  {
+    "_meta": {
+      "id": "15.15.8.",
+      "description": "Delete a member from a group"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "identity/groups/{!groupId}/members/{!userId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteMember": [
+        "groupId",
+        "userId"
+      ]
+    },
+    "description": "Delete a member from a group (15.15.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.7.",
+      "description": "Add a member to a group"
+    },
+    "template": {
+      "method": "POST",
+      "url": "identity/groups/{!groupId}/members",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "updateMember": [
+        "variables",
+        "groupId"
+      ]
+    },
+    "description": "Add a member to a group (15.15.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.6.",
+      "description": "Get members in a group"
+    },
+    "template": {
+      "method": "GET",
+      "url": "identity/users",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{!memberOfGroup:string}"
+    },
+    "functions": {
+      "getUsersofGroup": [
+        "memberOfGroup"
+      ]
+    },
+    "description": "Get members in a group (15.15.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.5.",
+      "description": "Delete a group"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "identity/groups/{!groupId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "delete": [
+        "groupId"
+      ]
+    },
+    "description": "Delete a group (15.15.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.4.",
+      "description": "Create a group"
+    },
+    "template": {
+      "method": "POST",
+      "url": "identity/groups",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "create": [
+        "variables"
+      ]
+    },
+    "description": "Create a group (15.15.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.3.",
+      "description": "Update a group"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "identity/groups/{!groupId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "update": [
+        "variables",
+        "groupId"
+      ]
+    },
+    "description": "Update a group (15.15.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.2.",
+      "description": "Get a list of groups"
+    },
+    "template": {
+      "method": "GET",
+      "url": "identity/groups",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "get": [
+        "query"
+      ]
+    },
+    "description": "Get a list of groups (15.15.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.15.1.",
+      "description": "Get a single group"
+    },
+    "template": {
+      "method": "GET",
+      "url": "identity/groups/{!groupId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "groupId"
+      ]
+    },
+    "description": "Get a single group (15.15.1.)"
+  }
+]

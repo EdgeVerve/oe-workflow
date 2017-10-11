@@ -1,0 +1,30 @@
+{
+    "name": "Activiti_WorkflowRequest",
+    "base": "BaseEntity",
+    "description": "Stores triggered workflow information for Model Instances(Activiti Workflow Engine)",
+    "options": {
+        "validateUpsert": true
+    },
+    "mixins": {
+        "SoftDeleteMixin": false
+    },
+    "properties": {
+        "modelName": {
+            "type": "string",
+            "required": true
+        },
+        "modelInstanceId": {
+            "type": "string",
+            "required": true
+        },
+        "processId": {
+            "type": "string",
+            "required": true,
+            "id": true
+        },
+        "operation": {
+            "type": "string",
+            "required": true
+        }
+    }
+}

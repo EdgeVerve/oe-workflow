@@ -1,0 +1,38 @@
+[
+  {
+    "_meta": {
+      "id": "15.11.2.",
+      "description": "Get engine info"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/engine",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getInfo": []
+    },
+    "description": "Get engine info (15.11.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.11.1.",
+      "description": "Get engine properties"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/properties",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getProperties": []
+    },
+    "description": "Get engine properties (15.11.1.)"
+  }
+]

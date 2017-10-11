@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="Process_1" name="BaseWorkflow" isExecutable="false">
+    <bpmn2:startEvent id="StartEvent_1" name="Init">
+      <bpmn2:outgoing>SequenceFlow_02b2occ</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_02b2occ" sourceRef="StartEvent_1" targetRef="CallActivity_0gqpq86" />
+    <bpmn2:sequenceFlow id="SequenceFlow_1b1mm08" sourceRef="CallActivity_0gqpq86" targetRef="ServiceTask_1gjzoks" />
+    <bpmn2:sequenceFlow id="SequenceFlow_1vmebdu" sourceRef="ServiceTask_1gjzoks" targetRef="ScriptTask_0pjlwt3" />
+    <bpmn2:endEvent id="EndEvent_0o3oith" name="Exit">
+      <bpmn2:incoming>SequenceFlow_0ykgzvi</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_0ykgzvi" sourceRef="IntermediateThrowEvent_0oxqlb3" targetRef="EndEvent_0o3oith" />
+    <bpmn2:callActivity id="CallActivity_0gqpq86" name="Transaction Approval Workflow" calledElement="${CallActivityWorkflow}">
+      <bpmn2:incoming>SequenceFlow_02b2occ</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_1b1mm08</bpmn2:outgoing>
+    </bpmn2:callActivity>
+    <bpmn2:serviceTask id="ServiceTask_1gjzoks" name="Conclude Parent Transaction">
+      <bpmn2:extensionElements>
+        <camunda:finalizeTransactionConnector>
+          <camunda:FTType>processvariable</camunda:FTType>
+          <camunda:FTValue>_action</camunda:FTValue>
+        </camunda:finalizeTransactionConnector>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_1b1mm08</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_1vmebdu</bpmn2:outgoing>
+    </bpmn2:serviceTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_0zr6g1e" sourceRef="ScriptTask_0pjlwt3" targetRef="IntermediateThrowEvent_0oxqlb3" />
+    <bpmn2:scriptTask id="ScriptTask_0pjlwt3" name="Prepare Related Model Signal Payload" scriptFormat="javscript">
+      <bpmn2:incoming>SequenceFlow_1vmebdu</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0zr6g1e</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[var key = _instance.toObject()["id"];
+if(_getPV("_action")=="approved"){
+key = key + "-approve";
+}else {
+key = key + "-reject";
+}
+_setPV("transactionKey",key);]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_0oxqlb3" name="Signal Related Model">
+      <bpmn2:incoming>SequenceFlow_0zr6g1e</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0ykgzvi</bpmn2:outgoing>
+      <bpmn2:signalEventDefinition signalRef="Signal_19bf81m" />
+    </bpmn2:intermediateThrowEvent>
+  </bpmn2:process>
+  <bpmn2:message id="Message_0etuxrg" />
+  <bpmn2:signal id="Signal_19bf81m" name="${transactionKey}" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="107" y="225" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="80" y="261" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_02b2occ_di" bpmnElement="SequenceFlow_02b2occ">
+        <di:waypoint xsi:type="dc:Point" x="143" y="243" />
+        <di:waypoint xsi:type="dc:Point" x="220" y="243" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="271" y="218" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1b1mm08_di" bpmnElement="SequenceFlow_1b1mm08">
+        <di:waypoint xsi:type="dc:Point" x="320" y="243" />
+        <di:waypoint xsi:type="dc:Point" x="419" y="243" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="473" y="218" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vmebdu_di" bpmnElement="SequenceFlow_1vmebdu">
+        <di:waypoint xsi:type="dc:Point" x="519" y="243" />
+        <di:waypoint xsi:type="dc:Point" x="580" y="243" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="672" y="218" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0o3oith_di" bpmnElement="EndEvent_0o3oith">
+        <dc:Bounds x="890" y="225" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="863" y="261" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ykgzvi_di" bpmnElement="SequenceFlow_0ykgzvi">
+        <di:waypoint xsi:type="dc:Point" x="802" y="243" />
+        <di:waypoint xsi:type="dc:Point" x="890" y="243" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="807.5" y="218" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="CallActivity_0gqpq86_di" bpmnElement="CallActivity_0gqpq86">
+        <dc:Bounds x="220" y="203" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1gjzoks_di" bpmnElement="ServiceTask_1gjzoks">
+        <dc:Bounds x="419" y="203" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0zr6g1e_di" bpmnElement="SequenceFlow_0zr6g1e">
+        <di:waypoint xsi:type="dc:Point" x="680" y="243" />
+        <di:waypoint xsi:type="dc:Point" x="766" y="243" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="610" y="228" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_0pjlwt3_di" bpmnElement="ScriptTask_0pjlwt3">
+        <dc:Bounds x="580" y="203" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0oxqlb3_di" bpmnElement="IntermediateThrowEvent_0oxqlb3">
+        <dc:Bounds x="766" y="225" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="739" y="261" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

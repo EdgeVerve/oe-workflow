@@ -1,0 +1,48 @@
+[
+  {
+    "_meta": {
+      "id": "15.9.2.",
+      "description": "Submit task form data"
+    },
+    "template": {
+      "method": "POST",
+      "url": "form/form-data",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "CreateFormData": [
+        "variables"
+      ]
+    },
+    "description": "Submit task form data (15.9.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.9.1.",
+      "description": "Get form data"
+    },
+    "template": {
+      "method": "GET",
+      "url": "form/form-data",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "taskId": "{!taskId:object}",
+        "processDefinitionId": "{!processDefinitionId :string}"
+      }
+    },
+    "functions": {
+      "getFormData": [
+        "taskId",
+        "processDefinitionId"
+      ]
+    },
+    "description": "Get form data (15.9.1.)"
+  }
+]

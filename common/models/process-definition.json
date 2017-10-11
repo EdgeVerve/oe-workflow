@@ -1,0 +1,53 @@
+
+
+{
+  "name": "ProcessDefinition",
+  "base": "WorkflowBaseEntity",
+  "description" : "Stores Process level definiton of workflows in oe-workflow engine",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "parsedDef": {
+      "type": "object",
+      "required": false
+    },
+    "processDefinition" : {
+      "type": "object",
+      "required": false
+    },
+    "messageFlowsBySrcProcess" : {
+      "type": "object",
+      "required": false
+    },
+    "parentProcessDefinitionId" : {
+      "type" : "string",
+      "required" : false
+    }
+  },
+  "validations": [],
+  "relations": {
+    "parentProcessDefinition": {
+      "type": "belongsTo",
+      "model": "ProcessDefinition",
+      "foreignKey" : "parentProcessDefinitionId"
+    },
+    "workflowDefinition": {
+      "type": "belongsTo",
+      "model": "ProcessDefinition",
+      "foreignKey" : "workflowDefinitionId"
+    },
+    "processInstances" : {
+      "type" : "hasMany",
+      "model" : "ProcessInstance"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

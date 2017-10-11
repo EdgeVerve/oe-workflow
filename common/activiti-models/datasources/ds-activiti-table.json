@@ -1,0 +1,82 @@
+[
+  {
+    "_meta": {
+      "id": "15.10.4.",
+      "description": "Get row data for a single table"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/tables/{!tableName}/data",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getRowData": [
+        "query",
+        "tableName"
+      ]
+    },
+    "description": "Get row data for a single table (15.10.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.10.3.",
+      "description": "Get column info for a single table"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/tables/{!tableName}/columns",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getColumnsById": [
+        "tableName"
+      ]
+    },
+    "description": "Get column info for a single table (15.10.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.10.2.",
+      "description": "Get a single table"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/tables/{!tableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "tableName"
+      ]
+    },
+    "description": "Get a single table (15.10.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.10.1.",
+      "description": "List of tables"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/tables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "get": []
+    },
+    "description": "List of tables (15.10.1.)"
+  }
+]

@@ -1,0 +1,260 @@
+[
+  {
+    "_meta": {
+      "id": "15.3.11.",
+      "description": "Get a candidate starter from a process definition"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/process-definitions/{!processDefinitionId}/identitylinks/{!family}/{!identityId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "description": "15.3.11. : Get a candidate starter from a process definition"
+    },
+    "functions": {
+      "getCandidateStarter": [
+        "processDefinitionId",
+        "family",
+        "identityId"
+      ]
+    },
+    "description": "Get a candidate starter from a process definition (15.3.11.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.10.",
+      "description": "Delete a candidate starter from a process definition"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "repository/process-definitions/{!processDefinitionId}/identitylinks/{!family}/{!identityId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "description": "15.3.10. : Delete a candidate starter from a process definition"
+    },
+    "functions": {
+      "deleteCandidateStarter": [
+        "processDefinitionId",
+        "family",
+        "identityId"
+      ]
+    },
+    "description": "Delete a candidate starter from a process definition (15.3.10.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.9.",
+      "description": "Add a candidate starter to a process definition"
+    },
+    "template": {
+      "method": "POST",
+      "url": "repository/process-definitions/{!processDefinitionId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}",
+      "description": "15.3.9. : Add a candidate starter to a process definition"
+    },
+    "functions": {
+      "createCandidateStarter": [
+        "processDefinitionId",
+        "variables"
+      ]
+    },
+    "description": "Add a candidate starter to a process definition (15.3.9.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.8.",
+      "description": "Get all candidate starters for a process-definition"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/process-definitions/{!processDefinitionId}/identitylinks",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "description": "15.3.8. : Get all candidate starters for a process-definition"
+    },
+    "functions": {
+      "getCandidateStarters": [
+        "processDefinitionId"
+      ]
+    },
+    "description": "Get all candidate starters for a process-definition (15.3.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.7.",
+      "description": "Activate a process definition"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "repository/process-definitions/{!processDefinitionId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "{!action:String}",
+        "includeProcessInstances": "{includeProcessInstances}",
+        "date": "{date:String}"
+      },
+      "description": "15.3.7. : Activate a process definition"
+    },
+    "functions": {
+      "activate": [
+        "processDefinitionId",
+        "action",
+        "includeProcessInstances",
+        "date"
+      ]
+    },
+    "description": "Activate a process definition (15.3.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.6.",
+      "description": "Suspend a process definition"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "repository/process-definitions/{!processDefinitionId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "{!action:String}",
+        "includeProcessInstances": "{includeProcessInstances}",
+        "date": "{date:String}"
+      },
+      "description": "15.3.6. : Suspend a process definition"
+    },
+    "functions": {
+      "suspend": [
+        "processDefinitionId",
+        "action",
+        "includeProcessInstances",
+        "date"
+      ]
+    },
+    "description": "Suspend a process definition (15.3.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.5.",
+      "description": "Get a process definition BPMN model"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/process-definitions/{!processDefinitionId}/model",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "description": "15.3.5. : Get a process definition BPMN model"
+    },
+    "functions": {
+      "getBPMNModel": [
+        "processDefinitionId"
+      ]
+    },
+    "description": "Get a process definition BPMN model (15.3.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.4.",
+      "description": "Get a process definition resource content"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/process-definitions/{!processDefinitionId}/resourcedata",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "description": "15.3.4. : Get a process definition resource content"
+    },
+    "functions": {
+      "getResourceContent": [
+        "processDefinitionId"
+      ]
+    },
+    "description": "Get a process definition resource content (15.3.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.3.",
+      "description": "Update category for a process definition"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "repository/process-definitions/{!processDefinitionId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "category": "{!category:String}"
+      },
+      "description": "15.3.3. : Update category for a process definition"
+    },
+    "functions": {
+      "updateCategory": [
+        "processDefinitionId",
+        "category"
+      ]
+    },
+    "description": "Update category for a process definition (15.3.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.2.",
+      "description": "Get a process definition"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/process-definitions/{!processDefinitionId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "description": "15.3.2. : Get a process definition"
+    },
+    "functions": {
+      "getById": [
+        "processDefinitionId"
+      ]
+    },
+    "description": "Get a process definition (15.3.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.3.1.",
+      "description": "List of process definitions"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/process-definitions",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}",
+      "description": "15.3.1. : List of process definitions"
+    },
+    "functions": {
+      "get": [
+        "query"
+      ]
+    },
+    "description": "List of process definitions (15.3.1.)"
+  }
+]

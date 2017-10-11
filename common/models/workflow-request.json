@@ -1,0 +1,31 @@
+{
+    "name": "WorkflowRequest",
+    "base": "WorkflowBaseEntity",
+    "description": "Stores triggered workflow information for Model Instances(oe-workflow engine)",
+    "idInjection" : true,
+    "options": {
+        "validateUpsert": true
+    },
+    "idInjection" : true,
+    "mixins": {
+        "SoftDeleteMixin": false
+    },
+    "properties": {
+        "modelName": {
+            "type": "string",
+            "required": true
+        },
+        "modelInstanceId": {
+            "type": "string",
+            "required": true
+        },
+        "processId": {
+            "type": "string",
+            "required": true
+        },
+        "operation": {
+            "type": "string",
+            "required": true
+        }
+    }
+}

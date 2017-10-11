@@ -1,0 +1,11 @@
+
+{
+  "name": "WorkflowBaseType",
+  "base": "PersistedModel",
+  "idInjection": false,
+  "properties": {},
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

@@ -1,0 +1,26 @@
+{
+  "name": "bpmndata",
+  "base": "BaseEntity",
+  "description" : "Contains XML data of BPMN workflows",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "versionmessage": {
+      "type": "string"
+    },
+    "bpmnname": {
+      "type": "string",
+      "required": true
+    },
+    "xmldata": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}

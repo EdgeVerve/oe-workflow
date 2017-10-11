@@ -1,0 +1,267 @@
+[
+  {
+    "_meta": {
+      "id": "15.6.11.",
+      "description": "Update an existing binary variable on a process-instance"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/executions/{!executionId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "multipart/form-data"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "updateVariables": [
+        "executionId",
+        "variableName",
+        "variables"
+      ]
+    },
+    "description": "Update an existing binary variable on a process-instance (15.6.11.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.10.",
+      "description": "Create a new binary variable on an execution"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/executions/{!executionId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "multipart/form-data"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "updateVariables": [
+        "executionId",
+        "variables"
+      ]
+    },
+    "description": "Create a new binary variable on an execution (15.6.10.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.9.",
+      "description": "Update a variable on an execution"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/executions/{!executionId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "updateVariables": [
+        "executionId",
+        "variableName",
+        "variables"
+      ]
+    },
+    "description": "Update a variable on an execution (15.6.9.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.8.",
+      "description": "Update variables on an execution"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/executions/{!executionId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "updateVariables": [
+        "executionId",
+        "variables"
+      ]
+    },
+    "description": "Update variables on an execution (15.6.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.8.",
+      "description": "Create variables on an execution"
+    },
+    "template": {
+      "method": "POST",
+      "url": "runtime/executions/{!executionId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables}"
+    },
+    "functions": {
+      "createVariables": [
+        "executionId",
+        "variables"
+      ]
+    },
+    "description": "Create variables on an execution (15.6.8.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.7.",
+      "description": "Get a variable for an execution"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/executions/{!executionId}/variables/{!variableName}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "getVariable": [
+        "executionId",
+        "variableName",
+        "scope"
+      ]
+    },
+    "description": "Get a variable for an execution (15.6.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.6.",
+      "description": "List of variables for an execution"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/executions/{!executionId}/variables",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": {
+        "scope": "{scope:String}"
+      }
+    },
+    "functions": {
+      "getVariables": [
+        "executionId",
+        "scope"
+      ]
+    },
+    "description": "List of variables for an execution (15.6.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.5.",
+      "description": "Query executions"
+    },
+    "template": {
+      "method": "POST",
+      "url": "query/executions",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "query": [
+        "variables"
+      ]
+    },
+    "description": "Query executions (15.6.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.1.",
+      "description": "List of Deployments"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/executions",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "get": [
+        "query"
+      ]
+    },
+    "description": "List of Deployments (15.2.1.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.3.",
+      "description": "Get active activities in an execution"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/executions/{executionId}/activities",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "activeActivities": [
+        "executionId"
+      ]
+    },
+    "description": "Get active activities in an execution (15.6.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.2.",
+      "description": "Execute an action on an execution"
+    },
+    "template": {
+      "method": "PUT",
+      "url": "runtime/executions/{!executionId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "executeAction": [
+        "executionId",
+        "variables"
+      ]
+    },
+    "description": "Execute an action on an execution (15.6.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.6.1.",
+      "description": "Get an execution"
+    },
+    "template": {
+      "method": "GET",
+      "url": "runtime/executions/{!executionId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "executionId"
+      ]
+    },
+    "description": "Get an execution (15.6.1.)"
+  }
+]

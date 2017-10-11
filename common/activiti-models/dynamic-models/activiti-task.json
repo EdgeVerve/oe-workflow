@@ -1,0 +1,11 @@
+{                                   
+    "name": "Activiti_Task",    
+    "base": "Activiti_BaseEntity",                
+    "idInjection": false,           
+    "strict": true,                 
+    "options": {                    
+        "validateUpsert": true      
+    },                              
+    "properties": {                 
+    }                               
+}                                   

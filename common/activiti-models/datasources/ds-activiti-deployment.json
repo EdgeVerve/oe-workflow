@@ -1,0 +1,146 @@
+[
+  {
+    "_meta": {
+      "id": "15.2.7.",
+      "description": "Get a deployment resource content"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/deployments/{!deploymentId}/resourcedata/{!resourceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getResourceContent": [
+        "deploymentId",
+        "resourceId"
+      ]
+    },
+    "description": "Get a deployment resource content (15.2.7.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.6.",
+      "description": "Get a deployment resource"
+    },
+    "template": {
+      "method": "GET",
+      "url": "GET repository/deployments/{!deploymentId}/resources/{!resourceId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getResource": [
+        "deploymentId",
+        "resourceId"
+      ]
+    },
+    "description": "Get a deployment resource (15.2.6.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.5.",
+      "description": "List resources in a deployment"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/deployments/{!deploymentId}/resources",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getResourcesById": [
+        "deploymentId"
+      ]
+    },
+    "description": "List resources in a deployment (15.2.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.4.",
+      "description": "Delete a deployment"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "repository/deployments/{!deploymentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteById": [
+        "deploymentId"
+      ]
+    },
+    "description": "Delete a deployment (15.2.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.3.",
+      "description": "Create a new deployment"
+    },
+    "template": {
+      "method": "POST",
+      "url": "repository/deployments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": "{!variables:object}"
+    },
+    "functions": {
+      "create": [
+        "variables"
+      ]
+    },
+    "description": "Create a new deployment (15.2.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.2.",
+      "description": "Get a deployment"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/deployments/{!deploymentId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "deploymentId"
+      ]
+    },
+    "description": "Get a deployment (15.2.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.2.1.",
+      "description": "List of Deployments"
+    },
+    "template": {
+      "method": "GET",
+      "url": "repository/deployments",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "get": [
+        "query"
+      ]
+    },
+    "description": "List of Deployments (15.2.1.)"
+  }
+]

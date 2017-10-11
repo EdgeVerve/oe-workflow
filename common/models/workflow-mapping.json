@@ -1,0 +1,49 @@
+{
+  "name": "WorkflowMapping",
+  "base": "WorkflowBaseEntity",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins":{
+    "SoftDeleteMixin" : false
+  },
+  "properties": {   
+    "engineType": {
+      "type": "string",
+      "required": true
+    },
+    "workflowBody": {
+      "type": "object",
+      "required": true
+    },
+    "modelName" :{
+      "type": "string",
+      "required": true
+    },
+    "actualModelName" :{
+      "type": "string",
+      "required": false,
+      "hidden" : true
+    },
+    "operation" : {
+      "type": "string",
+      "required": true
+    },
+    "wfDependent" : {
+      "type": "boolean",
+      "required": true
+    },
+    "privilegedUsers" : {
+      "type": "array",
+      "required": false
+    },
+    "privilegedRoles": {
+      "type": "array",
+      "required": false
+    }
+  },
+  "relations": {
+  },
+  "validations": []
+}

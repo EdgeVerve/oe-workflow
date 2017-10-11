@@ -1,0 +1,106 @@
+[
+  {
+    "_meta": {
+      "id": "15.13.5.",
+      "description": "Get a list of jobs"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/jobs",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "query": "{query:object}"
+    },
+    "functions": {
+      "getJobs": [
+        "query"
+      ]
+    },
+    "description": "Get a list of jobs (15.13.5.)"
+  },
+  {
+    "_meta": {
+      "id": "15.13.4.",
+      "description": "Get the exception stacktrace for a job"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/jobs/{!jobId}/exception-stacktrace",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getStackTraceById": [
+        "jobId"
+      ]
+    },
+    "description": "Get the exception stacktrace for a job (15.13.4.)"
+  },
+  {
+    "_meta": {
+      "id": "15.13.3.",
+      "description": "Execute a single job"
+    },
+    "template": {
+      "method": "POST",
+      "url": "management/jobs/{!jobId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      },
+      "body": {
+        "action": "execute"
+      }
+    },
+    "functions": {
+      "complete": [
+        "jobId"
+      ]
+    },
+    "description": "Execute a single job (15.13.3.)"
+  },
+  {
+    "_meta": {
+      "id": "15.13.2.",
+      "description": "Delete a job"
+    },
+    "template": {
+      "method": "DELETE",
+      "url": "management/jobs/{!jobId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "deleteById": [
+        "jobId"
+      ]
+    },
+    "description": "Delete a job (15.13.2.)"
+  },
+  {
+    "_meta": {
+      "id": "15.13.1.",
+      "description": "Get a single job"
+    },
+    "template": {
+      "method": "GET",
+      "url": "management/jobs/{!jobId}",
+      "headers": {
+        "accept": "application/json",
+        "content-type": "application/json"
+      }
+    },
+    "functions": {
+      "getById": [
+        "jobId"
+      ]
+    },
+    "description": "Get a single job (15.13.1.)"
+  }
+]

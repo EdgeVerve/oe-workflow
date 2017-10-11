@@ -1,0 +1,49 @@
+
+{
+  "name": "WorkflowInstance",
+  "base": "WorkflowBaseEntity",
+  "description" : "Manages workflow instances in oe-workflow engine",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "workflowDefinitionName": {
+      "type": "string",
+      "required": true
+    },
+    "workflowDefinitionId": {
+      "type": "string",
+      "required": true
+    },
+    "processVariables": {
+      "type": "object",
+      "required": false
+    },
+    "message": {
+      "type": "object",
+      "required": false
+    }
+  },
+  "validations": [],
+  "relations": {
+    "workflowDefinition": {
+      "type": "belongsTo",
+      "model": "WorkflowDefinition",
+      "foreignKey": "workflowDefinitionId"
+    },
+    "processes": {
+      "type": "hasMany",
+      "model": "ProcessInstance"
+    },
+    "tasks": {
+      "type": "hasMany",
+      "model": "Task"
+    },
+    "signals": {
+      "type": "hasMany",
+      "model": "WorkflowSignal"
+    }
+  },
+  "acls": []
+}

@@ -1,0 +1,86 @@
+
+{
+  "name": "Task",
+  "base": "WorkflowBaseEntity",
+  "description": "Manages User interaction with workflows in oe-workflow engine",
+  "plural" : "Tasks",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins" :{
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "default": "pending"
+    },
+    "processTokenId": {
+      "type": "string",
+      "required": true
+    },
+    "candidateUsers": {
+      "type": ["string"],
+      "required" : false
+    },
+    "excludedUsers": {
+      "type": ["string"],
+      "required" : false
+    },
+    "candidateRoles": {
+      "type": ["string"],
+      "required" : false
+    },
+    "excludedRoles": {
+      "type": ["string"],
+      "required" : false
+    },
+    "candidateGroups" : {
+      "type": ["string"],
+      "required" : false
+    },   
+    "excludedGroups" : {
+      "type": ["string"],
+      "required" : false
+    },
+    "formKey" : {
+      "type" : "string",
+      "required" : false
+    },
+    "formType" : {
+      "type" : "string",
+      "required" : false
+    },
+    "formVariables" : {
+      "type" : "object",
+      "required" : false
+    }   
+  },
+  "validations": [],
+  "relations": {
+    "processInstance": {
+      "type": "belongsTo",
+      "model": "ProcessInstance",
+      "foreignKey": "processInstanceId"
+    },
+    "workflowInstance" : {
+      "type" : "belongsTo",
+      "model" : "WorkflowInstance",
+      "foreignKey" : "workflowInstanceId"
+    }
+  },
+  "methods": {},
+  "acls" : [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "completeTask"
+    }
+  ]
+}
