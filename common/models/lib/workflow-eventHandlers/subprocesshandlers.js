@@ -16,8 +16,6 @@ var StateDelta = require('../../process-state-delta.js');
 var SUBPROCESS_INTERRUPT_EVENT = 'SUBPROCESS_INTERRUPT_EVENT';
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
 
-var _ = require('lodash');
-
 var exports = module.exports = {};
 
 exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options, currentProcess, token, processVariables) {
