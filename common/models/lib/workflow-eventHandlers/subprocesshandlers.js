@@ -58,7 +58,7 @@ exports._subProcessInterruptHandler = function _subProcessInterruptHandler(optio
     }
   });
 
-  var _options = _.cloneDeep(options);
+  var _options = JSON.parse(JSON.stringify(options));
   _options._skip_tf = true;
 
   currentProcess.tasks({}, _options, function fetchTasks(err, tasks) {
