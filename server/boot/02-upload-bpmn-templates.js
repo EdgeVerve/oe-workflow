@@ -49,7 +49,27 @@ module.exports = function uploadBpmnTemplates(app, next) {
         }
       ];
 
-      models.bpmndata.create(bpmnData, context, function cb(err, res) {
+      models.bpmndata.findOrCreate({
+        where: {
+          and: [
+            { 'bpmnname': bpmnData[0].bpmnname},
+            { 'versionmessage': bpmnData[0].versionmessage}
+          ]
+        }
+      }, bpmnData[0], context, function cb(err, res) {
+        if (err) {
+          log.error(log.defaultContext(), err);
+        }
+      });
+
+      models.bpmndata.findOrCreate({
+        where: {
+          and: [
+            { 'bpmnname': bpmnData[1].bpmnname},
+            { 'versionmessage': bpmnData[1].versionmessage}
+          ]
+        }
+      }, bpmnData[1], context, function cb(err, res) {
         if (err) {
           log.error(log.defaultContext(), err);
         }
