@@ -155,7 +155,7 @@ function _createWFRequest(RequestModel, modelName, modelInstanceId, processId, o
     } else if (res.length === 1) {
       // previous workflow request exists instead update this instance
       // TODO : sanity check for existing workflow instance not being in running state
-      res.updateAttributes({
+      res[0].updateAttributes({
         'processId': processId,
         'operation': operation
       }, options, function fetchWR(err, res) {
