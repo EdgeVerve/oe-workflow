@@ -114,46 +114,64 @@ function prepareActivitiVariables(instance) {
 
 exports.createWFRequest = function createWFRequest(engineType, modelName, modelInstanceId, processId, operation, options, cb) {
   if (engineType === 'oe-workflow') {
-    createOEWFRequest(modelName, modelInstanceId, processId, operation, options, cb);
+    let RequestModel = loopback.getModel('WorkflowRequest', options);
+    _createWFRequest(RequestModel, modelName, modelInstanceId, processId, operation, options, cb);
   } else {
-    createActivitiWFRequest(modelName, modelInstanceId, processId, operation, options, cb);
+    let RequestModel = loopback.getModel('Activiti_WorkflowRequest', options);
+    _createWFRequest(RequestModel, modelName, modelInstanceId, processId, operation, options, cb);
   }
 };
 
-function createOEWFRequest(modelName, modelInstanceId, processId, operation, options, cb) {
-  var WorkflowRequest = loopback.getModel('WorkflowRequest', options);
-
-  WorkflowRequest.create({
-    'modelName': modelName,
-    'modelInstanceId': modelInstanceId,
-    'processId': processId,
-    'operation': operation
-  }, options, function fetchWR(err, res) {
-    if (err) {
-      log.error(options, err);
-      cb(err);
-    } else {
-      log.debug(options, 'Workflow request instance for OE Workflow successfully created');
-      cb();
+function _createWFRequest(RequestModel, modelName, modelInstanceId, processId, operation, options, cb) {
+  RequestModel.find({
+    'where': {
+      'and': [{
+        'modelName': modelName
+      }, {
+        'modelInstanceId': modelInstanceId
+      }]
     }
-  });
-}
-
-function createActivitiWFRequest(modelName, modelInstanceId, processId, operation, options, cb) {
-  var ActivitiWorkflowRequest = loopback.getModel('Activiti_WorkflowRequest', options);
-
-  ActivitiWorkflowRequest.create({
-    'modelName': modelName,
-    'modelInstanceId': modelInstanceId,
-    'processId': processId,
-    'operation': operation
-  }, options, function fetchWR(err, res) {
+  }, options, function fetchExistingRequest(err, res) {
     if (err) {
       log.error(options, err);
       cb(err);
+    }
+    if (res.length === 0) {
+      // no existing workflow request create a new one
+      RequestModel.create({
+        'modelName': modelName,
+        'modelInstanceId': modelInstanceId,
+        'processId': processId,
+        'operation': operation
+      }, options, function fetchWR(err, res) {
+        if (err) {
+          log.error(options, err);
+          cb(err);
+        } else {
+          log.debug(options, 'Workflow request instance for OE Workflow successfully created');
+          cb();
+        }
+      });
+    } else if (res.length === 1) {
+      // previous workflow request exists instead update this instance
+      // TODO : sanity check for existing workflow instance not being in running state
+      res[0].updateAttributes({
+        'processId': processId,
+        'operation': operation
+      }, options, function fetchWR(err, res) {
+        if (err) {
+          log.error(options, err);
+          cb(err);
+        } else {
+          log.debug(options, 'Workflow request instance for OE Workflow successfully created');
+          cb();
+        }
+      });
     } else {
-      log.debug(options, 'Workflow request instance for activiti successfully created');
-      cb();
+      // there can't be multiple request for same model
+      let err = new Error('multiple workflow requests found while creating new workflow request');
+      log.error(options, err);
+      return cb(err);
     }
   });
 }

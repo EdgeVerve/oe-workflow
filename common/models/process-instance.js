@@ -521,6 +521,23 @@ module.exports = function ProcessInstance(ProcessInstance) {
         };
 
         ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token, null,  recoveryPayload);
+      } else if ( currentFlowObject.isUserTask) {
+        let xoptions = JSON.parse(JSON.stringify(options));
+        xoptions._skip_tf = true;
+        instance.tasks({
+          'where': {
+            'name': currentFlowObject.name
+          }
+        }, xoptions, function fetchTaskToVerifyIfExists(err, tasks) {
+          if (err) {
+            log.error(options, err);
+            return next(err);
+          }
+          if (tasks.length === 0) {
+            // in case of recovery if user task was not created but token exists then we need to emit token
+            ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
+          }
+        });
       } else {
         ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
       }

@@ -167,6 +167,10 @@ function addOERemoteMethods(Model) {
       if (instances.length === 0) {
         log.debug(ctx.options, 'No workflow instance attached to current Model Instance Id');
         return cb(null, null);
+      } else if ( instances.length > 1) {
+        let err = new Error('multiple workflow request found with same Model Instance Id');
+        log.error(ctx.options, err);
+        return cb(err);
       }
 
       var workflowRef = instances[0].processId;
@@ -215,9 +219,9 @@ function addOERemoteMethods(Model) {
         log.error(ctx.options, err);
         return cb(err);
       } else if (instances.length > 1) {
-        var lenErr = new Error('Multiple workflow instances cant be activated for a Model Instance');
-        log.error(ctx.options, lenErr);
-        return cb(lenErr);
+        let err = new Error('multiple workflow request found with same Model Instance Id');
+        log.error(ctx.options, err);
+        return cb(err);
       }
 
       if (instances.length === 0) {
@@ -641,8 +645,6 @@ function beforeSaveUpdateHook(ctx, next) {
       if (mapping.wfDependent === false) {
         ctx.data._status = 'public';
       } else {
-        handleReTrigger(mapping, options);
-
         var delta = {};
         var currentInstance = ctx.currentInstance.toObject();
         var originalProps = Object.keys(currentInstance);
@@ -704,7 +706,8 @@ function handleReTrigger(mapping, options) {
     where: {
       'and': [
           { 'modelName': mapping.modelName },
-          { 'operation': mapping.operation }
+          { 'operation': mapping.operation },
+          { 'modelInstanceId': mapping.modelInstanceId }
       ]
     }
   }, options, function fetchRequest(err, res) {
@@ -727,15 +730,6 @@ function handleReTrigger(mapping, options) {
           return;
         }
         log.debug(options, 'suspended workflow with processId - ' + instance.processId);
-
-        RequestModel.deleteWithVersion(instance.id, instance._version, options, function done(err, res) {
-          if (err) {
-            // console.log(JSON.stringify(err,null,'\t'))
-            log.error(options, 'unable to delete instance for previous workflow request', err);
-            return;
-          }
-          log.debug(options, 'successfully removed previous workflow request for model [' + mapping.modelName + ']');
-        });
       });
     } else {
       log.error(options, 'multiple previous requests not possible');
@@ -776,6 +770,7 @@ function afterSaveCommonHook(ctx, next) {
     engineType = ctx.options._engineType;
     variables = util.prepareWorkflowVariables(engineType, ctx.instance, ctx.Model);
     workflowBody = ctx.options._workflowBody;
+    let transactionType = ctx.options._transactionType;
 
     xOptions = JSON.parse(JSON.stringify(options));
     if (xOptions.transaction) {
@@ -793,6 +788,13 @@ function afterSaveCommonHook(ctx, next) {
     if (xOptions._engineType) {
       delete xOptions._engineType;
     }
+
+    handleReTrigger({
+      'modelInstanceId': ctx.instance.id,
+      'engineType': engineType,
+      'operation': transactionType,
+      'modelName': ctx.instance._type
+    }, options);
 
     util.triggerWorkflow(engineType, variables, workflowBody, xOptions, function triggerWorkflowCb(err, res) {
       if (err) {
