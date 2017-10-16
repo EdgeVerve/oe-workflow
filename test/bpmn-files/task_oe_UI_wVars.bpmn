@@ -5,7 +5,7 @@
       <bpmn2:outgoing>SequenceFlow_0ltmpmb</bpmn2:outgoing>
     </bpmn2:startEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_0ltmpmb" sourceRef="StartEvent_1" targetRef="UserTask_1bnl2d6" />
-    <bpmn2:userTask id="UserTask_1bnl2d6" name="UserTask[USERS]" camunda:candidateUsers="user1,user2" camunda:excludedUsers="user3"  formType="embedded:app" formKey="SimpleApprovalForm" formVariables="fromDate,toDate,comments">
+    <bpmn2:userTask id="UserTask_1bnl2d6" name="UserTask[USERS]" camunda:formKey="SimpleApprovalForm" camunda:candidateUsers="user1,user2" camunda:excludedUsers="user3">
       <bpmn2:incoming>SequenceFlow_0ltmpmb</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_1h9wvhv</bpmn2:outgoing>
     </bpmn2:userTask>

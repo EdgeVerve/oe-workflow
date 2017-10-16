@@ -73,7 +73,7 @@ BPMNTask.prototype.addReceiveTaskAttributes = function addReceiveTaskAttributes(
  * @param {BPMNProcessDefinition} defObject ProcessDefinition
  */
 BPMNTask.prototype.addUserTaskAttributes = function addUserTaskAttributes(defObject) {
-  // CandidateUsers
+  // Candidate Users
   // Candidate Roles
   // Candidate Groups
   this.isUserTask = true;
@@ -171,12 +171,10 @@ BPMNTask.prototype.addBusinessRuleTaskAttributes = function addBusinessRuleTaskA
 
 function addUserTaskFormVariables(defObject, taskObject) {
   if (typeof defObject !== 'undefined') {
-    if (defObject.attributes_ && defObject.attributes_.formKey) {
+    if (defObject.attributes_ && defObject.attributes_['camunda:formKey']) {
       taskObject.hasFormAttached = true;
-      taskObject.formKey = defObject.attributes_.formKey.value;
-      if (defObject.attributes_.formType) {
-        taskObject.formType =  defObject.attributes_.formType.value;
-      }
+      taskObject.formKey = defObject.attributes_['camunda:formKey'].value;
+      taskObject.formType = 'FormKey';
     }
     if (defObject.attributes_ && defObject.attributes_.formVariables) {
       taskObject.hasFormVariables = true;
@@ -184,7 +182,7 @@ function addUserTaskFormVariables(defObject, taskObject) {
     }
     if (defObject['bpmn2:extensionElements'] && defObject['bpmn2:extensionElements']['camunda:formData']) {
       var formDataObject = defObject['bpmn2:extensionElements']['camunda:formData'];
-      taskObject.formType = 'GenerateTaskForm';
+      taskObject.formType = 'FormData';
       taskObject.formVariables = {};
       var formFieldObject = formDataObject['camunda:formField'];
       var formFieldExtracted;
@@ -235,7 +233,7 @@ function extractFormField(formFieldObject) {
     if (constraintObject && constraintObject.constructor.name === 'Object') {
       if (constraintObject.attributes_) {
         if (constraintObject.attributes_.name) {
-          name = constraintObject.attributes_.name;
+          name = constraintObject.attributes_.name.value;
         }
         if (constraintObject.attributes_.config) {
           config = constraintObject.attributes_.config.value;
@@ -247,7 +245,7 @@ function extractFormField(formFieldObject) {
       for (var eachConstraintObject of constraintObject) {
         if (eachConstraintObject.attributes_) {
           if (eachConstraintObject.attributes_.name) {
-            name = eachConstraintObject.attributes_.name;
+            name = eachConstraintObject.attributes_.name.value;
           }
           if (eachConstraintObject.attributes_.config) {
             config = eachConstraintObject.attributes_.config.value;
@@ -266,7 +264,7 @@ function extractFormField(formFieldObject) {
       if (propertyObject.hasOwnProperty('camunda:property')) {
         eachPropertyObject = propertyObject['camunda:property'];
         if (eachPropertyObject.attributes_ && eachPropertyObject.attributes_.id) {
-          id = eachPropertyObject.attributes_.id;
+          id = eachPropertyObject.attributes_.id.value;
         }
         if (eachPropertyObject.attributes_ && eachPropertyObject.attributes_.value) {
           value = eachPropertyObject.attributes_.value.value;
@@ -282,7 +280,7 @@ function extractFormField(formFieldObject) {
         }
         if (prop.attributes_) {
           if (prop.attributes_.id) {
-            id = prop.attributes_.id;
+            id = prop.attributes_.id.value;
           }
           if (prop.attributes_.value) {
             value = prop.attributes_.value.value;
