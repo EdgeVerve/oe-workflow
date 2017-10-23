@@ -39,6 +39,15 @@ module.exports = function WorkflowManager(WorkflowManager) {
   WorkflowManager.disableRemoteMethod('updateById', true);
   WorkflowManager.disableRemoteMethod('deleteWithVersion', true);
 
+
+  // function WorkflowAttachmentError(message, mappings, attachmentErrors) {
+  //   this.name = 'WorkflowAttachementError';
+  //   this.message = message || '';
+  //   this.mappings = mappings;
+  //   this.attachmentErrors = attachmentErrors;
+  // }
+  // WorkflowAttachmentError.prototype = Object.create(Error.prototype);
+
   WorkflowManager.attachWorkflow = function attachWorkflow(data, options, cb) {
     var app = WorkflowManager.app;
     var err;
@@ -55,7 +64,8 @@ module.exports = function WorkflowManager(WorkflowManager) {
       err = new Error('operation parameter is required to attachWorkflow');
       log.error(options, err);
       return cb(err);
-    } else if (!(data.operation === 'create' || data.operation === 'update' || data.operation === 'delete')) {
+    } else if (!(data.operation === 'create' || data.operation === 'update' ||
+                  data.operation === 'delete' || data.operation === 'save')) {
       err = new Error('operation is not valid');
       log.error(options, err);
       return cb(err);
@@ -90,7 +100,6 @@ module.exports = function WorkflowManager(WorkflowManager) {
     if (typeof relatedData !== 'undefined' && !relatedData.implicitPost) {
       relatedWorkflowBody = createRelatedWorkflowBody(relatedData, relationModelNameMap);
     }
-
     if (typeof data.privilegedUsers !== 'undefined') {
       privilegedUsers = data.privilegedUsers;
     }
@@ -100,10 +109,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
     }
 
     function validateWorkflowDeployment(name, done) {
+      var filter = {'and': [{'name': name}, {'latest': true}]};
       app.models.WorkflowDefinition.find({
-        where: {
-          name: name
-        }
+        'where': filter
       }, options, function fetchWD(err, wfDefns) {
         if (err) {
           return done(err);
@@ -219,7 +227,6 @@ module.exports = function WorkflowManager(WorkflowManager) {
         log.error(options, err);
         return cb(err);
       }
-      var response = {'err': errorList, 'mappings': mappingsList};
       if (containsError(errorList)) {
         async.eachOf(mappingsList, function removeMappings(mapping, index, removeMappingscb) {
           if (mapping !== null && typeof mapping !== 'undefined') {
@@ -238,11 +245,15 @@ module.exports = function WorkflowManager(WorkflowManager) {
             log.error(options, err);
             return cb(err);
           }
-          var responsemessage = 'Unable to create workflow mapping; successfully rolledback any partial mappings';
-          var response = {'msg': responsemessage};
-          return cb(null, response);
+          var responsemessage = 'Unable to create workflow mapping; rolledback any partial mappings';
+          // var attachmentErr = new WorkflowAttachmentError(responsemessage, mappingsList, errorList);
+          var attachmentErr = new Error(responsemessage);
+          attachmentErr.mappings = mappingsList;
+          attachmentErr.attachmentErrors = errorList;
+          return cb(attachmentErr);
         });
       } else {
+        var response = {'mappings': mappingsList};
         return cb(null, response);
       }
     });

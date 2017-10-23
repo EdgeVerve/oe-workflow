@@ -444,6 +444,22 @@ function afterAccessHook(ctx, next) {
           delete instance._transactionType;
         }
         resultData.push(instance);
+      } else if (instance._status === 'private' && instance._transactionType === 'save') {
+        // intermediate create phase
+        keys = Object.keys(instance._delta);
+      // Assumption that _delta will not have any data in case of create and update always contains some data in _delta
+        if (instance._createdBy === currUser && keys.length === 0) {
+          resultData.push(instance);
+        } else if (instance._createdBy !== currUser && keys.length !== 0) {
+          for (j = 0; j < keys.length; j++) {
+            key = keys[j];
+            instance[key] = instance._delta[key];
+          }
+          delete instance._delta;
+          resultData.push(instance);
+        } else if (instance._createdBy === currUser && keys.length !== 0) {
+          resultData.push(instance);
+        }
       } else if (instance._status === 'private' && instance._transactionType === 'create' && ( instance._createdBy === currUser || privilegedUsers.match('create', currUser) || privilegedRoles.match('create', currRoles))) {
       // intermediate create phase
         resultData.push(instance);
@@ -575,13 +591,20 @@ function beforeSaveCreateHook(ctx, next) {
   var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
   var options = ctx.options;
 
+  var filter = {'or': [{
+    'and': [
+      { 'modelName': modelName },
+      { 'operation': 'create' }
+    ]
+  },
+  {
+    'and': [
+      { 'modelName': modelName },
+      { 'operation': 'save' }
+    ]
+  }]};
   WorkflowMapping.find({
-    where: {
-      'and': [
-        { 'modelName': modelName },
-        { 'operation': 'create' }
-      ]
-    }
+    where: filter
   }, options, function fetchWM(err, res) {
     if (err) {
       log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
@@ -625,13 +648,20 @@ function beforeSaveUpdateHook(ctx, next) {
   var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
   var options = ctx.options;
 
+  var filter = {'or': [{
+    'and': [
+      { 'modelName': modelName },
+      { 'operation': 'update' }
+    ]
+  },
+  {
+    'and': [
+      { 'modelName': modelName },
+      { 'operation': 'save' }
+    ]
+  }]};
   WorkflowMapping.find({
-    where: {
-      'and': [
-        { 'modelName': modelName },
-        { 'operation': 'update' }
-      ]
-    }
+    where: filter
   }, options, function fetchWM(err, res) {
     if (err) {
       log.error(options, 'unable to find workflow mapping - before save attach update [OE Workflow]', err);
@@ -681,11 +711,12 @@ function beforeSaveUpdateHook(ctx, next) {
         }
         ctx.data._status = 'private';
         ctx.data._transactionType = 'update';
+        ctx.data._transactionType = mapping.operation;
       }
 
       ctx.options._workflowBody = mapping.workflowBody;
       ctx.options._engineType = mapping.engineType;
-      ctx.options._transactionType = 'update';
+      ctx.options._transactionType = mapping.operation;
       next();
     } else {
       log.error(options, 'multiple workflow found attached on update');
@@ -763,7 +794,7 @@ function afterSaveCommonHook(ctx, next) {
     log.debug(ctx.options, 'skipping workflow after save hook during update');
     delete ctx.options._skip_wf;
     next();
-  } else if (ctx.instance && ctx.isNewInstance === false && ctx.options._transactionType === 'update' && ctx.options._workflowBody) {
+  } else if (ctx.instance && ctx.isNewInstance === false && (ctx.options._transactionType === 'update' || ctx.options._transactionType === 'save') && ctx.options._workflowBody) {
     log.debug(ctx.options, 'triggering workflow - during update');
 
     options = ctx.options;
@@ -802,14 +833,18 @@ function afterSaveCommonHook(ctx, next) {
         next(err);
       }
       var workflowRef = res.id;
+      var operation = ctx.options._transactionType;
+      if (operation === 'save') {
+        operation = operation + '-update';
+      }
       delete ctx.options._workflowBody;
       delete ctx.options._engineType;
       delete ctx.options._transactionType;
-      util.createWFRequest(engineType, modelName, ctx.instance.id, workflowRef, 'update', options, next);
+      util.createWFRequest(engineType, modelName, ctx.instance.id, workflowRef, operation, options, next);
     });
 
         // update request anyway wont require after save workflow hook
-  } else if (ctx.instance && ctx.options._transactionType === 'create' && ctx.options._workflowBody) {
+  } else if (ctx.instance && (ctx.options._transactionType === 'create'  || ctx.options._transactionType === 'save') && ctx.options._workflowBody) {
         // trigger workflow & create a WF request only if workflow was triggered
     log.debug(ctx.options, 'triggering workflow - during create');
 
@@ -840,11 +875,15 @@ function afterSaveCommonHook(ctx, next) {
         log.error(options, err);
         return next(err);
       }
+      var operation = ctx.options._transactionType;
+      if (operation === 'save') {
+        operation = operation + '-create';
+      }
       var workflowRef = res.id;
       delete ctx.options._workflowBody;
       delete ctx.options._engineType;
       delete ctx.options._transactionType;
-      util.createWFRequest(engineType, modelName, ctx.instance.id, workflowRef, 'create', options, next);
+      util.createWFRequest(engineType, modelName, ctx.instance.id, workflowRef, operation, options, next);
     });
   } else {
     log.debug(ctx.options, 'skipping workflow - during other scenario');
@@ -941,6 +980,7 @@ function afterDeleteHook(ctx, next) {
     var variables = ctx.hookState._variables;
     var workflowBody = ctx.hookState._workflowBody;
     var engineType = ctx.hookState._engineType;
+    var operation = ctx.hookState._transactionType;
 
     var xOptions = JSON.parse(JSON.stringify(ctx.options));
     if (xOptions.transaction) {
@@ -967,7 +1007,7 @@ function afterDeleteHook(ctx, next) {
       var workflowRef = res.id;
       var instanceId = ctx.id;
 
-      util.createWFRequest(engineType, modelName, instanceId, workflowRef, 'delete', tenantScope, next);
+      util.createWFRequest(engineType, modelName, instanceId, workflowRef, operation, tenantScope, next);
 
       delete ctx.hookState._variables;
       delete ctx.hookState._workflowBody;

@@ -23,8 +23,63 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
   WorkflowDefinition.observe('before save', function beforeSaveWD(ctx, next) {
     var workflowDef = ctx.instance || ctx.data;
     // as we are working in before save , we generate id and use it as foreign key in Process Defn creation
-    var workflowDefId = uuidv4();
-    ctx.instance.setAttribute('id', workflowDefId);
+
+    // All the updates needs to be done without any processing, updates can only happen for latest attribute of instance
+    if (!ctx.isNewInstance) {
+      return next();
+    }
+
+    // Any update to the workflow definition needs to be a create call with same name and updated xml defintion
+    // check if the workflow is already present and this the update to that instance
+    //
+
+    WorkflowDefinition.find({
+      'where': {'and':
+      [
+          {'name': workflowDef.name},
+          {'latest': true}
+      ]
+      }
+    }, ctx.options, function fetchLatestWFD(err, def) {
+      if (err) {
+        return next(err);
+      }
+      if (def.length === 0) {
+          // New Definition needs to be created.
+        workflowDef.setAttribute('latest', true);
+        return createWorkflowDefinition(workflowDef, ctx, next);
+      }
+      if (def.length > 1) {
+        return next(new Error('multiple Latest Workflow definitions found'));
+      }
+      if (def.length === 1) {
+          // Update the instance returned and make the current workflow definition as latest
+        workflowDef.setAttribute('latest', true);
+        def[0].latest = false;
+        WorkflowDefinition.upsert(def[0], ctx.options, function cb(cberr, res) {
+          if (cberr) {
+            return next(new Error('The old defintion could not be updated'));
+          }
+          return createWorkflowDefinition(workflowDef, ctx, next);
+        });
+      } else {
+        return next(err);
+      }
+    });
+  });
+
+
+  function createWorkflowDefinition(workflowDef, ctx, next) {
+    var workflowDefId;
+    if (!workflowDef.hasOwnProperty('id')) {
+      workflowDefId = uuidv4();
+    } else {
+      workflowDefId = workflowDef.id;
+    }
+    if (ctx.instance && ctx.instance.setAttribute) {
+      ctx.instance.setAttribute('id', workflowDefId);
+    }
+
     // TODO need to check if all the instances for the process definition are ended
     if (workflowDef && workflowDef.name && workflowDef.xmldata) {
       var xmldata = workflowDef.xmldata;
@@ -46,8 +101,9 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
             workflowDef[i] = collaborationDef[i];
           }
         }
-
-        workflowDef.unsetAttribute('xmldata');
+        if (workflowDef.unsetAttribute) {
+          workflowDef.unsetAttribute('xmldata');
+        }
         if (!collaborationDef) {
           return createProcessDefinition(workflowDefId, ctx.options, workflowDef.name, processDefinitions[0], {}, next);
         }
@@ -67,7 +123,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
       log.error(ctx.options, dataError);
       return next(dataError);
     }
-  });
+  }
 
     /**
      * Validate External Process Defintion
@@ -84,10 +140,9 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
       }
     }
     var ProcessDefinition = WorkflowDefinition.app.models.ProcessDefinition;
+    // var filter = [{'name': participant.name}, {'latest': true}];
     ProcessDefinition.find({
-      'where': {
-        'name': participant.name
-      }
+      'where': {'name': participant.name}
     }, options, function fetchPD(err, def) {
       if (err) {
         return callback(err);
@@ -95,9 +150,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
       if (def.length === 0) {
         return callback(new Error('Pool definition not deployed'));
       }
-      if (def.length > 1) {
-        return callback(new Error('multiple Pool definitions deployed'));
-      }
+      // No multiple pool definition check because of versioning system
       callback(err);
     });
   }
@@ -136,6 +189,26 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
      * @param  {Function} callback                  Callback
      */
   function createProcessDefinition(workflowDefId, options, name, processDefinition, messageFlowsBySrcProcess, callback) {
+    // var processDef = {
+    //   'name': name,
+    //   'parsedDef': processDefinition,
+    //   'workflowDefinitionId': workflowDefId
+    // };
+    // var ProcessDefinition = WorkflowDefinition.app.models.ProcessDefinition;
+    // var query = [{'name': name}, {'workflowDefinitionId': workflowDefId}];
+    // ProcessDefinition.find({'where': {'and': query}}, options, function cb(fetchErr, res) {
+    //   if (!fetchErr) {
+    //     var processDefVersion = res[0]._version;
+    //     processDef._version = processDefVersion;
+    //     processDef.messageFlowsBySrcProcess = messageFlowsBySrcProcess;
+    //     ProcessDefinition.upsert(processDef, options, function createPD(err, def) {
+    //       if (err && err.message === 'Duplicate entry for ' + ProcessDefinition.name) {
+    //         return callback(null, def);
+    //       }
+    //       return callback(err);
+    //     });
+    //   }
+    // });
     var processDef = {
       'name': name,
       'parsedDef': processDefinition,

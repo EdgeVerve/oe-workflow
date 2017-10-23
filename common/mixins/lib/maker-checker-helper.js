@@ -54,8 +54,23 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
     }
 
     var request = requests[0];
-
-    if (request.operation === 'create') {
+    if (request.operation.startsWith('save')) {
+      if (status === 'approved') {
+        if (request.operation === 'save-update') {
+          approvedUpdateInstance(app, request.modelName, request.modelInstanceId, wfupdates, options, next);
+        } else if (request.operation === 'save-create') {
+          approvedCreateInstance(app, request.modelName, request.modelInstanceId, wfupdates, options, next);
+        }
+      } else if (status === 'rejected') {
+        if (request.operation === 'save-update') {
+          rejectedUpdateInstance(app, request.modelName, request.modelInstanceId, options, next);
+        } else if (request.operation === 'save-create') {
+          rejectedCreateInstance(app, request.modelName, request.modelInstanceId, options, next);
+        }
+      } else {
+        next(new Error('invalid status passed during maker checker completition process'));
+      }
+    } else if (request.operation === 'create') {
       if (status === 'approved') {
         approvedCreateInstance(app, request.modelName, request.modelInstanceId, wfupdates, options, next);
       } else if (status === 'rejected') {
