@@ -180,12 +180,11 @@ describe('Test case for taskManagement UI Integeration [ With Form formVariables
       assert.isNotNull(tasks);
       assert.lengthOf(tasks, 1);
       var task = testVars.task = tasks[0];
-      assert.strictEqual(task.formType, 'GenerateTaskForm');
+      assert.strictEqual(task.formType, 'FormData');
       assert.isNotNull(task.formVariables);
       assert.strictEqual(task.formVariables.fromDate.defaultValue, fromDate);
       assert.strictEqual(task.formVariables.toDate.defaultValue, toDate);
       assert.strictEqual(task.formVariables.comments.defaultValue, comments);
-      assert.isUndefined(task.formVariables._workflowInstanceId, 'WorkflowInstance is defined.');
       setTimeout(done, 2000);
     });
   });
@@ -294,12 +293,11 @@ describe('Test case for taskManagement UI Integeration [ With Form formVariables
       assert.lengthOf(tasks, 1);
       var task = testVars.task = tasks[0];
       assert.strictEqual(task.formKey, 'SimpleApprovalForm');
-      assert.strictEqual(task.formType, 'embedded:app');
+      assert.strictEqual(task.formType, 'FormKey');
       assert.isNotNull(task.formVariables);
       assert.strictEqual(task.formVariables.fromDate, fromDate);
       assert.strictEqual(task.formVariables.toDate, toDate);
       assert.strictEqual(task.formVariables.comments, comments);
-      assert.isUndefined(task.formVariables._workflowInstanceId, 'WorkflowInstance is defined.');
       setTimeout(done, 2000);
     });
   });
@@ -409,7 +407,7 @@ describe('Test case for taskManagement UI Integeration [ Without Form formVariab
       assert.lengthOf(tasks, 1);
       var task = testVars.task = tasks[0];
       assert.strictEqual(task.formKey, 'SimpleApprovalForm');
-      assert.strictEqual(task.formType, 'embedded:app');
+      assert.strictEqual(task.formType, 'FormKey');
       assert.isNotNull(task.formVariables);
       assert.strictEqual(task.formVariables.fromDate, fromDate);
       assert.strictEqual(task.formVariables.toDate, toDate);
@@ -445,3 +443,4 @@ describe('Test case for taskManagement UI Integeration [ Without Form formVariab
     });
   });
 });
+

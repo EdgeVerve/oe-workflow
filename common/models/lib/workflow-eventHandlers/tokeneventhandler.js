@@ -153,9 +153,11 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         }
 
         // additional form changes
-        if (currentFlowObject.hasFormAttached) {
-          taskObj.formKey = currentFlowObject.formKey;
+        if (currentFlowObject.formType) {
           taskObj.formType = currentFlowObject.formType;
+          if (currentFlowObject.formKey) {
+            taskObj.formKey = currentFlowObject.formKey;
+          }
         }
 
         var evaluatePayload = function evaluatePayload(options, inputData, message, process) {
@@ -194,7 +196,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         var variables = {};
         var variableObj;
 
-        if (currentFlowObject.formType === 'GenerateTaskForm') {
+        if (currentFlowObject.formType === 'FormData') {
           variableObj = {};
 
           for (var key in currentFlowObject.formVariables) {
