@@ -1170,7 +1170,7 @@ describe('Test case for Implicitly attaching workflow to related models - Relate
       , bootstrap.defaultContext, function cb(err, res) {
         if (err) {
           log.error(err);
-          return done(err);
+          return done();
         }
         log.debug(res);
         return done();

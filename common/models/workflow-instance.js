@@ -24,19 +24,21 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     var WorkflowDefinition = loopback.getModel('WorkflowDefinition', ctx.options);
 
     WorkflowDefinition.find({
-      'where': {
-        'name': workflowDefinitionName
+      'where': {'and': [
+        {'name': workflowDefinitionName},
+        {'latest': true}
+      ]
       }
     }, ctx.options, function fetchWD(err, wdefns) {
       if (err) {
         log.error(ctx.options, err);
         return next(err);
       } else if (wdefns.length === 0) {
-        var errx = new Error('No workflow definition found.');
+        var errx = new Error('No latest workflow definition found.');
         log.error(ctx.options, errx);
         return next(errx);
       } else if (wdefns.length > 1) {
-        var errxx = new Error('Multiple workflow definitions found with the same name.');
+        var errxx = new Error('Multiple latest workflow definitions found with the same name.');
         log.error(ctx.options, errxx);
         return next(errxx);
       }
@@ -81,7 +83,11 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
   WorkflowInstance.prototype.createCollaborationProcesses = function createCollaborationProcesses(participants, options, next) {
     var self = this;
     async.each(participants, function iterateParticipants(participant, done) {
-      self.createProcess(participant.name, options, done);
+      if (participant.name.indexOf('$') > 0 && participant.name.indexOf('$') < participant.name.length) {
+        self.createProcess(participant.name, options, done);
+      } else {
+        self.createParticipantProcess(participant.name, options, done);
+      }
     }, function callback(err) {
       next(err);
     });
@@ -125,20 +131,19 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     var processDefinitionName = postData.processDefinitionName;
     var ProcessDefinition = loopback.getModel('ProcessDefinition', options);
 
+    var filter = {'and': [{'name': processDefinitionName}, {'workflowDefinitionId': self.workflowDefinitionId}]};
     ProcessDefinition.find({
-      'where': {
-        'name': processDefinitionName
-      }
+      'where': filter
     }, options, function fetchWD(err, pdefns) {
       if (err) {
         log.error(options, err);
         return next(err);
       } else if (pdefns.length === 0) {
-        var errx = new Error('No process definition found.');
+        var errx = new Error('No Latest process definition found.');
         log.error(options, errx);
         return next(errx);
       } else if (pdefns.length > 1) {
-        var errxx = new Error('Multiple process definitions found with the same name.');
+        var errxx = new Error('Multiple Latest process definitions found with the same name.');
         log.error(options, errxx);
         return next(errxx);
       }
@@ -149,6 +154,81 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       self.processes.create(postData, options, next);
     });
   };
+
+/**
+    * Create Process Instance
+    * @param  {String}   name     Process-Definition Name
+    * @param  {Object}   options  Options
+    * @param  {Function} next     Callback
+    * @returns {void}
+    */
+  WorkflowInstance.prototype.createParticipantProcess = function createParticipantProcess(name, options, next) {
+    var self = this;
+    var processVariables = {};
+    if (typeof self.processVariables !== 'undefined' && self.processVariables) {
+      try {
+        processVariables = JSON.parse(JSON.stringify(self.processVariables));
+      } catch (e) {
+        log.error(options, e);
+        return next(e);
+      }
+    }
+
+    processVariables._workflowInstanceId = self.id;
+
+    var postData = {
+      'processDefinitionName': name,
+      'processVariables': processVariables,
+      'message': self.message,
+      'workflowInstanceId': self.id
+    };
+
+    var processDefinitionName = postData.processDefinitionName;
+    var ProcessDefinition = loopback.getModel('ProcessDefinition', options);
+    var WorkflowDefinition = loopback.getModel('WorkflowDefinition', options);
+
+    WorkflowDefinition.find({
+      'where': {'and': [
+        {'name': processDefinitionName},
+        {'latest': true}
+      ]
+      }
+    }, options, function fetchWD(err, wdefns) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      } else if (wdefns.length === 0) {
+        var errx = new Error('No latest workflow definition found.');
+        log.error(options, errx);
+        return next(errx);
+      }
+      ProcessDefinition.find({
+        'where': {'and': [
+            {'name': processDefinitionName},
+            {'workflowDefinitionId': wdefns[0].id}
+        ]}
+      }, options, function fetchWD(err, pdefns) {
+        if (err) {
+          log.error(options, err);
+          return next(err);
+        } else if (pdefns.length === 0) {
+          var errx = new Error('No Latest process definition found.');
+          log.error(options, errx);
+          return next(errx);
+        } else if (pdefns.length > 1) {
+          var errxx = new Error('Multiple Latest process definitions found with the same name.');
+          log.error(options, errxx);
+          return next(errxx);
+        }
+        var inst = pdefns[0];
+        var id = inst.id;
+        postData.processDefinitionName = inst.name;
+        postData.processDefinitionId = id;
+        self.processes.create(postData, options, next);
+      });
+    });
+  };
+
 
    /*
     * Pass a message to an execution that is waiting for a matching message

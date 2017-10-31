@@ -10,7 +10,6 @@
   "properties": {
     "name": {
       "type": "string",
-      "unique": true,
       "required": true
     },
     "xmldata": {
@@ -24,6 +23,9 @@
     "participants": {
       "type": "object",
       "required": false
+    },
+    "latest": {
+      "type": "boolean"
     }
   },
   "validations": [],
