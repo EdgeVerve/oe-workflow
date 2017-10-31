@@ -23,6 +23,7 @@ module.exports = function MakerCheckerMixin(Model) {
 
   if (!Model.settings._workflowEnabled) {
     addProperties(Model);
+    // to update table with new columns in postgres
     Model.updateId = uuidv4();
     if (Model.settings._attachOnActiviti) {
       addActivitiRemoteMethods(Model);
@@ -39,6 +40,9 @@ module.exports = function MakerCheckerMixin(Model) {
     // as workflow is already enabled, remote methods are already enabled, we can safely remove the prop
     delete Model.settings._attachOnActiviti;
   }
+
+  // to enable newly added REST Endpoints on fly
+  Model.app.model(Model);
 };
 
 function addBeforeRemotes(Model) {
