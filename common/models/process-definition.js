@@ -25,10 +25,13 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
         var parsedDef = processDef.parsedDef;
         log.debug(JSON.stringify(parsedDef, null, '\t'));
         var processDefinition = parsedDef;
-        processDef.unsetAttribute('parsedDef');
+        if (processDef.unsetAttribute) {
+          processDef.unsetAttribute('parsedDef');
+        }
         var externalMessageFlowBySrcProcess = processDef.messageFlowsBySrcProcess || {};
-        processDef.unsetAttribute('messageFlowsBySrcProcess');
-
+        if (processDef.unsetAttribute) {
+          processDef.unsetAttribute('messageFlowsBySrcProcess');
+        }
         var i = 0;
         var flowObjects = processDefinition.flowObjects;
         var createSubProcess = function createSubProcess(err) {
@@ -58,13 +61,13 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
           } else {
             // We have to create all the indexes for the current processDefinition
             // TODO this will increase the process definition size , need to rethink this
-            processDefinition.nameMap = _buildNameMap(processDefinition.getFlowObjects());
+            processDefinition.nameMap = _buildNameMap(processDefinition.flowObjects);
             processDefinition.processElementIndex = _buildIndex(processDefinition);
             processDefinition.sequenceFlowBySourceIndex = _buildFlowIndex(processDefinition.sequenceFlows, true);
             processDefinition.sequenceFlowBySourceTarget = _buildFlowIndex(processDefinition.sequenceFlows, false);
             processDefinition.messageFlowBySourceTarget = _buildFlowIndex(processDefinition.messageFlows, false);
             processDefinition.messageFlowBySourceIndex = _buildFlowIndex(processDefinition.messageFlows, true);
-            processDefinition.catchEventIndex = typeof _buildCatchEventIndex(processDefinition.getFlowObjects()) === 'undefined' ? null : _buildCatchEventIndex(processDefinition.getFlowObjects());
+            processDefinition.catchEventIndex = typeof _buildCatchEventIndex(processDefinition.flowObjects) === 'undefined' ? null : _buildCatchEventIndex(processDefinition.flowObjects);
             processDefinition.boundaryEventsByAttachmentIndex = buildBoundaryEventsByAttachmentIndex(processDefinition);
             if (externalMessageFlowBySrcProcess[processDefinition.bpmnId]) {
               if (processDefinition.messageFlowBySourceTarget) {
@@ -177,11 +180,11 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
   function buildBoundaryEventsByAttachmentIndex(processDef) {
     var index = {};
     var self = processDef;
-    var boundaryEvents = self.getBoundaryEvents();
+    var boundaryEvents = processDef.flowObjects.filter((flowObject) => flowObject.isBoundaryEvent);
     boundaryEvents.forEach(function iterateBoundaryEvents(boundaryEvent) {
       var attachedToRef = boundaryEvent.attachedToRef;
-      var activity = self.getProcessElement(attachedToRef);
-
+      var activity = self.processElementIndex[attachedToRef];
+      // var activity = self.getProcessElement(attachedToRef);
       if (activity) {
         if (activity.isWaitTask || activity.isCallActivity || activity.isSubProcess || activity.isInsideTransaction) {
           var entry = index[attachedToRef];

@@ -122,10 +122,31 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
             taskObj.excludedGroups = evaluatedList;
           }
         }
-
+        var userInfo;
         // additionaly add to the includede pool info
         if (poolInfo) {
-          taskObj.candidateUsers.concat(evalEntity(poolInfo));
+          if (poolInfo.startsWith('Role:')) {
+            userInfo = poolInfo.split(':');
+            if (typeof taskObj.candidateRoles  === 'object' && taskObj.candidateRoles.constructor.name  === 'Array') {
+              taskObj.candidateRoles.push(userInfo[1]);
+            } else {
+              taskObj.candidateRoles = [userInfo[1]];
+            }
+          } else if (poolInfo.startsWith('User:')) {
+            userInfo = poolInfo.split(':');
+            if (typeof taskObj.candidateRoles  === 'object' && taskObj.candidateRoles.constructor.name  === 'Array') {
+              taskObj.candidateUsers.push(userInfo[1]);
+            } else {
+              taskObj.candidateUsers = [userInfo[1]];
+            }
+          } else if (poolInfo.startsWith('Group')) {
+            userInfo = poolInfo.split(':');
+            if (typeof taskObj.candidateRoles  === 'object' && taskObj.candidateRoles.constructor.name  === 'Array') {
+              taskObj.candidateGroups.push(userInfo[1]);
+            } else {
+              taskObj.candidateGroups = [userInfo[1]];
+            }
+          }
         }
         if (currentProcess._poolInfo) {
           taskObj.candidateUsers.concat(evalEntity(currentProcess._poolInfo));
@@ -243,35 +264,41 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           evaluatedProcessName = sandbox.evaluate$Expression(options, currentFlowObject.subProcessId, message, currentProcess);
         }
 
-        ProcessInstance.app.models.ProcessDefinition.find({
-          'where': {
-            'name': evaluatedProcessName
-          }
-        }, options, function fetchCallActivityPD(err, pDefinition) {
-          if (err) {
-            log.error(options, err);
-            return;
-          }
-          if (pDefinition.length !== 1) {
-            var errx = new Error('call activity process definition not found or found multiple');
-            log.error(options, errx);
-            return;
-          }
-          subProcessesIns.processDefinitionId = pDefinition[0].id;
-          subProcessesIns.processDefinitionName = pDefinition[0].name;
-          subProcessesIns.parentProcessInstanceId = currentProcess.id;
-          subProcessesIns.workflowInstanceId = currentProcess.workflowInstanceId;
-          var poolInfoSP = processDefinitionInstance.findPoolInfo(currentFlowObject);
-          if (poolInfoSP) {
-            subProcessesIns._poolInfo = poolInfoSP;
-          }
-          currentProcess.subProcesses.create(subProcessesIns, options, function createSubProcess(err) {
-            if (err) {
-              log.error(options, err);
-              return;
-            }
+        var filter = {'and': [{'name': evaluatedProcessName}, {'latest': true}]};
+        if (currentFlowObject.isSubProcess) {
+          var SubProcessName = evaluatedProcessName.split('$')[0];
+          filter = {'and': [{'name': SubProcessName}, {'latest': true}]};
+        }
+        ProcessInstance.app.models.WorkflowDefinition.find({'where': filter}, options,
+          function fetchCallActivityWD(err, workflowDefinition) {
+            var pdfilter = {'and': [{'name': evaluatedProcessName}, {'workflowDefinitionId': workflowDefinition[0].id}]};
+            ProcessInstance.app.models.ProcessDefinition.find({'where': pdfilter
+            }, options, function fetchCallActivityPD(err, pDefinition) {
+              if (err) {
+                log.error(options, err);
+                return;
+              }
+              if (pDefinition.length !== 1) {
+                var errx = new Error('call activity process definition not found or found multiple');
+                log.error(options, errx);
+                return;
+              }
+              subProcessesIns.processDefinitionId = pDefinition[0].id;
+              subProcessesIns.processDefinitionName = pDefinition[0].name;
+              subProcessesIns.parentProcessInstanceId = currentProcess.id;
+              subProcessesIns.workflowInstanceId = currentProcess.workflowInstanceId;
+              var poolInfoSP = processDefinitionInstance.findPoolInfo(currentFlowObject);
+              if (poolInfoSP) {
+                subProcessesIns._poolInfo = poolInfoSP;
+              }
+              currentProcess.subProcesses.create(subProcessesIns, options, function createSubProcess(err) {
+                if (err) {
+                  log.error(options, err);
+                  return;
+                }
+              });
+            });
           });
-        });
       } else if (currentFlowObject.isEndEvent || currentFlowObject.isIntermediateThrowEvent) {
         payload = null;
         if (currentFlowObject.isMessageEvent) {
