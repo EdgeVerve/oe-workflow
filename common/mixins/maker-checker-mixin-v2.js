@@ -172,6 +172,7 @@ function addOERemoteMethods(Model) {
     }
 
     var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+    var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
     var options = ctx.options;
 
   WorkflowMapping.find({
@@ -192,17 +193,21 @@ function addOERemoteMethods(Model) {
     } else if (res.length === 1) {
       var mapping = res[0];
 
-      /* Fix due to Decision Table changing instance constructor to object */
-      if (ctx.instance.constructor.name === 'Object') {
-        ctx.instance.setAttribute = function setAttribute(key, value) {
-          ctx.instance[key] = value;
-        };
-      }
+      let workflowBody = mapping.workflowBody;
+      let engineType = mapping.engineType;
+      WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst){
+        if(err){
+          log.error(options, err);
+          return next(err);
+        }
+        mod_data.workflow
+      });
 
-      ctx.options._workflowBody = mapping.workflowBody;
-      ctx.options._engineType = mapping.engineType;
-      ctx.options._transactionType = 'create';
-      ctx.instance.id = uuidv4();
+
+    }else {
+      let err = new Error("Multiple workflows attached to same Model.");
+      log.error(options, err);
+      return next(err);
     }
   });
 
