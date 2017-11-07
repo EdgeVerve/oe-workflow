@@ -13,7 +13,7 @@ var logger = require('oe-logger');
 var log = logger('WorkflowManager');
 var async = require('async');
 var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
-var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin');
+var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin-v2');
 
 var loopback = require('loopback');
 var helper = require('./../mixins/lib/maker-checker-helper.js');
