@@ -13,10 +13,12 @@ var logger = require('oe-logger');
 var log = logger('WorkflowManager');
 var async = require('async');
 var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
-var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin-v2');
+var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin');
+var applyMakerCheckerMixinV2 = require('./../mixins/maker-checker-mixin-v2');
 
 var loopback = require('loopback');
 var helper = require('./../mixins/lib/maker-checker-helper.js');
+var helperv2 = require('./../mixins/lib/maker-checker-helper-v2.js');
 
 var baseWorkflowCallActivity = 'BaseWorkflowTemplate';
 var relatedWorkflowCallActivity = 'RelatedWorkflowTemplate';
@@ -165,6 +167,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
         'privilegedUsers': privilegedUsers,
         'privilegedRoles': privilegedRoles
       };
+      // to make an entry in workflow mapping model for maker-checker v2
+      if (data.version && data.version === 'v2') {
+        instance.version = 'v2';
+      }
       if (!workflowBody || typeof workflowBody === 'undefined' || (workflowBody && !workflowBody.workflowDefinitionName)) {
         createMappingscb();
       }
@@ -204,7 +210,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
                 }
                 return createMappingscb();
               }
-              applyMakerCheckerMixin(Model);
+              if (mapping.version === 'v2') {
+                applyMakerCheckerMixinV2(Model);
+              } else {
+                applyMakerCheckerMixin(Model);
+              }
               log.debug(options, 'WorkflowMapping successfully created.');
               mappingsList.push(mapping);
               errorList.push(err);
@@ -341,8 +351,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
     if (data.updates) {
       updates = data.updates;
     }
-
-    helper._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    if (data.version && data.version === 'v2') {
+      helperv2._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    } else {
+      helper._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    }
   }
 
   function containsError(ErrorList) {

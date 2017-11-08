@@ -1,5 +1,6 @@
 /**
  *
+ *
  * ©2016-2017 EdgeVerve Systems Limited (a fully owned Infosys subsidiary),
  * Bangalore, India. All Rights Reserved.
  *
@@ -13,7 +14,7 @@ var loopback = require('loopback');
 var util = require('./lib/util.js');
 const uuidv4 = require('uuid/v4');
 var logger = require('oe-logger');
-var log = logger('maker-checker-mixin');
+var log = logger('maker-checker-mixin-v2');
 
 module.exports = function MakerCheckerMixin(Model) {
   // Skip this mixin where ever not applicable.
@@ -22,7 +23,6 @@ module.exports = function MakerCheckerMixin(Model) {
   }
 
   if (!Model.settings._workflowEnabled) {
-
     if (Model.settings._attachOnActiviti) {
       addActivitiRemoteMethods(Model);
       delete Model.settings._attachOnActiviti;
@@ -30,8 +30,8 @@ module.exports = function MakerCheckerMixin(Model) {
       addOERemoteMethods(Model);
     }
 
-    addObservers(Model);
-    addBeforeRemotes(Model);
+    // addObservers(Model);
+    // addBeforeRemotes(Model);
 
     Model.settings._workflowEnabled = true;
   } else if (Model.settings._attachOnActiviti) {
@@ -104,7 +104,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/change'
+      path: '/create_m'
     },
     returns: {
       arg: 'response',
@@ -113,7 +113,7 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('change', {
+  Model.remoteMethod('find_m', {
     description: 'Find the intermediate instance present in Change Request Model.',
     accessType: 'READ',
     accepts: [{
@@ -126,7 +126,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/:id/change'
+      path: '/:id/find_m'
     },
     returns: {
       arg: 'response',
@@ -157,105 +157,139 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.create_m = function create_m(data, ctx, cb) {
+  Model.create_m = function create_m(data, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
-    let idName = Model.getIdName();
-    let modelId = data[idName] || uuidv4();
-
-    let mod_data = {
-      modelName : modelName,
-      modelId : modelId,
-      data : data
+    let idName = Model.definition.idName();
+    // case id is not defined
+    if (typeof data[idName] === 'undefined') {
+      data[idName] =  uuidv4();
     }
 
-    var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
-    var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
-    var options = ctx.options;
+    let modelId = data[idName];
+    console.log(JSON.stringify(options,null,'\t'))
+    var mod_data = {
+      modelName: modelName,
+      modelId: modelId,
+      data: data
+    };
 
-  WorkflowMapping.find({
-    where: {
-      'and': [
-        { 'modelName': modelName },
-        { 'operation': 'create' }
-      ]
-    }
-  }, options, function fetchWM(err, res) {
-    if (err) {
-      log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-      next(err);
-    } else if (res && res.length === 0) {
-      // this case should never occur
-      log.debug(options, 'no create mapping found');
-      next();
-    } else if (res.length === 1) {
-      var mapping = res[0];
+    // check instance data is Valid
+    let obj = new Model(data);
+    obj.isValid(function validate(valid) {
+      if (valid) {
+        log.error(options, 'Instance has been validated during maker checker creation');
 
-      let workflowBody = mapping.workflowBody;
-      let engineType = mapping.engineType;
-      WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst){
-        if(err){
-          log.error(options, err);
-          return next(err);
-        }
-        mod_data.workflow
-      });
+        var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+        var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
 
+        WorkflowMapping.find({
+          where: {
+            'and': [
+              { 'modelName': modelName },
+              { 'engineType': 'oe-workflow' },
+              { 'version': 'v2' },
+              { 'operation': 'create' }
+            ]
+          }
+        }, options, function fetchWM(err, res) {
+          if (err) {
+            log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
+            next(err);
+          } else if (res && res.length === 0) {
+            // this case should never occur
+            log.debug(options, 'no create mapping found');
+            next();
+          } else if (res.length === 1) {
+            var mapping = res[0];
 
-    }else {
-      let err = new Error("Multiple workflows attached to same Model.");
-      log.error(options, err);
-      return next(err);
-    }
-  });
-
-    ChangeWorkflowRequest.create(data,ctx.options, function createChangeModel(err, inst){
-      if(err){
-        log.error(log.options, err);
-        return cb(err);
+            let workflowBody = mapping.workflowBody;
+            workflowBody.processVariables = workflowBody.processVariables || {};
+            // this is to identify while executing Finalize Transaction to follow which implementation
+            workflowBody.processVariables._maker_check_impl = 'v2';
+            WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+              if (err) {
+                log.error(options, err);
+                return next(err);
+              }
+              mod_data.workflowInstanceId = winst.id;
+              console.log(JSON.stringify(mod_data));
+              ChangeWorkflowRequest.create(mod_data, options, function createChangeModel(err, inst) {
+                if (err) {
+                  log.error(options, err);
+                  return next(err);
+                }
+                log.debug(options, inst);
+                // wrapping back data properly
+                let cinst = inst.toObject();
+                for (let i in cinst.data) {
+                  if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
+                    cinst[i] = cinst.data[i];
+                  }
+                }
+                delete cinst.data;
+                return next(null, cinst);
+              });
+            });
+          } else {
+            let err = new Error('Multiple workflows attached to same Model.');
+            log.error(options, err);
+            return next(err);
+          }
+        });
+      } else {
+        // obj.errors is return object so stringifying and returning back
+        let err = new Error(JSON.stringify(obj.errors));
+        log.error(options, err);
+        return next(err);
       }
-      log.debug(ctx.options, ctx.inst);
-      return cb(null, inst.payload);
-    });
-  }
+    }, options, data);
+  };
 
-  Model.change = function workflow(id, ctx, cb) {
+  Model.find_m = function find_m(id, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
     ChangeWorkflowRequest.find({
-      where : {
-        and : [{
-          modelName : modelName
-        },{
-          modelId : id
+      where: {
+        and: [{
+          modelName: modelName
+        }, {
+          modelId: id
         }]
       }
-    },ctx.options, function fetchChangeModel(err, inst){
-      if(err){
-        log.error(log.options, err);
+    }, ctx, function fetchChangeModel(err, inst) {
+      if (err) {
+        log.error(ctx, err);
         return cb(err);
       }
-      if(inst.length > 1){
+      if (inst.length > 1) {
         let err = new Error('Multiple instances found with same id in Change Workflow Request');
-        log.error(log.options, err);
+        log.error(ctx, err);
         return cb(err);
-      } else if(inst.length === 0){
+      } else if (inst.length === 0) {
         // no instance found in change request model
         return cb(null, null);
-      } else{
-        return cb(null, inst);
       }
+      // unwarap the object
+      let cinst = inst[0].toObject();
+      for (let i in cinst.data) {
+        if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
+          cinst[i] = cinst.data[i];
+        }
+      }
+      delete cinst.data;
+      return cb(null, cinst);
     });
-  }
+  };
 
   Model.workflow = function workflow(id, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
-    var WorkflowRequest = app.models.WorkflowRequest;
+    var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
     var WorkflowInstance = app.models.WorkflowInstance;
 
     if (!id) {
@@ -268,27 +302,27 @@ function addOERemoteMethods(Model) {
       'where': {
         'and': [
             { 'modelName': modelName },
-            { 'modelInstanceId': id }
+            { 'modelId': id }
         ]
       }
     };
 
-    WorkflowRequest.find(filter, ctx, function fetchWR(err, instances) {
+    ChangeWorkflowRequest.find(filter, ctx, function fetchWR(err, instances) {
       if (err) {
         log.error(ctx.options, err);
         return cb(err);
       }
 
       if (instances.length === 0) {
-        log.debug(ctx.options, 'No workflow instance attached to current Model Instance Id');
+        log.debug(ctx, 'No workflow instance attached to current Model Instance Id');
         return cb(null, null);
       } else if ( instances.length > 1) {
         let err = new Error('multiple workflow request found with same Model Instance Id');
-        log.error(ctx.options, err);
+        log.error(ctx, err);
         return cb(err);
       }
 
-      var workflowRef = instances[0].processId;
+      var workflowRef = instances[0].workflowInstanceId;
 
       WorkflowInstance.find({
         'where': {
@@ -721,11 +755,11 @@ function beforeSaveCreateHook(ctx, next) {
       ctx.instance.id = uuidv4();
 
       WorkflowMapping.app.models.ChangeWorkflowRequest.create({
-        payload : ctx.instance,
-        modelName : modelName,
-        modelId : ctx.instance.id
-      }, ctx.options, function onCreateCB(err,inst){
-        if(err){
+        payload: ctx.instance,
+        modelName: modelName,
+        modelId: ctx.instance.id
+      }, ctx.options, function onCreateCB(err, inst) {
+        if (err) {
           log.error(ctx.options, err);
           return next(err);
         }

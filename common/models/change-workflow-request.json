@@ -15,11 +15,11 @@
       "index": true
     },
     "modelId": {
-      "type": "object",
+      "type": "string",
       "required": true,
       "index": true
     },
-    "workflowReferenceId": {
+    "workflowInstanceId": {
       "type": "string",
       "required": true
     } 

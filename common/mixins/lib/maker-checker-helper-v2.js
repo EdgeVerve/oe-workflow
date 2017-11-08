@@ -21,7 +21,7 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
   var RequestModel;
 
   if (engineType === 'oe-workflow') {
-    RequestModel = app.models.WorkflowRequest;
+    RequestModel = app.models.ChangeWorkflowRequest;
   } else {
     RequestModel = app.models.Activiti_WorkflowRequest;
   }
@@ -32,7 +32,7 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
 
   RequestModel.find({
     where: {
-      'processId': processId
+      'workflowInstanceId': processId
     }
   }, options, function fetchRM(err, requests) {
     if (err) {
@@ -57,25 +57,25 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
 
     if (request.operation === 'create') {
       if (status === 'approved') {
-        approvedCreateInstance(app, request.modelName, request.modelInstanceId, wfupdates, options, next);
+        approvedCreateInstance(app, request, wfupdates, options, next);
       } else if (status === 'rejected') {
-        rejectedCreateInstance(app, request.modelName, request.modelInstanceId, options, next);
+        rejectedCreateInstance(app, request, options, next);
       } else {
         next(new Error('invalid status passed during maker checker completition process'));
       }
     } else if (request.operation === 'update') {
       if (status === 'approved') {
-        approvedUpdateInstance(app, request.modelName, request.modelInstanceId, wfupdates, options, next);
+        approvedUpdateInstance(app, request.modelName, request.modelId, wfupdates, options, next);
       } else if (status === 'rejected') {
-        rejectedUpdateInstance(app, request.modelName, request.modelInstanceId, options, next);
+        rejectedUpdateInstance(app, request.modelName, request.modelId, options, next);
       } else {
         next(new Error('invalid status passed during maker checker completition process'));
       }
     } else if (request.operation === 'delete') {
       if (status === 'approved') {
-        approvedDeleteInstance(app, request.modelName, request.modelInstanceId, options, next);
+        approvedDeleteInstance(app, request.modelName, request.modelId, options, next);
       } else if (status === 'rejected') {
-        rejectedDeleteInstance(app, request.modelName, request.modelInstanceId, options, next);
+        rejectedDeleteInstance(app, request.modelName, request.modelId, options, next);
       } else {
         next(new Error('invalid status passed during maker checker completition process'));
       }
@@ -296,8 +296,6 @@ function rejectedCreateInstance(app, modelName, modelInstanceId, options, next) 
 
 function approvedCreateInstance(app, modelName, modelInstanceId, wfupdates, options, next) {
   var model = loopback.getModel(modelName, options);
-  options._skip_wfx = true;
-  // skip internal after access hook
 
   model.findById(modelInstanceId, options, function fetchMI(err, instance) {
     if (err) {

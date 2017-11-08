@@ -30,6 +30,11 @@
       "type": "string",
       "required": true
     },
+    "version" : {
+      "type": "string",
+      "required": true,
+      "default": "v1"
+    },
     "wfDependent" : {
       "type": "boolean",
       "required": true
