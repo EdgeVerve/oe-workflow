@@ -73,9 +73,9 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
       }
     } else if (request.operation === 'delete') {
       if (status === 'approved') {
-        approvedDeleteInstance(app, request.modelName, request.modelId, options, next);
+        approvedDeleteInstance(app, request, options, next);
       } else if (status === 'rejected') {
-        rejectedDeleteInstance(app, request.modelName, request.modelId, options, next);
+        rejectedDeleteInstance(app, request, options, next);
       } else {
         next(new Error('invalid status passed during maker checker completition process'));
       }
@@ -87,72 +87,33 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
   });
 };
 
-function rejectedDeleteInstance(app, modelName, modelInstanceId, options, next) {
-  var model = loopback.getModel(modelName, options);
-
-  options._skip_wfx = true;
-  model.findById(modelInstanceId, options, function fetchMI(err, instance) {
+function rejectedDeleteInstance(app, request, options, next) {
+  request.destroy(options, function cb(err, inst) {
     if (err) {
-      log.error(options, 'error in finding persisted instance', err);
-      return next(err);
-    }
-
-    if (instance && instance._status && instance._status !== 'private') {
-      err = new Error('invalid instance status');
       log.error(options, err);
       return next(err);
     }
-
-    options._skip_wf = true;
-
-    var updates = {
-      '_status': 'public',
-      '_isDeleted': 'false',
-      '_requestId': null,
-      '_transactionType': null
-    };
-
-    instance.updateAttributes(updates, options, function cb(err, inst) {
-      if (err) {
-        log.error(options, 'error in updating instance status', err);
-        return next(err);
-      }
-      next(null, inst);
-    });
+    log.debug(options, 'Workflow request completed for rejected create Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+    next(null, inst);
   });
 }
 
-function approvedDeleteInstance(app, modelName, modelInstanceId, options, next) {
-  var model = loopback.getModel(modelName, options);
+function approvedDeleteInstance(app, request, options, next) {
+  var model = loopback.getModel(request.modelName, options);
 
-  options._skip_wfx = true;
-
-  model.findById(modelInstanceId, options, function fetchMI(err, instance) {
+  model.deleteWithVersion(request.modelId, request.data._version, options, function fetchMI(err, instance) {
     if (err) {
-      log.error(options, 'error in finding persisted instance', err);
-      return next(err);
-    }
-
-    if (instance && instance._status && instance._status !== 'private') {
-      err = new Error('invalid instance status');
       log.error(options, err);
       return next(err);
     }
 
-    options._skip_wf = true;
-
-    var updates = {
-      '_status': 'public',
-      '_isDeleted': 'true',
-      '_transactionType': null
-    };
-
-    instance.updateAttributes(updates, options, function cb(err, inst) {
+    request.destroy(options, function cb(err, inst) {
       if (err) {
         log.error(options, 'error in updating instance status', err);
         return next(err);
       }
-      next(null, inst);
+      log.debug(options, 'Workflow request completed for approved delete Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+      next(null, instance);
     });
   });
 }

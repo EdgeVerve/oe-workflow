@@ -242,7 +242,6 @@ function addOERemoteMethods(Model) {
     }
   });
 
-
   Model.deleteMC = function deleteMC(id, version, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
@@ -266,12 +265,10 @@ function addOERemoteMethods(Model) {
         return next(err);
       }
 
-      let idName = Model.definition.idName();
-      data[idName] = id;
       var mData = {
         modelName: modelName,
         modelId: id,
-        operation: 'update',
+        operation: 'delete',
         data: einst
       };
 

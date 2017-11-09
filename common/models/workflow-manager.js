@@ -351,11 +351,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
     if (data.updates) {
       updates = data.updates;
     }
-    if (data.version && data.version === 'v2') {
-      helperv2._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
-    } else {
-      helper._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
-    }
+    if(data.version && data.version === "v2"){
+    helperv2._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    }else {
+    helper._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+  }
   }
 
   function containsError(ErrorList) {
