@@ -95,9 +95,9 @@ describe('User Creation', function CB() {
   });
 });
 
-describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - approved', function CB() {
+describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
-  var modelName = 'OEWorkflow_TestingM1CW';
+  var modelName = 'OEWorkflow_TestingM1RW';
   var wfName = 'maker-checker-generic';
   var testVars = {};
 
@@ -161,7 +161,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       'workflowBody': {
         'workflowDefinitionName': wfName
       },
-      'operation': 'create',
+      'operation': 'update',
       'wfDependent': true,
       'version': 'v2'
     };
@@ -177,7 +177,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].createMC({
+    models[modelName].create({
       'luckydraw': '00000'
     }, User1Context, function cb(err, instance) {
       if (err) {
@@ -185,7 +185,22 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
         return done(err);
       }
       log.debug(instance);
-      testVars.instanceId = instance.modelId;
+      testVars.instanceId = instance.id;
+      testVars.instanceVersion = instance._version;
+      done();
+    });
+  });
+
+  it('update instance of ' + modelName + ' : author - user1', function CB(done) {
+    models[modelName].updateMC(testVars.instanceId, {
+      'luckydraw': '11111',
+      '_version': testVars.instanceVersion
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
       done();
     });
   });
@@ -201,22 +216,6 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
         return done(errNoWinstance);
       }
       log.debug(instance);
-      setTimeout(done, 1000);
-    });
-  });
-
-  it('check if checker task instance is created', function CB(done) {
-    models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      } else if (tasks.length === 0) {
-        var errNoWinstance = new Error('No task instance found');
-        log.error(errNoWinstance);
-        return done(errNoWinstance);
-      }
-      log.debug(tasks);
-      testVars.taskInstance = tasks[0];
       done();
     });
   });
@@ -413,22 +412,6 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
     });
   });
 
-  it('complete user task by checker', function CB(done) {
-    testVars.taskInstance.complete({
-      pv: {
-        '_action': 'approved'
-      }
-    }, User3Context, function cb(err, res) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(res);
-      assert.isNotNull(res);
-      setTimeout(done,2000);
-    });
-  });
-
   xit('end create request [ through OE Workflow ]', function CB(done) {
     models.WorkflowManager.endAttachWfRequest({
       workflowInstanceId: testVars._workflowRef,
@@ -549,9 +532,9 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 });
 
-describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
+describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
-  var modelName = 'OEWorkflow_TestingM2CW';
+  var modelName = 'OEWorkflow_TestingM2UW';
   var wfName = 'maker-checker-generic';
   var testVars = {};
 
@@ -603,7 +586,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       // Code for duplicate keys
       if (bootstrap.checkDuplicateKeyError(err)) {
         done();
-      } else {
+      }          else {
         done(err);
       }
     });
@@ -615,7 +598,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       'workflowBody': {
         'workflowDefinitionName': wfName
       },
-      'operation': 'create',
+      'operation': 'update',
       'wfDependent': true,
       'version': 'v2'
     };
@@ -631,7 +614,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
   });
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].createMC({
+    models[modelName].create({
       'luckydraw': '00000'
     }, User1Context, function cb(err, instance) {
       if (err) {
@@ -639,7 +622,22 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      testVars.instanceId = instance.modelId;
+      testVars.instanceId = instance.id;
+      testVars.instanceVersion = instance._version;
+      done();
+    });
+  });
+
+  it('update instance of ' + modelName + ' : author - user1', function CB(done) {
+    models[modelName].updateMC(testVars.instanceId, {
+      'luckydraw': '11111',
+      '_version': testVars.instanceVersion
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
       done();
     });
   });
