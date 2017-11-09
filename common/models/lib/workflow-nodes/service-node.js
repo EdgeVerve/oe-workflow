@@ -74,6 +74,10 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
     postData.updates = process._processVariables._updates;
   }
 
+  if(process._processVariables._maker_checker_impl === 'v2'){
+    postData.version = 'v2';
+  }
+  debugger;
   WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
     if (err) {
       log.error(err);

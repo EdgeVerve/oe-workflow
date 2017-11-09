@@ -91,7 +91,7 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('create_m', {
+  Model.remoteMethod('createMC', {
     description: 'Maker should do create via this api',
     accessType: 'WRITE',
     accepts: [{
@@ -104,7 +104,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/create_m'
+      path: '/createMC'
     },
     returns: {
       arg: 'response',
@@ -113,7 +113,92 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('find_m', {
+  Model.remoteMethod('deleteMC', {
+    description: 'Maker should do create via this api',
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'id',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Model id'
+    }, {
+      arg: 'version',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Model '
+    }],
+    http: {
+      verb: 'get',
+      path: '/deleteMC'
+    },
+    returns: {
+      arg: 'response',
+      type: 'object',
+      root: true
+    }
+  });
+  Model.remoteMethod('updateMC', {
+    description: 'Maker should do create via this api',
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'id',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Model id'
+    }, {
+      arg: 'data',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Model data to be posted'
+    }],
+    http: {
+      verb: 'get',
+      path: '/updateMC'
+    },
+    returns: {
+      arg: 'response',
+      type: 'object',
+      root: true
+    }
+  });
+  Model.remoteMethod('updateMC', {
+    description: 'Maker should do create via this api',
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'id',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Model id'
+    }, {
+      arg: 'data',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Model data to be posted'
+    }],
+    http: {
+      verb: 'get',
+      path: '/updateMC'
+    },
+    returns: {
+      arg: 'response',
+      type: 'object',
+      root: true
+    }
+  });
+
+  Model.remoteMethod('findMC', {
     description: 'Find the intermediate instance present in Change Request Model.',
     accessType: 'READ',
     accepts: [{
@@ -126,7 +211,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/:id/find_m'
+      path: '/:id/findMC'
     },
     returns: {
       arg: 'response',
@@ -157,7 +242,204 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.create_m = function create_m(data, options, next) {
+
+  Model.deleteMC = function deleteMC(id, version, options, next) {
+    var app = Model.app;
+    var modelName = Model.definition.name;
+    var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+
+    Model.findById(id, options, function fetchInstance(err, sinst) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      // is the instance to be passed also ? if the user just passes the updates ?
+      let einst = sinst.toObject();
+      if (typeof id === 'undefined') {
+        let err = new Error('please provide id');
+        log.error(options, err);
+        return next(err);
+      }
+      if (typeof version === 'undefined') {
+        let err = new Error('please provide version');
+        log.error(options, err);
+        return next(err);
+      }
+
+      let idName = Model.definition.idName();
+      data[idName] = id;
+      var mData = {
+        modelName: modelName,
+        modelId: id,
+        operation: 'update',
+        data: einst
+      };
+
+      var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+      var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+
+      WorkflowMapping.find({
+        where: {
+          'and': [
+          { 'modelName': modelName },
+          { 'engineType': 'oe-workflow' },
+          { 'version': 'v2' },
+          { 'operation': 'delete' }
+          ]
+        }
+      }, options, function fetchWM(err, res) {
+        if (err) {
+          log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
+          next(err);
+        } else if (res && res.length === 0) {
+          // this case should never occur
+          log.debug(options, 'no create mapping found');
+          next();
+        } else if (res.length === 1) {
+          var mapping = res[0];
+
+          let workflowBody = mapping.workflowBody;
+          workflowBody.processVariables = workflowBody.processVariables || {};
+          workflowBody.processVariables._modelInstance = mData.data;
+          // this is to identify while executing Finalize Transaction to follow which implementation
+          workflowBody.processVariables._maker_checker_impl = 'v2';
+          WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+            if (err) {
+              log.error(options, err);
+              return next(err);
+            }
+            mData.workflowInstanceId = winst.id;
+            console.log(JSON.stringify(mData, null, '\t'));
+            ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+              if (err) {
+                log.error(options, err);
+                return next(err);
+              }
+              log.debug(options, inst);
+              // wrapping back data properly
+              let cinst = inst.toObject();
+              for (let i in cinst.data) {
+                if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
+                  cinst[i] = cinst.data[i];
+                }
+              }
+              delete cinst.data;
+              return next(null, cinst);
+            });
+          });
+        } else {
+          let err = new Error('Multiple workflows attached to same Model.');
+          log.error(options, err);
+          return next(err);
+        }
+      });
+    });
+  };
+
+  Model.updateMC = function updateMC(id, data, options, next) {
+    var app = Model.app;
+    var modelName = Model.definition.name;
+    var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+
+
+    Model.findById(id, options, function fetchInstance(err, sinst) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      // is the instance to be passed also ? if the user just passes the updates ?
+      let einst = sinst.toObject();
+      if (typeof data._version === 'undefined' || data._version !== einst._version) {
+        let err = new Error('version undefined or mismatch');
+        log.error(options, err);
+        return next(err);
+      }
+      // old instance might need to wrapped and passed
+
+      let idName = Model.definition.idName();
+      data[idName] = id;
+      var mData = {
+        modelName: modelName,
+        modelId: id,
+        operation: 'update',
+        data: data
+      };
+
+      // check instance data is Valid
+      let obj = new Model(data);
+      obj.isValid(function validate(valid) {
+        if (valid) {
+          log.debug(options, 'Instance has been validated during maker checker creation');
+
+          var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+          var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+
+          WorkflowMapping.find({
+            where: {
+              'and': [
+              { 'modelName': modelName },
+              { 'engineType': 'oe-workflow' },
+              { 'version': 'v2' },
+              { 'operation': 'update' }
+              ]
+            }
+          }, options, function fetchWM(err, res) {
+            if (err) {
+              log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
+              next(err);
+            } else if (res && res.length === 0) {
+              // this case should never occur
+              log.debug(options, 'no create mapping found');
+              next();
+            } else if (res.length === 1) {
+              var mapping = res[0];
+
+              let workflowBody = mapping.workflowBody;
+              workflowBody.processVariables = workflowBody.processVariables || {};
+              workflowBody.processVariables._modelInstance = mData.data;
+              // this is to identify while executing Finalize Transaction to follow which implementation
+              workflowBody.processVariables._maker_checker_impl = 'v2';
+              WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+                if (err) {
+                  log.error(options, err);
+                  return next(err);
+                }
+                mData.workflowInstanceId = winst.id;
+                console.log(JSON.stringify(mData, null, '\t'));
+                ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                  log.debug(options, inst);
+                  // wrapping back data properly
+                  let cinst = inst.toObject();
+                  for (let i in cinst.data) {
+                    if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
+                      cinst[i] = cinst.data[i];
+                    }
+                  }
+                  delete cinst.data;
+                  return next(null, cinst);
+                });
+              });
+            } else {
+              let err = new Error('Multiple workflows attached to same Model.');
+              log.error(options, err);
+              return next(err);
+            }
+          });
+        } else {
+        // obj.errors is return object so stringifying and returning back
+          let err = new Error(JSON.stringify(obj.errors));
+          log.error(options, err);
+          return next(err);
+        }
+      }, options, data);
+    });
+  };
+
+  Model.createMC = function createMC(data, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
@@ -169,10 +451,10 @@ function addOERemoteMethods(Model) {
     }
 
     let modelId = data[idName];
-    console.log(JSON.stringify(options,null,'\t'))
-    var mod_data = {
+    var mData = {
       modelName: modelName,
       modelId: modelId,
+      operation: 'create',
       data: data
     };
 
@@ -180,7 +462,7 @@ function addOERemoteMethods(Model) {
     let obj = new Model(data);
     obj.isValid(function validate(valid) {
       if (valid) {
-        log.error(options, 'Instance has been validated during maker checker creation');
+        log.debug(options, 'Instance has been validated during maker checker creation');
 
         var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
         var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
@@ -207,16 +489,16 @@ function addOERemoteMethods(Model) {
 
             let workflowBody = mapping.workflowBody;
             workflowBody.processVariables = workflowBody.processVariables || {};
+            workflowBody.processVariables._modelInstance = mData.data;
             // this is to identify while executing Finalize Transaction to follow which implementation
-            workflowBody.processVariables._maker_check_impl = 'v2';
+            workflowBody.processVariables._maker_checker_impl = 'v2';
             WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
               if (err) {
                 log.error(options, err);
                 return next(err);
               }
-              mod_data.workflowInstanceId = winst.id;
-              console.log(JSON.stringify(mod_data));
-              ChangeWorkflowRequest.create(mod_data, options, function createChangeModel(err, inst) {
+              mData.workflowInstanceId = winst.id;
+              ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
                 if (err) {
                   log.error(options, err);
                   return next(err);
@@ -248,7 +530,7 @@ function addOERemoteMethods(Model) {
     }, options, data);
   };
 
-  Model.find_m = function find_m(id, ctx, cb) {
+  Model.findMC = function findMC(id, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
@@ -345,7 +627,7 @@ function addOERemoteMethods(Model) {
   Model.tasks = function tasks(id, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
-    var WorkflowRequest = app.models.WorkflowRequest;
+    var WorkflowRequest = app.models.ChangeWorkflowRequest;
     var WorkflowInstance = app.models.WorkflowInstance;
 
     if (!id) {
@@ -358,7 +640,7 @@ function addOERemoteMethods(Model) {
       'where': {
         'and': [
             { 'modelName': modelName },
-            { 'modelInstanceId': id }
+            { 'modelId': id }
         ]
       }
     };
@@ -378,7 +660,7 @@ function addOERemoteMethods(Model) {
         return cb(null, null);
       }
 
-      var workflowRef = instances[0].processId;
+      var workflowRef = instances[0].workflowInstanceId;
 
       WorkflowInstance.findById(workflowRef, ctx, function fetchWI(err, workflowInstance) {
         if (err) {
@@ -386,19 +668,14 @@ function addOERemoteMethods(Model) {
           return cb(err);
         }
 
-        workflowInstance.processes({
-          'fields': {
-            'workflowInstanceId': true,
-            'id': true
-          },
-          'include': 'tasks'
-        }, ctx, function fetchProcesses(err, processInstances) {
+        workflowInstance.tasks({
+        }, ctx, function fetchProcesses(err, tasks) {
           if (err) {
             log.error(ctx.options, err);
             return cb(err);
           }
 
-          cb(null, _normalizeToTasks(processInstances));
+          cb(null, tasks);
         });
       });
     });

@@ -65,9 +65,9 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
       }
     } else if (request.operation === 'update') {
       if (status === 'approved') {
-        approvedUpdateInstance(app, request.modelName, request.modelId, wfupdates, options, next);
+        approvedUpdateInstance(app, request, wfupdates, options, next);
       } else if (status === 'rejected') {
-        rejectedUpdateInstance(app, request.modelName, request.modelId, options, next);
+        rejectedUpdateInstance(app, request, options, next);
       } else {
         next(new Error('invalid status passed during maker checker completition process'));
       }
@@ -157,66 +157,22 @@ function approvedDeleteInstance(app, modelName, modelInstanceId, options, next) 
   });
 }
 
-function rejectedUpdateInstance(app, modelName, modelInstanceId, options, next) {
-  var model = loopback.getModel(modelName, options);
-  options._skip_wfx = true;
-  // skip internal after access hook
-
-  model.findById(modelInstanceId, options, function fetchMI(err, instance) {
+function rejectedUpdateInstance(app, request, options, next) {
+  // TODO : create better error message so that user can understand why it failed
+  request.destroy(options, function cb(err, inst) {
     if (err) {
-      log.error(options, 'error in finding persisted instance', err);
-      return next(err);
-    }
-
-    if (instance === null) {
-      err = new Error('no instance found');
       log.error(options, err);
       return next(err);
     }
-
-    if (instance._status !== 'private') {
-      err = new Error('invalid instance status');
-      log.error(options, err);
-      return next(err);
-    }
-
-    // dont set any props inside delta as they were a part of the update instead just remove delta and leave the rest
-    options._skip_wf = true;
-    // to make a clean update with the observer hooks added by us
-
-    var updates = _.cloneDeep(instance.toObject()._delta);
-    updates._status = 'public';
-    updates._transactionType = null;
-    updates._delta = null;
-
-    instance.updateAttributes(updates, options, function cb(err, inst) {
-      if (err) {
-        log.error(options, 'error in updating instance', err);
-        options._skip_wf = true;
-
-        instance.updateAttributes({
-          _status: 'public',
-          // gracefully handle error
-          _transactionType: 'FAILED-DURING-REJECT-UPDATE'
-        }, options, function updateInstance(revertError, revertInst) {
-          if (revertError) {
-            log.error(options, revertError);
-            return next(revertError);
-          }
-          return next(err);
-        });
-      }
-      next(null, inst);
-    });
+    log.debug(options, 'Workflow request completed for rejected create Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+    next(null, inst);
   });
 }
 
-function approvedUpdateInstance(app, modelName, modelInstanceId, wfupdates, options, next) {
-  var model = loopback.getModel(modelName, options);
-  options._skip_wfx = true;
-  // skip internal after access hook
+function approvedUpdateInstance(app, request, wfupdates, options, next) {
+  var model = loopback.getModel(request.modelName, options);
 
-  model.findById(modelInstanceId, options, function fetchMI(err, instance) {
+  model.findById(request.modelId, options, function fetchMI(err, instance) {
     if (err) {
       log.error(options, 'error in finding persisted instance', err);
       return next(err);
@@ -228,20 +184,7 @@ function approvedUpdateInstance(app, modelName, modelInstanceId, wfupdates, opti
       return next(err);
     }
 
-    if (instance._status !== 'private') {
-      err = new Error('invalid instance status');
-      log.error(options, err);
-      return next(err);
-    }
-
-    options._skip_wf = true;
-
-    var updates = {
-      _delta: null,
-      _status: 'public',
-      _transactionType: null
-    };
-
+    let updates = request.data;
     if (wfupdates) {
       applyWorkflowUpdates(updates, wfupdates);
     }
@@ -249,89 +192,54 @@ function approvedUpdateInstance(app, modelName, modelInstanceId, wfupdates, opti
     instance.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
         log.error(options, err);
-        // if error occured during update revert to previous state but public
+        // if error occured during update revert to previous state
         // otherwise the instance will be stuck because of workflow
         return next(err);
       }
-      next(null, inst);
+      request.destroy(options, function cb(err, dinst) {
+        if (err) {
+          log.error(options, err);
+          return next(err);
+        }
+        log.debug(options, 'Workflow request completed for approved update Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+        return next(null, inst);
+      });
     });
   });
 }
 
-function rejectedCreateInstance(app, modelName, modelInstanceId, options, next) {
-  var model = loopback.getModel(modelName, options);
-  options._skip_wfx = true;
-  // skip internal after access hook
-
-  model.findById(modelInstanceId, options, function fetchMI(err, instance) {
+function rejectedCreateInstance(app, request, options, next) {
+  // TODO : create better error message so that user can understand why it failed
+  request.destroy(options, function cb(err, inst) {
     if (err) {
-      log.error(options, 'error in finding persisted instance', err);
-      return next(err);
-    }
-
-    if (instance === null) {
-      err = new Error('no instance found');
       log.error(options, err);
       return next(err);
     }
-
-    if (instance._status !== 'private') {
-      err = new Error('invalid instance status');
-      log.error(options, err);
-      return next(err);
-    }
-
-
-    options._skip_wf = true;
-
-    instance.destroy(options, function destroyInstance(err, res) {
-      if (err) {
-        log.error(options, 'error in destroying instance', err);
-        return next(err);
-      }
-      next(null, res);
-    });
+    log.debug(options, 'Workflow request completed for rejected create Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+    next(null, inst);
   });
 }
 
-function approvedCreateInstance(app, modelName, modelInstanceId, wfupdates, options, next) {
-  var model = loopback.getModel(modelName, options);
+function approvedCreateInstance(app, request, wfupdates, options, next) {
+  var model = loopback.getModel(request.modelName, options);
+  let data = request.data;
 
-  model.findById(modelInstanceId, options, function fetchMI(err, instance) {
+  if (wfupdates) {
+    applyWorkflowUpdates(data, wfupdates);
+  }
+
+  model.create(data, options, function createTrueInstance(err, instance) {
     if (err) {
-      log.error(options, 'error in finding persisted instance', err);
-      return next(err);
-    }
-
-    if (instance === null) {
-      err = new Error('no instance found');
       log.error(options, err);
       return next(err);
     }
-
-    if (instance._status !== 'private') {
-      err = new Error('invalid instance status');
-      log.error(options, err);
-      return next(err);
-    }
-
-    var updates = {
-      '_transactionType': null,
-      '_status': 'public'
-    };
-
-    if (wfupdates) {
-      applyWorkflowUpdates(updates, wfupdates);
-    }
-
-    options._skip_wf = true;
-
-    instance.updateAttributes(updates, options, function cb(err, inst) {
+    request.destroy(options, function cb(err, inst) {
       if (err) {
-        log.error(options, 'error in updating instance', err);
+        log.error(options, err);
         return next(err);
       }
-      next(null, inst);
+      log.debug(options, 'Workflow request completed for approved create Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+      next(null, instance);
     });
   });
 }

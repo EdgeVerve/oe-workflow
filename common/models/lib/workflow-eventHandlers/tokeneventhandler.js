@@ -271,6 +271,10 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         }
         ProcessInstance.app.models.WorkflowDefinition.find({'where': filter}, options,
           function fetchCallActivityWD(err, workflowDefinition) {
+            if (err) {
+              log.error(options, err);
+              return;
+            }
             var pdfilter = {'and': [{'name': evaluatedProcessName}, {'workflowDefinitionId': workflowDefinition[0].id}]};
             ProcessInstance.app.models.ProcessDefinition.find({'where': pdfilter
             }, options, function fetchCallActivityPD(err, pDefinition) {
