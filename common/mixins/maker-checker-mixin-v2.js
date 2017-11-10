@@ -169,34 +169,6 @@ function addOERemoteMethods(Model) {
       root: true
     }
   });
-  Model.remoteMethod('updateMC', {
-    description: 'Maker should do create via this api',
-    accessType: 'WRITE',
-    accepts: [{
-      arg: 'id',
-      type: 'string',
-      http: {
-        source: 'path'
-      },
-      description: 'Model id'
-    }, {
-      arg: 'data',
-      type: 'object',
-      http: {
-        source: 'body'
-      },
-      description: 'Model data to be posted'
-    }],
-    http: {
-      verb: 'get',
-      path: '/updateMC'
-    },
-    returns: {
-      arg: 'response',
-      type: 'object',
-      root: true
-    }
-  });
 
   Model.remoteMethod('findMC', {
     description: 'Find the intermediate instance present in Change Request Model.',
@@ -278,10 +250,10 @@ function addOERemoteMethods(Model) {
       WorkflowMapping.find({
         where: {
           'and': [
-          { 'modelName': modelName },
-          { 'engineType': 'oe-workflow' },
-          { 'version': 'v2' },
-          { 'operation': 'delete' }
+            { 'modelName': modelName },
+            { 'engineType': 'oe-workflow' },
+            { 'version': 'v2' },
+            { 'operation': 'delete' }
           ]
         }
       }, options, function fetchWM(err, res) {
