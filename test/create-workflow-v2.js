@@ -185,7 +185,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
         return done(err);
       }
       log.debug(instance);
-      testVars.instanceId = instance.modelId;
+      testVars.instanceId = instance.id;
       done();
     });
   });
@@ -639,7 +639,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      testVars.instanceId = instance.modelId;
+      testVars.instanceId = instance.id;
       done();
     });
   });

@@ -410,13 +410,7 @@ function addOERemoteMethods(Model) {
                   }
                   log.debug(options, inst);
                   // wrapping back data properly
-                  let cinst = inst.toObject();
-                  for (let i in cinst.data) {
-                    if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
-                      cinst[i] = cinst.data[i];
-                    }
-                  }
-                  delete cinst.data;
+                  let cinst = unwrapChangeRequest(inst);
                   return next(null, cinst);
                 });
               });
@@ -502,12 +496,7 @@ function addOERemoteMethods(Model) {
                 }
                 log.debug(options, inst);
                 // wrapping back data properly
-                let cinst = inst.toObject();
-                for (let i in cinst.data) {
-                  if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
-                    cinst[i] = cinst.data[i];
-                  }
-                }
+                let cinst = unwrapChangeRequest(inst);
                 delete cinst.data;
                 return next(null, cinst);
               });
@@ -554,16 +543,23 @@ function addOERemoteMethods(Model) {
         return cb(null, null);
       }
       // unwarap the object
-      let cinst = inst[0].toObject();
-      for (let i in cinst.data) {
-        if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
-          cinst[i] = cinst.data[i];
-        }
-      }
-      delete cinst.data;
+      let cinst = unwrapChangeRequest(inst[0]);
       return cb(null, cinst);
     });
   };
+
+  function unwrapChangeRequest(inst) {
+    let cinst = {};
+    let oinst = inst.toObject();
+    for (let i in oinst.data) {
+      if (Object.prototype.hasOwnProperty.call(oinst.data, i)) {
+        cinst[i] = oinst.data[i];
+      }
+    }
+    cinst._changeRequestId = oinst.id;
+    cinst._changeRequestVersion = oinst._version;
+    return cinst;
+  }
 
   Model.workflow = function workflow(id, ctx, cb) {
     var app = Model.app;

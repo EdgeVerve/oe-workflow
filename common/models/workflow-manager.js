@@ -41,15 +41,6 @@ module.exports = function WorkflowManager(WorkflowManager) {
   WorkflowManager.disableRemoteMethod('updateById', true);
   WorkflowManager.disableRemoteMethod('deleteWithVersion', true);
 
-
-  // function WorkflowAttachmentError(message, mappings, attachmentErrors) {
-  //   this.name = 'WorkflowAttachementError';
-  //   this.message = message || '';
-  //   this.mappings = mappings;
-  //   this.attachmentErrors = attachmentErrors;
-  // }
-  // WorkflowAttachmentError.prototype = Object.create(Error.prototype);
-
   WorkflowManager.attachWorkflow = function attachWorkflow(data, options, cb) {
     var app = WorkflowManager.app;
     var err;
