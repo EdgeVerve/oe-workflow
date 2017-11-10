@@ -14,7 +14,7 @@ var chai = bootstrap.chai;
 var expect = chai.expect;
 var assert = chai.assert;
 var models = bootstrap.models;
-var log = bootstrap.log('console');
+var log = bootstrap.log();
 
 var User1Context = {
   ctx: {

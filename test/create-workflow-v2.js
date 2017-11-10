@@ -14,7 +14,7 @@ var chai = bootstrap.chai;
 var expect = chai.expect;
 var assert = chai.assert;
 var models = bootstrap.models;
-var log = bootstrap.log('console');
+var log = bootstrap.log();
 
 var User1Context = {
   ctx: {
@@ -186,7 +186,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       }
       log.debug(instance);
       testVars.instanceId = instance.id;
-      done();
+      setTimeout(done, 2000);
     });
   });
 
@@ -640,7 +640,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       }
       log.debug(instance);
       testVars.instanceId = instance.id;
-      done();
+      setTimeout(done, 2000);
     });
   });
 
@@ -655,6 +655,22 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
         return done(errNoWinstance);
       }
       log.debug(instance);
+      done();
+    });
+  });
+
+  it('check if checker task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
       done();
     });
   });
@@ -848,6 +864,22 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       var errx = new Error('Instance should not have been deleted.');
       log.error(errx);
       done(errx);
+    });
+  });
+
+  it('complete user task by checker', function CB(done) {
+    testVars.taskInstance.complete({
+      pv: {
+        '_action': 'rejected'
+      }
+    }, User3Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done,2000);
     });
   });
 

@@ -14,7 +14,7 @@ var chai = bootstrap.chai;
 var expect = chai.expect;
 var assert = chai.assert;
 var models = bootstrap.models;
-var log = bootstrap.log('console');
+var log = bootstrap.log();
 
 var User1Context = {
   ctx: {
@@ -95,7 +95,7 @@ describe('User Creation', function CB() {
   });
 });
 
-describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
+describe.skip('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
   var modelName = 'OEWorkflowM1UW';
   var wfName = 'maker-checker-generic';
@@ -201,7 +201,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      setTimeout(done,2000);
+      setTimeout(done, 2000);
     });
   });
 
@@ -440,7 +440,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       log.debug(res);
       assert.isNotNull(res);
-      setTimeout(done,2000);
+      setTimeout(done, 2000);
     });
   });
 
@@ -564,7 +564,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 });
 
-describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
+describe.skip('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
   var modelName = 'OEWorkflowM2UW';
   var wfName = 'maker-checker-generic';
@@ -670,7 +670,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      setTimeout(done,2000);
+      setTimeout(done, 2000);
     });
   });
 
@@ -909,7 +909,581 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       log.debug(res);
       assert.isNotNull(res);
-      setTimeout(done,2000);
+      setTimeout(done, 2000);
+    });
+  });
+
+  xit('end create request [ through OE Workflow ]', function CB(done) {
+    models.WorkflowManager.endAttachWfRequest({
+      workflowInstanceId: testVars._workflowRef,
+      version: 'v2',
+      status: 'rejected'
+    }, User1Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      done();
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      done();
+    });
+  });
+
+  it('findById - user2', function CB(done) {
+    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+      //   var token = login.id;
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 200);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('findById [REST] - user2', function CB(done) {
+    bootstrap.login(User2Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 200);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  xit('remove model instances [clean-up]', function CB(done) {
+    models[modelName].destroyAll({}, User1Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      done();
+    });
+  });
+
+  xit('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
+    var id = testVars.modelDetails.id;
+    var version = testVars.modelDetails._version;
+    models.ModelDefinition.deleteWithVersion(id, version, User1Context, function CB(err) {
+      if (err) {
+        done(err);
+      } else {
+        done();
+      }
+    });
+  });
+
+  xit('remove workflow mapping [clean-up]', function CB(done) {
+    models.WorkflowMapping.destroyAll({}, User1Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      done();
+    });
+  });
+});
+
+describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - retrigger', function CB() {
+  this.timeout(15000);
+  var modelName = 'OEWorkflowM2UW';
+  var wfName = 'maker-checker-generic';
+  var testVars = {};
+
+  it('should create testing model - ' + modelName, function CB(done) {
+    var postData = {
+      'name': modelName,
+      'base': 'BaseEntity',
+      'idInjection': true,
+      'options': {
+        'validateUpsert': true
+      },
+      'mixins': {},
+      'properties': {
+        'luckydraw': {
+          'type': 'string',
+          'required': true
+        }
+      },
+      'relations': {},
+      'validations': []
+    };
+
+
+    models.ModelDefinition.create(postData, User1Context, function CB(err, res) {
+      if (err) {
+        done(err);
+      } else {
+        // log.debug(res);
+        expect(models[modelName]).not.to.be.null;
+        expect(models[modelName].definition.properties).not.to.be.undefined;
+        expect(Object.keys(models[modelName].definition.properties)).
+          to.include.members(Object.keys(models.BaseEntity.definition.properties));
+        testVars.modelDetails = res;
+        done();
+      }
+    });
+  });
+
+  it('should read the file', function CB(done) {
+    fs.readFile(path.resolve('./test/bpmn-files', wfName + '.bpmn'), 'utf8', (err, data) => {
+      testVars.xmldata = data;
+      done(err);
+    });
+  });
+
+  it('deploy the WorkflowDefinition', function CB(done) {
+    var defData = { 'name': wfName, 'xmldata': testVars.xmldata };
+    models.WorkflowDefinition.create(defData, bootstrap.defaultContext, function CB(err, res) {
+      // Code for duplicate keys
+      if (bootstrap.checkDuplicateKeyError(err)) {
+        done();
+      }          else {
+        done(err);
+      }
+    });
+  });
+
+  it('should attach workflow to ' + modelName, function CB(done) {
+    var attachWorkflowDef = {
+      'modelName': modelName,
+      'workflowBody': {
+        'workflowDefinitionName': wfName
+      },
+      'operation': 'update',
+      'wfDependent': true,
+      'version': 'v2'
+    };
+
+    models.WorkflowManager.attachWorkflow(attachWorkflowDef, bootstrap.defaultContext, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      done();
+    });
+  });
+
+  it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
+    models[modelName].create({
+      'luckydraw': '00000'
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      testVars.instanceId = instance.id;
+      testVars.instanceVersion = instance._version;
+      done();
+    });
+  });
+
+  it('update instance of ' + modelName + ' : author - user1', function CB(done) {
+    models[modelName].updateMC(testVars.instanceId, {
+      'luckydraw': '11111',
+      '_version': testVars.instanceVersion
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      testVars.changeRequestId = instance._changeRequestId;
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('check if workflow instance is up', function CB(done) {
+    models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (instance === null) {
+        var errNoWinstance = new Error('No workflow instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(instance);
+      testVars.initialWorkflowInstanceId = instance.id;
+      done();
+    });
+  });
+
+  it('check if checker task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
+      testVars.initialTaskInstanceId = tasks[0].id;
+      done();
+    });
+  });
+
+  it('re-update instance of ' + modelName + ' without change request id : author - user1', function CB(done) {
+    models[modelName].updateMC(testVars.instanceId, {
+      'luckydraw': '22222',
+      '_version': testVars.instanceVersion
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.debug(err);
+        return done();
+      }
+      log.debug(instance);
+      let errx = new Error('Instance should not have updated without change request id');
+      done(errx);
+    });
+  });
+
+  it('re-update instance of ' + modelName + ' with change request id : author - user1', function CB(done) {
+    models[modelName].updateMC(testVars.instanceId, {
+      'luckydraw': '22222',
+      '_changeRequestId': testVars.changeRequestId,
+      '_version': testVars.instanceVersion
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('check if previous workflow instance is down', function CB(done) {
+    models.WorkflowInstance.find({
+      where: {
+        id: testVars.initialWorkflowInstanceId
+      },
+      'include': {
+        'relation': 'processes'
+      }
+    }, User1Context, function CB(err, instances) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (instances.length === 0) {
+        var errNoWinstance = new Error('No workflow instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(instances);
+      assert.strictEqual(instances.length, 1);
+      assert.strictEqual(instances[0].toObject().processes[0]._status, 'interrupted');
+      done();
+    });
+  });
+
+  it('check if previous checker task instance is interrupted', function CB(done) {
+    models.Task.findById(testVars.initialTaskInstanceId, User3Context, function CB(err, task) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (task === null) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(task);
+      assert.strictEqual(task.status, 'interrupted');
+      done();
+    });
+  });
+
+
+  it('check if workflow instance is up', function CB(done) {
+    models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (instance === null) {
+        var errNoWinstance = new Error('No workflow instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(instance);
+      done();
+    });
+  });
+
+  it('check if checker task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      done();
+    });
+  });
+
+  it('findById - user2', function CB(done) {
+    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 200);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('findById [REST] - user2', function CB(done) {
+    bootstrap.login(User2Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  xit('should not be able to update instance [UpdateAttributes/PUT by Id] - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+
+      instance.updateAttributes({
+        'luckydraw': '3333'
+      }, User1Context, function CB(err, inst) {
+        if (err) {
+          log.debug(err);
+          assert.isNotNull(err);
+          assert.strictEqual(err.statusCode, 400);
+          assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
+          return done();
+        }
+
+        log.debug(inst);
+        var errx = new Error('Instance should not have been updated.');
+        log.error(errx);
+        done(errx);
+      });
+    });
+  });
+
+  xit('should not be able to update instance [UpdateAttributes/PUT by Id]- user2 (Any Other User)', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User2Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+
+      log.debug(instance);
+      assert.isNull(instance);
+      return done();
+      // instance is already null so anyway instance.updateAttributes is not applicable
+    });
+  });
+
+  xit('should not be able to update instance [Upsert/PUT] - user1', function CB(done) {
+    models[modelName].upsert({
+      'luckydraw': '3333',
+      'id': testVars.instanceId,
+      '_version': testVars.instanceVersion
+    }, User1Context, function CB(err, inst) {
+      if (err) {
+        log.debug(err);
+        assert.isNotNull(err);
+        assert.strictEqual(err.statusCode, 400);
+        assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
+        return done();
+      }
+
+      log.debug(inst);
+      var errx = new Error('Instance should not have been updated.');
+      log.error(errx);
+      done(errx);
+    });
+  });
+
+  xit('should not be able to update instance [Upsert/PUT]- user2 (Any Other User)', function CB(done) {
+    models[modelName].upsert({
+      'luckydraw': '3333',
+      'id': testVars.instanceId,
+      '_version': testVars.instanceVersion
+    }, User2Context, function CB(err, inst) {
+      if (err) {
+        log.debug(err);
+        assert.isNotNull(err);
+        assert.strictEqual(err.statusCode, 400);
+        assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
+        return done();
+      }
+
+      log.debug(inst);
+      var errx = new Error('Instance should not have been updated.');
+      log.error(errx);
+      done(errx);
+    });
+  });
+
+  // till delete part is updated by user2 - user1
+  xit('should not be able to delete instance - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+
+      models[modelName].deleteWithVersion(instance.id, instance._version, User1Context, function CB(err, inst) {
+        if (err) {
+          log.debug(err);
+          assert.isNotNull(err);
+          assert.strictEqual(err.statusCode, 400);
+          assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
+          return done();
+        }
+
+        log.debug(inst);
+        var errx = new Error('Instance should not have been deleted.');
+        log.error(errx);
+        done(errx);
+      });
+    });
+  });
+
+  xit('should not be able to delete instance - user2 (Any other user)', function CB(done) {
+    models[modelName].deleteWithVersion(testVars.instanceId, testVars.instanceVersion, User2Context, function CB(err, inst) {
+      if (err) {
+        log.debug(err);
+        assert.isNotNull(err);
+        log.debug(JSON.stringify(testVars, null, '\t'));
+        return done();
+      }
+
+      log.debug(inst);
+      var errx = new Error('Instance should not have been deleted.');
+      log.error(errx);
+      done(errx);
+    });
+  });
+
+  it('complete user task by checker', function CB(done) {
+    testVars.taskInstance.complete({
+      pv: {
+        '_action': 'approved'
+      }
+    }, User3Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
     });
   });
 
