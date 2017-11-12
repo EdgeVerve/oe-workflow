@@ -49,6 +49,12 @@ var User2Details = {
   'password': 'user2',
   'id': 'user2'
 };
+var User3Details = {
+  'username': 'user3',
+  'email': 'user3@oe.com',
+  'password': 'user3',
+  'id': 'user3'
+};
 var User1Credentials = {
   'username': 'user1',
   'password': 'user1'
@@ -80,6 +86,21 @@ describe('User Creation', function CB() {
 
   it('should create user - user2', function CB(done) {
     BaseUser.create(User2Details, bootstrap.defaultContext, function CB(err, users) {
+      if (bootstrap.checkDuplicateKeyError(err)) {
+        log.debug(users);
+        done();
+      } else if (err) {
+        log.error(err);
+        return done(err);
+      } else {
+        log.debug(users);
+        assert.isNotNull(users);
+        done();
+      }
+    });
+  });
+  it('should create user - user3', function CB(done) {
+    BaseUser.create(User3Details, bootstrap.defaultContext, function CB(err, users) {
       if (bootstrap.checkDuplicateKeyError(err)) {
         log.debug(users);
         done();

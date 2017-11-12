@@ -103,7 +103,7 @@ function addOERemoteMethods(Model) {
       description: 'Model data to be posted'
     }],
     http: {
-      verb: 'get',
+      verb: 'post',
       path: '/createMC'
     },
     returns: {
@@ -132,8 +132,8 @@ function addOERemoteMethods(Model) {
       description: 'Model '
     }],
     http: {
-      verb: 'get',
-      path: '/deleteMC'
+      verb: 'delete',
+      path: '/:id/:version/deleteMC'
     },
     returns: {
       arg: 'response',
@@ -160,8 +160,8 @@ function addOERemoteMethods(Model) {
       description: 'Model data to be posted'
     }],
     http: {
-      verb: 'get',
-      path: '/updateMC'
+      verb: 'put',
+      path: '/:id/updateMC'
     },
     returns: {
       arg: 'response',
