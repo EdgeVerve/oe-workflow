@@ -97,7 +97,7 @@ describe('User Creation', function CB() {
 
 describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - approved', function CB() {
   this.timeout(15000);
-  var modelName = 'OEWorkflowM1DW';
+  var modelName = 'TestDWM1';
   var wfName = 'maker-checker-generic';
   var testVars = {};
 
@@ -547,7 +547,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
 
 describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
-  var modelName = 'OEWorkflowM2DW';
+  var modelName = 'TestDWM2';
   var wfName = 'maker-checker-generic';
   var testVars = {};
 

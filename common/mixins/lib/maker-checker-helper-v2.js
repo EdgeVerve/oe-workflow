@@ -12,7 +12,7 @@
 var logger = require('oe-logger');
 var log = logger('maker-checker-end-request');
 
-var _ = require('lodash');
+// var _ = require('lodash');
 var loopback = require('loopback');
 
 var exports = module.exports = {};
