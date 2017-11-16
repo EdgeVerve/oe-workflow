@@ -151,6 +151,21 @@ function addOERemoteMethods(Model) {
     }
   });
 
+  Model.remoteMethod('findXAll', {
+    description: 'Find all the intermediate instances present in Change Request Model.',
+    accessType: 'READ',
+    accepts: [],
+    http: {
+      verb: 'get',
+      path: '/maker-checker'
+    },
+    returns: {
+      arg: 'response',
+      type: 'array',
+      root: true
+    }
+  });
+
   Model.remoteMethod('findX', {
     description: 'Find the intermediate instance present in Change Request Model.',
     accessType: 'READ',
@@ -291,7 +306,13 @@ function addOERemoteMethods(Model) {
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
     Model.findById(id, options, function fetchInstance(err, sinst) {
+      debugger;
       if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      if(!err & !sinst){
+        let err = new Error('Model id is not valid.')
         log.error(options, err);
         return next(err);
       }
@@ -361,7 +382,7 @@ function addOERemoteMethods(Model) {
             data: data
           };
 
-      // check instance data is Valid
+          // check instance data is Valid
           let obj = new Model(data);
           obj.isValid(function validate(valid) {
             if (valid) {
@@ -373,10 +394,10 @@ function addOERemoteMethods(Model) {
               WorkflowMapping.find({
                 where: {
                   'and': [
-              { 'modelName': modelName },
-              { 'engineType': 'oe-workflow' },
-              { 'version': 'v2' },
-              { 'operation': 'update' }
+                    { 'modelName': modelName },
+                    { 'engineType': 'oe-workflow' },
+                    { 'version': 'v2' },
+                    { 'operation': 'update' }
                   ]
                 }
               }, options, function fetchWM(err, res) {
@@ -384,7 +405,7 @@ function addOERemoteMethods(Model) {
                   log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
                   next(err);
                 } else if (res && res.length === 0) {
-              // this case should never occur
+                  // this case should never occur
                   log.debug(options, 'no create mapping found');
                   next();
                 } else if (res.length === 1) {
@@ -393,7 +414,7 @@ function addOERemoteMethods(Model) {
                   let workflowBody = mapping.workflowBody;
                   workflowBody.processVariables = workflowBody.processVariables || {};
                   workflowBody.processVariables._modelInstance = mData.data;
-              // this is to identify while executing Finalize Transaction to follow which implementation
+                  // this is to identify while executing Finalize Transaction to follow which implementation
                   workflowBody.processVariables._maker_checker_impl = 'v2';
                   WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
                     if (err) {
@@ -407,7 +428,7 @@ function addOERemoteMethods(Model) {
                         return next(err);
                       }
                       log.debug(options, inst);
-                  // wrapping back data properly
+                      // wrapping back data properly
                       let cinst = unwrapChangeRequest(inst);
                       return next(null, cinst);
                     });
@@ -419,7 +440,7 @@ function addOERemoteMethods(Model) {
                 }
               });
             } else {
-        // obj.errors is return object so stringifying and returning back
+              // obj.errors is return object so stringifying and returning back
               let err = new Error(JSON.stringify(obj.errors));
               log.error(options, err);
               return next(err);
@@ -515,6 +536,27 @@ function addOERemoteMethods(Model) {
     }, options, data);
   };
 
+  Model.findXAll = function findXAll(ctx, cb) {
+    var app = Model.app;
+    var modelName = Model.definition.name;
+    var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+
+    ChangeWorkflowRequest.find({
+      where: {
+        modelName: modelName
+      }
+    }, ctx, function fetchChangeModel(err, insts) {
+      if (err) {
+        log.error(ctx, err);
+        return cb(err);
+      }
+      let cinsts = insts.map(function unwrapAll(inst){
+        return unwrapChangeRequest(inst);
+      });
+      return cb(null, cinsts);
+    });
+  };
+
   Model.findX = function findX(id, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
@@ -575,8 +617,8 @@ function addOERemoteMethods(Model) {
     var filter = {
       'where': {
         'and': [
-            { 'modelName': modelName },
-            { 'modelId': id }
+          { 'modelName': modelName },
+          { 'modelId': id }
         ]
       }
     };
@@ -631,8 +673,8 @@ function addOERemoteMethods(Model) {
     var filter = {
       'where': {
         'and': [
-            { 'modelName': modelName },
-            { 'modelId': id }
+          { 'modelName': modelName },
+          { 'modelId': id }
         ]
       }
     };
@@ -673,7 +715,7 @@ function addOERemoteMethods(Model) {
     });
   };
 
-    // to refresh swagger json
+  // to refresh swagger json
   Model.app.emit('modelRemoted', Model.sharedClass);
 }
 
@@ -714,8 +756,8 @@ function addActivitiRemoteMethods(Model) {
     var filter = {
       'where': {
         'and': [
-            { 'modelName': modelName },
-            { 'modelInstanceId': id }
+          { 'modelName': modelName },
+          { 'modelInstanceId': id }
         ]
       }
     };
