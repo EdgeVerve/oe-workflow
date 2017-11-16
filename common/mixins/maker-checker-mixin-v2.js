@@ -598,7 +598,6 @@ function addOERemoteMethods(Model) {
       }
     }
     cinst._changeRequestId = oinst.id;
-    cinst._changeRequestVersion = oinst._version;
     return cinst;
   }
 
