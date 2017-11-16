@@ -20,10 +20,10 @@
     "chai-things": "^0.2.0",
     "chalk": "^1.1.1",
     "eslint": "^3.19.0",
-    "loopback-connector-postgres": "git+http://evgit/oecloud.io/loopback-connector-postgresql.git#master",
-    "loopback-connector-rest": "git+http://evgit/oecloud.io/loopback-connector-rest.git#master",
-    "loopback-connector-mongodb": "git+http://evgit/oecloud.io/loopback-connector-mongodb.git#master",
-    "loopback-datasource-juggler": "git+http://evgit/oecloud.io/loopback-datasource-juggler.git#master",
+    "loopback-connector-postgres": "git+https://github.com/EdgeVerve/loopback-connector-postgresql.git#master",
+    "loopback-connector-rest": "git+https://github.com/EdgeVerve/loopback-connector-rest.git#master",
+    "loopback-connector-mongodb": "git+https://github.com/EdgeVerve/loopback-connector-mongodb.git#master",
+    "loopback-datasource-juggler": "git+https://github.com/EdgeVerve/loopback-datasource-juggler.git#master",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-contrib-clean": "^0.7.0",
@@ -33,8 +33,8 @@
     "istanbul": "0.4.1",
     "mocha": "2.3.4",
     "node-uuid": "^1.4.8",
-    "oe-cloud": "git+http://evgit/oecloud.io/oe-cloud.git#master",
-    "oe-logger": "git+http://evgit/oecloud.io/oe-logger.git#master"
+    "oe-cloud": "git+https://github.com/EdgeVerve/oe-cloud.git#master",
+    "oe-logger": "git+https://github.com/EdgeVerve/oe-logger.git#master"
   },
   "description": "oe-workflow engine written using oecloud.io framework"
 }
