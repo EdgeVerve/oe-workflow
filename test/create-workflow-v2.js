@@ -118,7 +118,7 @@ describe('User Creation', function CB() {
 
 describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - approved', function CB() {
   this.timeout(15000);
-  var modelName = 'OEWorkflowM1CW';
+  var modelName = 'TestCWM1';
   var wfName = 'maker-checker-generic';
   var testVars = {};
 
@@ -198,7 +198,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].createMC({
+    models[modelName].createX({
       'luckydraw': '00000'
     }, User1Context, function cb(err, instance) {
       if (err) {
@@ -243,7 +243,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -254,7 +254,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -271,7 +271,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '/?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -294,7 +294,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '/?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -446,7 +446,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       }
       log.debug(res);
       assert.isNotNull(res);
-      setTimeout(done,2000);
+      setTimeout(done, 2000);
     });
   });
 
@@ -467,7 +467,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -478,7 +478,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -496,7 +496,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -519,7 +519,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -572,7 +572,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
 
 describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
-  var modelName = 'OEWorkflowM2CW';
+  var modelName = 'TestCWM2';
   var wfName = 'maker-checker-generic';
   var testVars = {};
 
@@ -652,7 +652,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
   });
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].createMC({
+    models[modelName].createX({
       'luckydraw': '00000'
     }, User1Context, function cb(err, instance) {
       if (err) {
@@ -697,7 +697,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -708,7 +708,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -718,14 +718,14 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
     });
   });
 
-  it('findById [REST] - user1', function CB(done) {
+  xit('findById [REST] - user1', function CB(done) {
     bootstrap.login(User1Credentials, function CB(err, login) {
       if (err) {
         return done(err);
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -748,7 +748,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -900,7 +900,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       }
       log.debug(res);
       assert.isNotNull(res);
-      setTimeout(done,2000);
+      setTimeout(done, 2000);
     });
   });
 
@@ -921,7 +921,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -932,7 +932,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -950,7 +950,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -973,7 +973,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
