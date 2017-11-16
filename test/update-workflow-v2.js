@@ -192,7 +192,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
   });
 
   it('update instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].updateMC(testVars.instanceId, {
+    models[modelName].updateX(testVars.instanceId, {
       'luckydraw': '11111',
       '_version': testVars.instanceVersion
     }, User1Context, function cb(err, instance) {
@@ -237,7 +237,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -248,7 +248,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -265,7 +265,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -288,7 +288,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -461,7 +461,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -472,7 +472,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -490,7 +490,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -513,7 +513,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -661,7 +661,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('update instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].updateMC(testVars.instanceId, {
+    models[modelName].updateX(testVars.instanceId, {
       'luckydraw': '11111',
       '_version': testVars.instanceVersion
     }, User1Context, function cb(err, instance) {
@@ -706,7 +706,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -717,7 +717,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -734,7 +734,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -757,7 +757,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -930,7 +930,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -941,7 +941,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -959,7 +959,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -982,7 +982,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -1130,7 +1130,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('update instance of ' + modelName + ' : author - user1', function CB(done) {
-    models[modelName].updateMC(testVars.instanceId, {
+    models[modelName].updateX(testVars.instanceId, {
       'luckydraw': '11111',
       '_version': testVars.instanceVersion
     }, User1Context, function cb(err, instance) {
@@ -1178,7 +1178,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('re-update instance of ' + modelName + ' without change request id : author - user1', function CB(done) {
-    models[modelName].updateMC(testVars.instanceId, {
+    models[modelName].updateX(testVars.instanceId, {
       'luckydraw': '22222',
       '_version': testVars.instanceVersion
     }, User1Context, function cb(err, instance) {
@@ -1193,7 +1193,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('re-update instance of ' + modelName + ' with change request id : author - user1', function CB(done) {
-    models[modelName].updateMC(testVars.instanceId, {
+    models[modelName].updateX(testVars.instanceId, {
       'luckydraw': '22222',
       '_changeRequestId': testVars.changeRequestId,
       '_version': testVars.instanceVersion
@@ -1280,7 +1280,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -1291,7 +1291,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -1308,7 +1308,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -1331,7 +1331,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -1504,7 +1504,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -1515,7 +1515,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user2', function CB(done) {
-    models[modelName].findMC(testVars.instanceId, User2Context, function cb(err, instance) {
+    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -1533,7 +1533,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -1556,7 +1556,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/findMC?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 

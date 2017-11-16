@@ -71,7 +71,7 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('createMC', {
+  Model.remoteMethod('createX', {
     description: 'Maker should do create via this api',
     accessType: 'WRITE',
     accepts: [{
@@ -84,7 +84,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'post',
-      path: '/createMC'
+      path: '/maker-checker'
     },
     returns: {
       arg: 'response',
@@ -93,8 +93,8 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('deleteMC', {
-    description: 'Maker should do create via this api',
+  Model.remoteMethod('deleteX', {
+    description: 'Maker should do delete via this api',
     accessType: 'WRITE',
     accepts: [{
       arg: 'id',
@@ -109,11 +109,11 @@ function addOERemoteMethods(Model) {
       http: {
         source: 'path'
       },
-      description: 'Model '
+      description: 'Model version'
     }],
     http: {
       verb: 'delete',
-      path: '/:id/:version/deleteMC'
+      path: '/maker-checker/:id/:version'
     },
     returns: {
       arg: 'response',
@@ -122,8 +122,8 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('updateMC', {
-    description: 'Maker should do create via this api',
+  Model.remoteMethod('updateX', {
+    description: 'Maker should do update via this api',
     accessType: 'WRITE',
     accepts: [{
       arg: 'id',
@@ -142,7 +142,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'put',
-      path: '/:id/updateMC'
+      path: '/maker-checker/:id'
     },
     returns: {
       arg: 'response',
@@ -151,7 +151,7 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.remoteMethod('findMC', {
+  Model.remoteMethod('findX', {
     description: 'Find the intermediate instance present in Change Request Model.',
     accessType: 'READ',
     accepts: [{
@@ -164,7 +164,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/:id/findMC'
+      path: '/maker-checker/:id'
     },
     returns: {
       arg: 'response',
@@ -195,7 +195,7 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.deleteMC = function deleteMC(id, version, options, next) {
+  Model.deleteX = function deleteX(id, version, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
@@ -285,7 +285,7 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  Model.updateMC = function updateMC(id, data, options, next) {
+  Model.updateX = function updateX(id, data, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
@@ -429,7 +429,7 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  Model.createMC = function createMC(data, options, next) {
+  Model.createX = function createX(data, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
@@ -515,7 +515,7 @@ function addOERemoteMethods(Model) {
     }, options, data);
   };
 
-  Model.findMC = function findMC(id, ctx, cb) {
+  Model.findX = function findX(id, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
