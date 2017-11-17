@@ -62,7 +62,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/:id/workflow'
+      path: '/maker-checker/:id/workflow'
     },
     returns: {
       arg: 'response',
@@ -201,7 +201,7 @@ function addOERemoteMethods(Model) {
     }],
     http: {
       verb: 'get',
-      path: '/:id/tasks'
+      path: '/maker-checker/:id/tasks'
     },
     returns: {
       arg: 'response',
@@ -266,6 +266,7 @@ function addOERemoteMethods(Model) {
           let workflowBody = mapping.workflowBody;
           workflowBody.processVariables = workflowBody.processVariables || {};
           workflowBody.processVariables._modelInstance = mData.data;
+          workflowBody.processVariables._modelInstance._type = modelName;
           // this is to identify while executing Finalize Transaction to follow which implementation
           workflowBody.processVariables._maker_checker_impl = 'v2';
           WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -414,6 +415,7 @@ function addOERemoteMethods(Model) {
                   let workflowBody = mapping.workflowBody;
                   workflowBody.processVariables = workflowBody.processVariables || {};
                   workflowBody.processVariables._modelInstance = mData.data;
+                  workflowBody.processVariables._modelInstance._type = modelName;
                   // this is to identify while executing Finalize Transaction to follow which implementation
                   workflowBody.processVariables._maker_checker_impl = 'v2';
                   WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -501,6 +503,7 @@ function addOERemoteMethods(Model) {
             let workflowBody = mapping.workflowBody;
             workflowBody.processVariables = workflowBody.processVariables || {};
             workflowBody.processVariables._modelInstance = mData.data;
+            workflowBody.processVariables._modelInstance._type = modelName;
             // this is to identify while executing Finalize Transaction to follow which implementation
             workflowBody.processVariables._maker_checker_impl = 'v2';
             WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
