@@ -1,5 +1,4 @@
 
-
 {
   "name": "ProcessDefinition",
   "base": "WorkflowBaseEntity",
@@ -39,7 +38,7 @@
     },
     "workflowDefinition": {
       "type": "belongsTo",
-      "model": "ProcessDefinition",
+      "model": "WorkflowDefinition",
       "foreignKey" : "workflowDefinitionId"
     },
     "processInstances" : {
