@@ -9,8 +9,10 @@
  * @author Kangan Verma(kangan06), Mandeep Gill(mandeep6ill), Nirmal Satyendra(iambns), Prem Sai(premsai-ch), Vivek Mittal(vivekmittal07)
  */
 
+var loopback = require('loopback');
 var logger = require('oe-logger');
 var log = logger('Task');
+var evaluateJSON = require('./lib/workflow-nodes/service-node.js').evaluateJSON;
 
 var taskEventHandler = require('./lib/workflow-eventHandlers/taskeventhandler.js');
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
@@ -179,6 +181,80 @@ module.exports = function Task(Task) {
     });
   };
 
+  Task.prototype.complete = function complete(data, options, next) {
+    var self = this;
+    var tname = self.name;
+    self.processInstance({}, options, function fetchProcessDef(err, process) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      process.processDefinition({}, options, function fetchProcessDef(err, processDef) {
+        if (err) {
+          log.error(options, err);
+          return next(err);
+        }
+        let taskObj = processDef.getFlowObjectByName(tname);
+        if (taskObj.isMultiMaker) {
+          // this task is a maker user task, so no need to have pv and msg and directly take obj as update
+          // TODO : validate the object first
+          var updates = data;
+          var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
+          ChangeWorkflowRequest.find({
+            where: {
+              and: [{
+                modelName: process._processVariables._modelInstance._type
+              }, {
+                modelId: process._processVariables._modelInstance.id
+              }]
+            }
+          }, options, function fetchChangeModel(err, inst) {
+            if (err) {
+              log.error(ctx, err);
+              return next(err);
+            }
+            if (inst.length > 1) {
+              let err = new Error('Multiple instances found with same id in Change Workflow Request');
+              log.error(ctx, err);
+              return next(err);
+            } else if (inst.length === 0) {
+              // no instance found in change request model
+              return next(null, {
+                'change_request_update': 'failed - no instance found'
+              });
+            }
+            var instx = JSON.parse(JSON.stringify(inst[0].data));
+            for (let key in updates) {
+              if (Object.prototype.hasOwnProperty.call(updates, key)) {
+                var val = updates[key];
+                instx[key] = val;
+              }
+            }
+            debugger;
+            inst[0].updateAttributes({
+              data: instx
+            }, options, function updateCM(err, res) {
+              debugger;
+              if (err) {
+                log.error(options, err);
+                return next(err);
+              }
+              // process._processVariables._modelInstance = instx;
+              return self.complete_({
+                'pv': {
+                  '_modelInstance': instx
+                }
+              }, options, next);
+            });
+          });
+        } else if (taskObj.isFinalizeTransaction) {
+          // do handling of finalize transaction first, only then complete the task
+        } else {
+          return self.complete_(data, options, next);
+        }
+      });
+    });
+  };
      /**
      * REST endpoint for completing User-Task
      * @param  {Object}   data              Process-Variables & Message data
@@ -186,9 +262,10 @@ module.exports = function Task(Task) {
      * @param  {Function} next              Callback
      * @returns {void}
      */
-  Task.prototype.complete = function complete(data, options, next) {
+  Task.prototype.complete_ = function complete_(data, options, next) {
     var self = this;
 
+    debugger;
     var message = {};
     if (data && data.msg) {
       message = data.msg;

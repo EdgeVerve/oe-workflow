@@ -78,6 +78,16 @@ BPMNTask.prototype.addUserTaskAttributes = function addUserTaskAttributes(defObj
   // Candidate Groups
   this.isUserTask = true;
   var currentProcessElement = this;
+  if (defObject.attributes_['camunda:isMultiMaker']) {
+    if(defObject.attributes_['camunda:isMultiMaker'].value == 'true'){
+      currentProcessElement.isMultiMaker = true;
+    }
+  }
+  if (defObject.attributes_['camunda:isFinalizeTransaction']) {
+    if(defObject.attributes_['camunda:isFinalizeTransaction'].value == 'true'){
+      currentProcessElement.isFinalizeTransaction = true;
+    }
+  }
   if (defObject.attributes_['camunda:candidateUsers']) {
     var candidateUsers = defObject.attributes_['camunda:candidateUsers'].value;
     currentProcessElement.candidateUsers = candidateUsers.split(',');

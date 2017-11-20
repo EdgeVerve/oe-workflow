@@ -337,7 +337,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   }
 }
 
-function evaluateJSON(data, incomingMsg, process, options) {
+module.exports.evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
   var sandbox = {
     msg: incomingMsg,
     pv: function pv(name) {
