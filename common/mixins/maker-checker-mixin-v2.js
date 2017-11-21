@@ -312,8 +312,8 @@ function addOERemoteMethods(Model) {
         log.error(options, err);
         return next(err);
       }
-      if(!err & !sinst){
-        let err = new Error('Model id is not valid.')
+      if (!err & !sinst) {
+        let err = new Error('Model id is not valid.');
         log.error(options, err);
         return next(err);
       }
@@ -362,14 +362,14 @@ function addOERemoteMethods(Model) {
                 return;
               }
               // now can destroy old change request
-              crinst.destroy(options, function onOldChangeRequestRemoval(err, res) {
-                if (err) {
-                  log.error(options, err);
-                  return;
-                }
-                log.debug(options, 'Exising change request instance removed properly');
-                return;
-              });
+              // crinst.destroy(options, function onOldChangeRequestRemoval(err, res) {
+              //   if (err) {
+              //     log.error(options, err);
+              //     return;
+              //   }
+              //   log.debug(options, 'Exising change request instance removed properly');
+              //   return;
+              // });
             });
           }
 
@@ -424,6 +424,21 @@ function addOERemoteMethods(Model) {
                       return next(err);
                     }
                     mData.workflowInstanceId = winst.id;
+                    // TODO : make this check better
+                    if (crinsts.length > 0) {
+                      delete mData.data._changeRequestId;
+                      crinst.updateAttributes(mData, options, function createChangeModel(err, inst) {
+                        if (err) {
+                          log.error(options, err);
+                          return next(err);
+                        }
+                        log.debug(options, inst);
+                      // wrapping back data properly
+                        let cinst = unwrapChangeRequest(inst);
+                        return next(null, cinst);
+                      });
+                      return;
+                    }
                     ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
                       if (err) {
                         log.error(options, err);
@@ -553,7 +568,7 @@ function addOERemoteMethods(Model) {
         log.error(ctx, err);
         return cb(err);
       }
-      let cinsts = insts.map(function unwrapAll(inst){
+      let cinsts = insts.map(function unwrapAll(inst) {
         return unwrapChangeRequest(inst);
       });
       return cb(null, cinsts);

@@ -226,7 +226,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
     });
   });
 
-  it('check if checker task instance is created', function CB(done) {
+  it('check if maker 2 task instance is created', function CB(done) {
     models[modelName].tasks(testVars.instanceId, User1Context, function CB(err, tasks) {
       if (err) {
         log.error(err);
@@ -436,9 +436,11 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
 
   it('complete user task by checker', function CB(done) {
     testVars.taskInstance.complete({
-      'luckydraw' : '3333_maker2'
+      'luckydraw' : '3333_maker2',
+      'pv' : {
+        'comment_by_maker2' : 'sample comment'
+      }
     }, User1Context, function cb(err, res) {
-      debugger;
       if (err) {
         log.error(err);
         return done(err);
@@ -446,22 +448,6 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       log.debug(res);
       assert.isNotNull(res);
       setTimeout(done, 2000);
-    });
-  });
-
-  xit('end create request [ through OE Workflow ]', function CB(done) {
-    models.WorkflowManager.endAttachWfRequest({
-      workflowInstanceId: testVars._workflowRef,
-      version: 'v2',
-      status: 'approved'
-    }, User1Context, function cb(err, res) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(res);
-      assert.isNotNull(res);
-      done();
     });
   });
 
@@ -531,6 +517,39 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
         log.debug(instance);
         done();
       }
+    });
+  });
+
+  it('check if checker task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User2Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.checkerTaskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by checker', function CB(done) {
+    testVars.checkerTaskInstance.complete({
+      '__action__' : 'approved',
+      'pv' : {
+        'comment_by_checker' : 'sample comment'
+      }
+    }, User1Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
     });
   });
 
@@ -679,7 +698,7 @@ describe.skip('Test case for Trigger on Create OE Workflow [ workflow dependent 
     });
   });
 
-  it('check if checker task instance is created', function CB(done) {
+  it('check if maker 2 task instance is created', function CB(done) {
     models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
       if (err) {
         log.error(err);

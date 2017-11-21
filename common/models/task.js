@@ -199,6 +199,15 @@ module.exports = function Task(Task) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           // TODO : validate the object first
           var updates = data;
+          var pdata = {};
+          if(typeof data.pv !== undefined){
+            pdata.pv = data.pv;
+            delete updates.pv;
+          }
+          if(typeof data.msg !== undefined){
+            pdata.msg = data.msg;
+            delete updates.msg;
+          }
           var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
           ChangeWorkflowRequest.find({
             where: {
@@ -230,25 +239,54 @@ module.exports = function Task(Task) {
                 instx[key] = val;
               }
             }
-            debugger;
             inst[0].updateAttributes({
               data: instx
             }, options, function updateCM(err, res) {
-              debugger;
               if (err) {
                 log.error(options, err);
                 return next(err);
               }
               // process._processVariables._modelInstance = instx;
-              return self.complete_({
-                'pv': {
-                  '_modelInstance': instx
-                }
-              }, options, next);
+              var xdata = {};
+              xdata.pv = pdata.pv || {};
+              xdata.pv._modelInstance = instx;
+              xdata.msg = pdata.msg;
+              return self.complete_(xdata, options, next);
             });
           });
         } else if (taskObj.isFinalizeTransaction) {
-          // do handling of finalize transaction first, only then complete the task
+         // do handling of finalize transaction first, only then complete the task
+          var WorkflowManager = loopback.getModel('WorkflowManager', options);
+          var workflowInstanceId = process._processVariables._workflowInstanceId;
+
+          var postData = {
+            'workflowInstanceId': workflowInstanceId,
+            'status': data.__action__
+          };
+
+          if (process._processVariables._updates) {
+            postData.updates = process._processVariables._updates;
+          }
+
+          if (process._processVariables._maker_checker_impl === 'v2') {
+            postData.version = 'v2';
+          }
+          var pdata = {};
+          if(typeof data.pv !== undefined){
+            pdata.pv = data.pv;
+          }
+          if(typeof data.msg !== undefined){
+            pdata.msg = data.msg;
+          }
+
+          WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
+            if (err) {
+              log.error(err);
+              return next(err);
+            }
+          return self.complete_(pdata, options, next);
+            // done(null, msg);
+          });
         } else {
           return self.complete_(data, options, next);
         }
@@ -265,7 +303,6 @@ module.exports = function Task(Task) {
   Task.prototype.complete_ = function complete_(data, options, next) {
     var self = this;
 
-    debugger;
     var message = {};
     if (data && data.msg) {
       message = data.msg;
