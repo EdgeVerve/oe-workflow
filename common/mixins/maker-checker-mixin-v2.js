@@ -6,8 +6,8 @@
  *
  */
 /**
- * Maker Checker Mixin
- * @author Mandeep Gill(mandeep6ill), Prem Sai(premsai-ch), Sampath Kilparthi(sampathkumar81293)
+ * Maker Checker Mixin Version2
+ * @author Mandeep Gill(mandeep6ill), Prem Sai(premsai-ch)
  */
 
 var loopback = require('loopback');
@@ -29,7 +29,6 @@ module.exports = function MakerCheckerMixin(Model) {
     } else {
       addOERemoteMethods(Model);
     }
-
     Model.settings._workflowEnabled = true;
   } else if (Model.settings._attachOnActiviti) {
     // as workflow is already enabled, remote methods are already enabled, we can safely remove the prop
@@ -180,6 +179,28 @@ function addOERemoteMethods(Model) {
     http: {
       verb: 'get',
       path: '/maker-checker/:id'
+    },
+    returns: {
+      arg: 'response',
+      type: 'object',
+      root: true
+    }
+  });
+
+  Model.remoteMethod('recall', {
+    description: 'Recall the Maker-Checker Instance',
+    accessType: 'READ',
+    accepts: [{
+      arg: 'id',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Model id'
+    }],
+    http: {
+      verb: 'delete',
+      path: '/maker-checker/:id/recall'
     },
     returns: {
       arg: 'response',
@@ -364,15 +385,7 @@ function addOERemoteMethods(Model) {
                 log.error(options, err);
                 return;
               }
-              // now can destroy old change request
-              // crinst.destroy(options, function onOldChangeRequestRemoval(err, res) {
-              //   if (err) {
-              //     log.error(options, err);
-              //     return;
-              //   }
-              //   log.debug(options, 'Exising change request instance removed properly');
-              //   return;
-              // });
+              return;
             });
           }
 
@@ -628,6 +641,69 @@ function addOERemoteMethods(Model) {
     cinst._changeRequestId = oinst.id;
     return cinst;
   }
+
+  Model.recall = function recall(id, options, cb) {
+    var app = Model.app;
+    var modelName = Model.definition.name;
+    var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+
+
+    ChangeWorkflowRequest.find({
+      where: {
+        and: [{
+          modelName: modelName
+        }, {
+          modelId: id
+        }]
+      }
+    }, options, function fetchChangeModel(err, inst) {
+      if (err) {
+        log.error(options, err);
+        return cb(err);
+      }
+      if (inst.length > 1) {
+        let err = new Error('Multiple instances found with same id in Change Workflow Request');
+        log.error(options, err);
+        return cb(err);
+      } else if (inst.length === 0) {
+        // no instance found in change request model
+        return cb(null, null);
+      }
+
+      if (!ctx.options || !ctx.options.username) {
+        let err = new Error('Unable to detect user making this request.');
+        log.error(options, err);
+        return cb(err);
+      }
+      let username = ctx.options.username;
+      let modifiers = inst[0]._modifiers;
+
+      if(modifiers.indexOf(username) === -1){
+        let err = new Error('Not authorized to recall');
+        log.options(options, err);
+        return cb(err);
+      }
+
+      var workflowInstanceId = inst[0].workflowInstanceId;
+      inst[0].destroy(options, function deleteInstance(err, res) {
+        if (err) {
+          let err = new Error('Unable to delete change request in recall case');
+          log.error(options, err);
+          return cb(err);
+        }
+        util.terminateWorkflow('oe-workflow', workflowInstanceId, options, function onTerminationWorkflow(err, res) {
+          if (err) {
+            let err = new Error('Unable to interrupt workflow in recall case');
+            log.error(options, err);
+            return cb(err);
+          }
+          return cb(null, {
+            'success': true
+          });
+        });
+      });
+    });
+  };
 
   Model.workflow = function workflow(id, ctx, cb) {
     var app = Model.app;
