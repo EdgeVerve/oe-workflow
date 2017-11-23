@@ -237,7 +237,10 @@ function addOERemoteMethods(Model) {
         modelName: modelName,
         modelId: id,
         operation: 'delete',
-        data: einst
+        data: einst,
+        _modifiers: [
+          options.ctx.username
+        ]
       };
 
       var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
@@ -380,7 +383,10 @@ function addOERemoteMethods(Model) {
             modelName: modelName,
             modelId: id,
             operation: 'update',
-            data: data
+            data: data,
+            _modifiers: [
+              options.ctx.username
+            ]
           };
 
           // check instance data is Valid
@@ -484,9 +490,11 @@ function addOERemoteMethods(Model) {
       modelName: modelName,
       modelId: modelId,
       operation: 'create',
-      data: data
+      data: data,
+      _modifiers: [
+        options.ctx.username
+      ]
     };
-
     // check instance data is Valid
     let obj = new Model(data);
     obj.isValid(function validate(valid) {

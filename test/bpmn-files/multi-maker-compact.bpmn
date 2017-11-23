@@ -10,11 +10,11 @@
       <bpmn2:incoming>SequenceFlow_02yo25z</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_02yo25z" sourceRef="UserTask_1hn4mm6" targetRef="EndEvent_0g5ic8h" />
-    <bpmn2:userTask id="UserTask_02kkhzu" name="Maker 2" camunda:candidateUsers="user1" camunda:isMultiMaker="true">
+    <bpmn2:userTask id="UserTask_02kkhzu" name="Maker 2" camunda:candidateUsers="user1" camunda:taskCategory="multiMaker">
       <bpmn2:incoming>SequenceFlow_16i1kdl</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_121hqmd</bpmn2:outgoing>
     </bpmn2:userTask>
-    <bpmn2:userTask id="UserTask_1hn4mm6" name="Checker" camunda:candidateUsers="user2" camunda:isFinalizeTransaction="true">
+    <bpmn2:userTask id="UserTask_1hn4mm6" name="Checker" camunda:candidateUsers="user2" camunda:taskCategory="autoFinalize">
       <bpmn2:incoming>SequenceFlow_121hqmd</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_02yo25z</bpmn2:outgoing>
     </bpmn2:userTask>
