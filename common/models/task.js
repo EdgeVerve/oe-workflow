@@ -63,7 +63,7 @@ module.exports = function Task(Task) {
       if (finalCall === -1) {
         continue;
       } else if (finalCall === 1) {
-      // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
+        // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
         resultData.push(instance);
         continue;
       } else {
@@ -137,15 +137,15 @@ module.exports = function Task(Task) {
     next();
   });
 
-    /**
-     * To be DEPRECATED soon, Please use /complete instead
-     * REST endpoint for completing User-Task
-     * @param  {Object}   message           Message
-     * @param  {Object}   processVariables  Process-Variables
-     * @param  {Object}   options           Options
-     * @param  {Function} next              Callback
-     * @returns {void}
-     */
+  /**
+   * To be DEPRECATED soon, Please use /complete instead
+   * REST endpoint for completing User-Task
+   * @param  {Object}   message           Message
+   * @param  {Object}   processVariables  Process-Variables
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
   Task.prototype.completeTask = function completeTask(message, processVariables, options, next) {
     var self = this;
 
@@ -258,7 +258,7 @@ module.exports = function Task(Task) {
             });
           });
         } else if (taskObj.isFinalizeTransaction) {
-         // do handling of finalize transaction first, only then complete the task
+          // do handling of finalize transaction first, only then complete the task
           var WorkflowManager = loopback.getModel('WorkflowManager', options);
           var workflowInstanceId = process._processVariables._workflowInstanceId;
 
@@ -287,7 +287,7 @@ module.exports = function Task(Task) {
               log.error(err);
               return next(err);
             }
-          return self.complete_(pdata, options, next);
+            return self.complete_(pdata, options, next);
             // done(null, msg);
           });
         } else {
@@ -296,13 +296,13 @@ module.exports = function Task(Task) {
       });
     });
   };
-     /**
-     * REST endpoint for completing User-Task
-     * @param  {Object}   data              Process-Variables & Message data
-     * @param  {Object}   options           Options
-     * @param  {Function} next              Callback
-     * @returns {void}
-     */
+  /**
+   * REST endpoint for completing User-Task
+   * @param  {Object}   data              Process-Variables & Message data
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
   Task.prototype.complete_ = function complete_(data, options, next) {
     var self = this;
 
@@ -349,13 +349,13 @@ module.exports = function Task(Task) {
   };
 
 
-     /**
-     * REST endpoint for completing User-Task
-     * @param  {Object}   data              Process-Variables & Message data
-     * @param  {Object}   options           Options
-     * @param  {Function} next              Callback
-     * @returns {void}
-     */
+  /**
+   * REST endpoint for completing User-Task
+   * @param  {Object}   data              Process-Variables & Message data
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
   Task.prototype.delegate = function delegate(data, options, next) {
     var self = this;
 

@@ -29,7 +29,7 @@
     "_modifiers": {
       "type": [ "string" ] ,
       "required": false
-    } 
+    }
   },
   "validations": [],
   "relations": {
