@@ -14,7 +14,7 @@ var chai = bootstrap.chai;
 var expect = chai.expect;
 var assert = chai.assert;
 var models = bootstrap.models;
-var log = bootstrap.log();
+var log = bootstrap.log('console');
 
 var User1Context = {
   ctx: {
@@ -133,6 +133,10 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       'mixins': {},
       'properties': {
         'luckydraw': {
+          'in' : [
+            '00000',
+            '11111'
+          ],
           'type': 'string',
           'required': true
         }
@@ -196,6 +200,36 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       done();
     });
   });
+
+  // it('create an error instance of ' + modelName + ' : author - user1', function CB(done) {
+  //   models[modelName].createX({
+  //     'luckydraw': '33333'
+  //   }, User1Context, function cb(err, instance) {
+  //     debugger;
+  //     if (err) {
+  //       log.error(err);
+  //       return done(err);
+  //     }
+  //     log.debug(instance);
+  //     testVars.instanceId = instance.id;
+  //     setTimeout(done, 2000);
+  //   });
+  // });
+
+  // it('create an error instance of ' + modelName + ' via true api : author - user1', function CB(done) {
+  //   models[modelName].create({
+  //     'luckydraw': '33333'
+  //   }, User1Context, function cb(err, instance) {
+  //     debugger;
+  //     if (err) {
+  //       log.error(err);
+  //       return done(err);
+  //     }
+  //     log.debug(instance);
+  //     testVars.instanceId = instance.id;
+  //     setTimeout(done, 2000);
+  //   });
+  // });
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
     models[modelName].createX({

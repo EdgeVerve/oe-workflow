@@ -95,7 +95,7 @@ describe('User Creation', function CB() {
   });
 });
 
-describe.skip('Test case for Trigger on Update OE Workflow [ workflow dependent ] - approved', function CB() {
+describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - approved', function CB() {
   this.timeout(15000);
   var modelName = 'TestUWM1';
   var wfName = 'maker-checker-generic';
@@ -564,7 +564,7 @@ describe.skip('Test case for Trigger on Update OE Workflow [ workflow dependent 
   });
 });
 
-describe.skip('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
+describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
   var modelName = 'TestUWM2';
   var wfName = 'maker-checker-generic';

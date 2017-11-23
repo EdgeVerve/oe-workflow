@@ -63,7 +63,7 @@ module.exports = function Task(Task) {
       if (finalCall === -1) {
         continue;
       } else if (finalCall === 1) {
-                // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
+      // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
         resultData.push(instance);
         continue;
       } else {
@@ -71,7 +71,7 @@ module.exports = function Task(Task) {
         if (finalCall === -1) {
           continue;
         } else if (finalCall === 1) {
-                    // user is part of authorized roles
+          // user is part of authorized roles
           resultData.push(instance);
           continue;
         } else {
@@ -79,7 +79,7 @@ module.exports = function Task(Task) {
           if (finalCall === -1) {
             continue;
           } else if (finalCall === 1) {
-                        // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
+            // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
             resultData.push(instance);
             continue;
           } else {
@@ -91,13 +91,13 @@ module.exports = function Task(Task) {
 
     function groupMatch(group, candidateGroups, excludedGroups) {
       if (candidateGroups.indexOf(group) !== -1 ) {
-                // group found
+        // group found
         return 1;
       } else if (excludedGroups.indexOf(group) !== -1) {
-                // no further check needed for excluded group
+        // no further check needed for excluded group
         return -1;
       }
-                // group match was unsuccessfully, look for role match
+      // group match was unsuccessfully, look for role match
       return 0;
     }
 
@@ -239,8 +239,11 @@ module.exports = function Task(Task) {
                 instx[key] = val;
               }
             }
+            let modifiers = inst[0]._modifiers || [];
+            modifiers.push(options.ctx.username);
             inst[0].updateAttributes({
-              data: instx
+              data: instx,
+              _modifiers: modifiers
             }, options, function updateCM(err, res) {
               if (err) {
                 log.error(options, err);

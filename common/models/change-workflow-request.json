@@ -25,6 +25,10 @@
     "workflowInstanceId": {
       "type": "string",
       "required": true
+    },
+    "_modifiers": {
+      "type": [ "string" ] ,
+      "required": false
     } 
   },
   "validations": [],

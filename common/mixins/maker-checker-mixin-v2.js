@@ -265,6 +265,7 @@ function addOERemoteMethods(Model) {
 
           let workflowBody = mapping.workflowBody;
           workflowBody.processVariables = workflowBody.processVariables || {};
+          workflowBody.processVariables._operation = mData.operation;
           workflowBody.processVariables._modelInstance = mData.data;
           workflowBody.processVariables._modelInstance._type = modelName;
           // this is to identify while executing Finalize Transaction to follow which implementation
@@ -307,7 +308,6 @@ function addOERemoteMethods(Model) {
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
     Model.findById(id, options, function fetchInstance(err, sinst) {
-      debugger;
       if (err) {
         log.error(options, err);
         return next(err);
@@ -414,6 +414,7 @@ function addOERemoteMethods(Model) {
 
                   let workflowBody = mapping.workflowBody;
                   workflowBody.processVariables = workflowBody.processVariables || {};
+                  workflowBody.processVariables._operation = mData.operation;
                   workflowBody.processVariables._modelInstance = mData.data;
                   workflowBody.processVariables._modelInstance._type = modelName;
                   // this is to identify while executing Finalize Transaction to follow which implementation
@@ -517,6 +518,7 @@ function addOERemoteMethods(Model) {
 
             let workflowBody = mapping.workflowBody;
             workflowBody.processVariables = workflowBody.processVariables || {};
+            workflowBody.processVariables._operation = mData.operation;
             workflowBody.processVariables._modelInstance = mData.data;
             workflowBody.processVariables._modelInstance._type = modelName;
             // this is to identify while executing Finalize Transaction to follow which implementation
