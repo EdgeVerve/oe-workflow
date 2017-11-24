@@ -119,7 +119,7 @@ describe('User Creation', function CB() {
 describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - approved', function CB() {
   this.timeout(15000);
   var modelName = 'TestCWM1';
-  var wfName = 'maker-checker-generic';
+  var wfName = 'single-checker-auto';
   var testVars = {};
 
   it('should create testing model - ' + modelName, function CB(done) {
@@ -204,36 +204,6 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       done();
     });
   });
-
-  // it('create an error instance of ' + modelName + ' : author - user1', function CB(done) {
-  //   models[modelName].createX({
-  //     'luckydraw': '33333'
-  //   }, User1Context, function cb(err, instance) {
-  //     debugger;
-  //     if (err) {
-  //       log.error(err);
-  //       return done(err);
-  //     }
-  //     log.debug(instance);
-  //     testVars.instanceId = instance.id;
-  //     setTimeout(done, 2000);
-  //   });
-  // });
-
-  // it('create an error instance of ' + modelName + ' via true api : author - user1', function CB(done) {
-  //   models[modelName].create({
-  //     'luckydraw': '33333'
-  //   }, User1Context, function cb(err, instance) {
-  //     debugger;
-  //     if (err) {
-  //       log.error(err);
-  //       return done(err);
-  //     }
-  //     log.debug(instance);
-  //     testVars.instanceId = instance.id;
-  //     setTimeout(done, 2000);
-  //   });
-  // });
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
     models[modelName].createX({
@@ -608,10 +578,10 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 });
 
-describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
+describe.skip('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
   var modelName = 'TestCWM2';
-  var wfName = 'maker-checker-generic';
+  var wfName = 'single-checker-auto';
   var testVars = {};
 
   it('should create testing model - ' + modelName, function CB(done) {

@@ -13,6 +13,8 @@
 var loopback = require('loopback');
 var util = require('./lib/util-v2.js');
 const uuidv4 = require('uuid/v4');
+var validationError = require('loopback-datasource-juggler/lib/validations.js').ValidationError
+
 var logger = require('oe-logger');
 var log = logger('maker-checker-mixin-v2');
 
@@ -477,8 +479,7 @@ function addOERemoteMethods(Model) {
                 }
               });
             } else {
-              // obj.errors is return object so stringifying and returning back
-              let err = new Error(JSON.stringify(obj.errors));
+              let err = validationError(obj); 
               log.error(options, err);
               return next(err);
             }
@@ -569,8 +570,7 @@ function addOERemoteMethods(Model) {
           }
         });
       } else {
-        // obj.errors is return object so stringifying and returning back
-        let err = new Error(JSON.stringify(obj.errors));
+        let err = validationError(obj);
         log.error(options, err);
         return next(err);
       }

@@ -98,7 +98,7 @@ describe('User Creation', function CB() {
 describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - approved', function CB() {
   this.timeout(15000);
   var modelName = 'TestUWM1';
-  var wfName = 'maker-checker-generic';
+  var wfName = 'single-checker-auto';
   var testVars = {};
 
   it('should create testing model - ' + modelName, function CB(done) {
@@ -567,7 +567,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
 describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
   var modelName = 'TestUWM2';
-  var wfName = 'maker-checker-generic';
+  var wfName = 'single-checker-auto';
   var testVars = {};
 
   it('should create testing model - ' + modelName, function CB(done) {
@@ -1036,7 +1036,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
 describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - retrigger', function CB() {
   this.timeout(15000);
   var modelName = 'TestUWM3';
-  var wfName = 'maker-checker-generic';
+  var wfName = 'single-checker-auto';
   var testVars = {};
 
   it('should create testing model - ' + modelName, function CB(done) {
