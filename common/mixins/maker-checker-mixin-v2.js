@@ -670,12 +670,12 @@ function addOERemoteMethods(Model) {
         return cb(null, null);
       }
 
-      if (!ctx.options || !ctx.options.username) {
+      if (!options.ctx || !options.ctx.username) {
         let err = new Error('Unable to detect user making this request.');
         log.error(options, err);
         return cb(err);
       }
-      let username = ctx.options.username;
+      let username = options.ctx.username;
       let modifiers = inst[0]._modifiers;
 
       if(modifiers.indexOf(username) === -1){
