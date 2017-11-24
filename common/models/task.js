@@ -259,6 +259,7 @@ module.exports = function Task(Task) {
           });
         } else if (taskObj.isFinalizeTransaction) {
           // do handling of finalize transaction first, only then complete the task
+          // user task wont complete till finalize transaction is successful
           var WorkflowManager = loopback.getModel('WorkflowManager', options);
           var workflowInstanceId = process._processVariables._workflowInstanceId;
 

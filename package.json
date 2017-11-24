@@ -6,7 +6,7 @@
     "lint": "./node_modules/.bin/eslint .",
     "fix-lint": "./node_modules/.bin/eslint --fix .",
     "precoverage": "npm install --no-optional",
-    "test": "./node_modules/.bin/mocha"          
+    "test": "./node_modules/.bin/mocha"
   },
   "dependencies": {
     "app-root-path": "^1.3.0",

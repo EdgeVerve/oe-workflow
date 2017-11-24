@@ -14,7 +14,7 @@ var chai = bootstrap.chai;
 var expect = chai.expect;
 var assert = chai.assert;
 var models = bootstrap.models;
-var log = bootstrap.log('console');
+var log = bootstrap.log();
 
 var User1Context = {
   ctx: {
@@ -139,6 +139,10 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
           ],
           'type': 'string',
           'required': true
+        },
+        '_verifiedBy' : {
+          'type': 'string',
+          'required': false
         }
       },
       'relations': {},
@@ -623,6 +627,10 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
         'luckydraw': {
           'type': 'string',
           'required': true
+        },
+        '_verifiedBy' : {
+          'type': 'string',
+          'required': false
         }
       },
       'relations': {},

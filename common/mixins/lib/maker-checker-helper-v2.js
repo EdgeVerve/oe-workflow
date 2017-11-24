@@ -150,6 +150,7 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
       applyWorkflowUpdates(updates, wfupdates);
     }
 
+    updates._verifiedBy = options.ctx.username || 'workflow-system';
     instance.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
         log.error(options, err);
@@ -189,6 +190,7 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
     applyWorkflowUpdates(data, wfupdates);
   }
 
+  data._verifiedBy = options.ctx.username || 'workflow-system';
   model.create(data, options, function createTrueInstance(err, instance) {
     if (err) {
       log.error(options, err);
