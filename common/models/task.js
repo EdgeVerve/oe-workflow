@@ -195,6 +195,7 @@ module.exports = function Task(Task) {
           return next(err);
         }
         let taskObj = processDef.getFlowObjectByName(tname);
+        debugger;
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           // TODO : validate the object first
@@ -232,6 +233,7 @@ module.exports = function Task(Task) {
                 'change_request_update': 'failed - no instance found'
               });
             }
+
             var instx = JSON.parse(JSON.stringify(inst[0].data));
             for (let key in updates) {
               if (Object.prototype.hasOwnProperty.call(updates, key)) {
@@ -239,25 +241,41 @@ module.exports = function Task(Task) {
                 instx[key] = val;
               }
             }
+
             let modifiers = inst[0]._modifiers || [];
             modifiers.push(options.ctx.username);
-            inst[0].updateAttributes({
-              data: instx,
-              _modifiers: modifiers
-            }, options, function updateCM(err, res) {
-              if (err) {
+
+            let modelName = process._processVariables._modelInstance._type;
+            let Model = loopback.getModel(modelName, options);
+            let obj = new Model(instx);
+            obj.isValid(function validate(valid) {
+              if (valid) {
+                log.debug(options, 'Instance has been validated during maker checker creation');
+
+                inst[0].updateAttributes({
+                  data: instx,
+                  _modifiers: modifiers
+                }, options, function updateCM(err, res) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                  // process._processVariables._modelInstance = instx;
+                  var xdata = {};
+                  xdata.pv = pdata.pv || {};
+                  xdata.pv._modelInstance = instx;
+                  xdata.msg = pdata.msg;
+                  return self.complete_(xdata, options, next);
+                });
+              } else {
+                let err = validationError(obj);
                 log.error(options, err);
                 return next(err);
               }
-              // process._processVariables._modelInstance = instx;
-              var xdata = {};
-              xdata.pv = pdata.pv || {};
-              xdata.pv._modelInstance = instx;
-              xdata.msg = pdata.msg;
-              return self.complete_(xdata, options, next);
-            });
+            }, options, instx);
+
           });
-        } else if (taskObj.isFinalizeTransaction) {
+        } else if (taskObj.isAutoFinalize) {
           // do handling of finalize transaction first, only then complete the task
           // user task wont complete till finalize transaction is successful
           var WorkflowManager = loopback.getModel('WorkflowManager', options);
@@ -289,7 +307,6 @@ module.exports = function Task(Task) {
               return next(err);
             }
             return self.complete_(pdata, options, next);
-            // done(null, msg);
           });
         } else {
           return self.complete_(data, options, next);

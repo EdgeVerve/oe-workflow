@@ -444,9 +444,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
 
   it('complete user task by checker', function CB(done) {
     testVars.taskInstance.complete({
-      pv: {
-        '_action': 'approved'
-      }
+      '__action__': 'approved'
     }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -578,7 +576,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
   });
 });
 
-describe.skip('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
+describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - rejected', function CB() {
   this.timeout(15000);
   var modelName = 'TestCWM2';
   var wfName = 'single-checker-auto';
@@ -902,9 +900,7 @@ describe.skip('Test case for Trigger on Create OE Workflow [ workflow dependent 
 
   it('complete user task by checker', function CB(done) {
     testVars.taskInstance.complete({
-      pv: {
-        '_action': 'rejected'
-      }
+      '__action__': 'rejected'
     }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);

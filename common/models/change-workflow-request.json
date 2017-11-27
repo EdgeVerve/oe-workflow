@@ -22,6 +22,11 @@
       "required": true,
       "index": true
     },
+    "status": {
+      "type": "string",
+      "required": true,
+      "default": "pending"
+    },
     "workflowInstanceId": {
       "type": "string",
       "required": true

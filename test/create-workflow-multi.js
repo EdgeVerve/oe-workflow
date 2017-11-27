@@ -135,6 +135,10 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
         'luckydraw': {
           'type': 'string',
           'required': true
+        },
+        '_verifiedBy': {
+          'type': 'string',
+          'required': false
         }
       },
       'relations': {},
@@ -212,7 +216,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
   });
 
   it('check if workflow instance is up', function CB(done) {
-    models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
+    models[modelName].workflow(testVars.instanceId, User2Context, function CB(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
@@ -227,7 +231,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
   });
 
   it('check if maker 2 task instance is created', function CB(done) {
-    models[modelName].tasks(testVars.instanceId, User1Context, function CB(err, tasks) {
+    models[modelName].tasks(testVars.instanceId, User2Context, function CB(err, tasks) {
       if (err) {
         log.error(err);
         return done(err);
@@ -521,7 +525,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
   });
 
   it('check if checker task instance is created', function CB(done) {
-    models[modelName].tasks(testVars.instanceId, User2Context, function CB(err, tasks) {
+    models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
       if (err) {
         log.error(err);
         return done(err);
@@ -542,7 +546,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
       'pv' : {
         'comment_by_checker' : 'sample comment'
       }
-    }, User1Context, function cb(err, res) {
+    }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);
         return done(err);

@@ -6,7 +6,7 @@
  */
 /**
  * @mixin Maker Checker Utilities
- * @author Mandeep Gill(mandeep6ill), Prem Sai(premsai-ch), Sampath Kilparthi(sampathkumar81293)
+ * @author Mandeep Gill(mandeep6ill), Prem Sai(premsai-ch)
  */
 
 var logger = require('oe-logger');
@@ -55,6 +55,7 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
 
     var request = requests[0];
 
+    debugger;
     if (request.operation === 'create') {
       if (status === 'approved') {
         approvedCreateInstance(app, request, wfupdates, options, next);
