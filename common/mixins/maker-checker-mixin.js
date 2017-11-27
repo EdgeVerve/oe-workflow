@@ -946,10 +946,10 @@ function beforeDeleteHook(ctx, next) {
           return next(err);
         }
 
-        ctx.hookState._variables = util.prepareWorkflowVariables(ctx.hookState._engineType, instance, ctx.Model);
         ctx.hookState._workflowBody = mapping.workflowBody;
         ctx.hookState._transactionType = 'delete';
         ctx.hookState._engineType = mapping.engineType;
+        ctx.hookState._variables = util.prepareWorkflowVariables(ctx.hookState._engineType, instance, ctx.Model);
         ctx.data._transactionType = 'delete';
         ctx.data._isDeleted = false;
 
