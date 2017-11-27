@@ -356,6 +356,8 @@ function addOERemoteMethods(Model) {
           and: [{
             modelName: modelName
           }, {
+            status: 'pending'
+          }, {
             modelId: id
           }]
         }}, options, function checkExisitingRequest(err, crinsts) {
@@ -584,7 +586,11 @@ function addOERemoteMethods(Model) {
 
     ChangeWorkflowRequest.find({
       where: {
-        modelName: modelName
+        and : [{
+          status: 'pending'
+        },{
+          modelName: modelName
+        }]
       }
     }, ctx, function fetchChangeModel(err, insts) {
       if (err) {
@@ -607,6 +613,8 @@ function addOERemoteMethods(Model) {
       where: {
         and: [{
           modelName: modelName
+        }, {
+          status: 'pending'
         }, {
           modelId: id
         }]
@@ -721,6 +729,7 @@ function addOERemoteMethods(Model) {
       'where': {
         'and': [
           { 'modelName': modelName },
+          { 'status': 'pending' },
           { 'modelId': id }
         ]
       }
@@ -777,6 +786,7 @@ function addOERemoteMethods(Model) {
       'where': {
         'and': [
           { 'modelName': modelName },
+          { 'status': 'pending' },
           { 'modelId': id }
         ]
       }

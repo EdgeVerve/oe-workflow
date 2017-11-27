@@ -195,7 +195,6 @@ module.exports = function Task(Task) {
           return next(err);
         }
         let taskObj = processDef.getFlowObjectByName(tname);
-        debugger;
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           // TODO : validate the object first

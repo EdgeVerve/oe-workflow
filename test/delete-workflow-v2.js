@@ -427,9 +427,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
 
   it('complete user task by checker', function CB(done) {
     testVars.taskInstance.complete({
-      pv: {
-        '_action': 'approved'
-      }
+      '__action__': 'approved'
     }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -877,9 +875,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
 
   it('complete user task by checker', function CB(done) {
     testVars.taskInstance.complete({
-      pv: {
-        '_action': 'rejected'
-      }
+      '__action__': 'rejected'
     }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);

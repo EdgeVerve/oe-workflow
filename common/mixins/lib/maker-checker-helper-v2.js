@@ -89,7 +89,14 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
 };
 
 function rejectedDeleteInstance(app, request, options, next) {
-  request.destroy(options, function cb(err, inst) {
+  var _verifiers = request._verifiers || [];
+  _verifiers.push(options.ctx.username+':rejected');
+  var updates = {
+    status : 'complete',
+    _verifiers: _verifiers,
+    _version: request._version
+  }
+  request.updateAttributes(updates, options, function cb(err, inst) {
     if (err) {
       log.error(options, err);
       return next(err);
@@ -108,7 +115,14 @@ function approvedDeleteInstance(app, request, options, next) {
       return next(err);
     }
 
-    request.destroy(options, function cb(err, inst) {
+    var _verifiers = request._verifiers || [];
+    _verifiers.push(options.ctx.username+':approved');
+    var updates = {
+      status : 'complete',
+      _verifiers: _verifiers,
+      _version: request._version
+    }
+    request.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
         log.error(options, 'error in updating instance status', err);
         return next(err);
@@ -121,7 +135,14 @@ function approvedDeleteInstance(app, request, options, next) {
 
 function rejectedUpdateInstance(app, request, options, next) {
   // TODO : create better error message so that user can understand why it failed
-  request.destroy(options, function cb(err, inst) {
+  var _verifiers = request._verifiers || [];
+  _verifiers.push(options.ctx.username+':rejected');
+  var updates = {
+    status : 'complete',
+    _verifiers: _verifiers,
+    _version: request._version
+  }
+  request.updateAttributes(updates, options, function cb(err, inst) {
     if (err) {
       log.error(options, err);
       return next(err);
@@ -159,7 +180,14 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
         // otherwise the instance will be stuck because of workflow
         return next(err);
       }
-      request.destroy(options, function cb(err, dinst) {
+      var _verifiers = request._verifiers || [];
+      _verifiers.push(options.ctx.username+':approved');
+      var updates = {
+        status : 'complete',
+        _verifiers: _verifiers,
+        _version: request._version
+      }
+      request.updateAttributes(updates, options, function cb(err, dinst) {
         if (err) {
           log.error(options, err);
           return next(err);
@@ -173,7 +201,14 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
 
 function rejectedCreateInstance(app, request, options, next) {
   // TODO : create better error message so that user can understand why it failed
-  request.destroy(options, function cb(err, inst) {
+  var _verifiers = request._verifiers || [];
+  _verifiers.push(options.ctx.username+':rejected');
+  var updates = {
+    status : 'complete',
+    _verifiers: _verifiers,
+    _version: request._version
+  }
+  request.updateAttributes(updates, options, function cb(err, inst) {
     if (err) {
       log.error(options, err);
       return next(err);
@@ -197,7 +232,14 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
       log.error(options, err);
       return next(err);
     }
-    request.destroy(options, function cb(err, inst) {
+    var _verifiers = request._verifiers || [];
+    _verifiers.push(options.ctx.username+':approved');
+    var updates = {
+      status : 'complete',
+      _verifiers: _verifiers,
+      _version: request._version
+    }
+    request.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
         log.error(options, err);
         return next(err);
