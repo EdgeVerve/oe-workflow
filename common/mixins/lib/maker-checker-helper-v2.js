@@ -21,7 +21,8 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
   var RequestModel;
 
   if (engineType === 'oe-workflow') {
-    RequestModel = app.models.ChangeWorkflowRequest;
+    // RequestModel = app.models.ChangeWorkflowRequest;
+    RequestModel = loopback.getModel('ChangeWorkflowRequest', options); 
   } else {
     RequestModel = app.models.Activiti_WorkflowRequest;
   }
@@ -55,7 +56,6 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
 
     var request = requests[0];
 
-    debugger;
     if (request.operation === 'create') {
       if (status === 'approved') {
         approvedCreateInstance(app, request, wfupdates, options, next);

@@ -280,6 +280,22 @@ module.exports = function Task(Task) {
           var WorkflowManager = loopback.getModel('WorkflowManager', options);
           var workflowInstanceId = process._processVariables._workflowInstanceId;
 
+          if( typeof data.__action__ === 'undefined' ){
+            let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+            log.error(options, err);
+            return next(err);
+          }
+
+          let validActArr = taskObj.stepVariables.__action__ || [];
+          validActArr = validActArr.concat([ 'approved' , 'rejected' ]);
+
+          let isValid = ( validActArr.indexOf(data.__action__) > -1 );
+          if(!isValid){
+            let err = new Error('Provided action is not valid. Possible valid actions : ', JSON.stringify(validActArr));
+            log.error(options, err);
+            return next(err);
+          }
+
           var postData = {
             'workflowInstanceId': workflowInstanceId,
             'status': data.__action__
@@ -454,7 +470,7 @@ module.exports = function Task(Task) {
     http: {
       verb: 'post'
     },
-    isStatic: false,
+    isStatic: true,
     returns: {
       type: 'object',
       root: true
@@ -475,7 +491,7 @@ module.exports = function Task(Task) {
     http: {
       verb: 'put'
     },
-    isStatic: false,
+    isStatic: true,
     returns: {
       type: 'object',
       root: true
