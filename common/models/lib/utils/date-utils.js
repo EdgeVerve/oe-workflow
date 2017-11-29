@@ -1,24 +1,23 @@
-var utils = require('./oe-date-utils.js')
+var utils = require('./oe-date-utils.js');
 
-module.exports.parse_date = function parse_date(input, format) {
-
+module.exports.parse_date = function parseDate(input, format) {
   if (!input || input.trim().length === 0) {
-    return undefined;
+    return '';
   }
   var tuInput = input.trim().toUpperCase();
 
   var retDate;
 
-  //reference for date calculation is today in user's timezone
-  //but represented as UTC.
-  //i.e. if entering '1d' at 2AM IST on 5th. It should calculate 6th as the date.
-  //but 6th 00:00:00Z in UTC timezone.
+  // reference for date calculation is today in user's timezone
+  // but represented as UTC.
+  // i.e. if entering '1d' at 2AM IST on 5th. It should calculate 6th as the date.
+  // but 6th 00:00:00Z in UTC timezone.
   var mDate = new Date();
   mDate = new Date(Date.UTC(mDate.getFullYear(), mDate.getMonth(), mDate.getDate()));
 
   if (tuInput === 'T' || tuInput === 'TOD' || tuInput === 'TODAY') {
     retDate = mDate;
-  } else if (tuInput == 'TOM') {
+  } else if (tuInput === 'TOM') {
     retDate = mDate.setUTCDate(mDate.getUTCDate() + 1);
   } else if (tuInput[tuInput.length - 1] === 'D') {
     retDate = _calcDate(mDate, tuInput, 'days');
@@ -35,11 +34,13 @@ module.exports.parse_date = function parse_date(input, format) {
   }
 
   return retDate;
-}
+};
 
 function _parseDecimal(input) {
   if (!input || input.length === 0) {
+     /*eslint-disable */
     return undefined;
+      /*eslint-enable */
   }
 
   var tmp = input;
@@ -47,7 +48,9 @@ function _parseDecimal(input) {
   var isInvalid = tmp.split('.').length > 2 || tmp.lastIndexOf('+') > 0 || tmp.lastIndexOf('-') > 0 || tmp.replace(
     /[\+\-0-9\.]/g, '').length > 0;
   if (isInvalid) {
+    /*eslint-disable */
     return undefined;
+    /*eslint-enable */
   }
   return parseFloat(tmp);
 }
@@ -64,7 +67,7 @@ function _calcDate(mDate, tuInput, type) {
         break;
 
       case 'weeks':
-        var newDay = retDate.getUTCDate() + 7 * topup; //eslint-disable-line no-redeclare
+        var newDay = retDate.getUTCDate() + 7 * topup; // eslint-disable-line no-redeclare
         retDate.setUTCDate(newDay);
         break;
 
@@ -74,7 +77,7 @@ function _calcDate(mDate, tuInput, type) {
         break;
 
       case 'quarters':
-        var newMonth = retDate.getUTCMonth() + 3 * topup; //eslint-disable-line no-redeclare
+        var newMonth = retDate.getUTCMonth() + 3 * topup; // eslint-disable-line no-redeclare
         retDate.setUTCMonth(newMonth);
         break;
 

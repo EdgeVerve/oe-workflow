@@ -3,6 +3,7 @@
 */
 
 // date parse module.
+// eslint radix:0
 
 var OEDateUtils = OEDateUtils || {};
 module.exports = OEDateUtils;
@@ -10,20 +11,21 @@ OEDateUtils.DateUtils = {
   months: ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 };
 
-OEDateUtils.DateUtils.utcDateFormatter = (function () {
-
-  var locale = "en-US" //navigator.language;
+OEDateUtils.DateUtils.utcDateFormatter = (function formatter() {
+  var locale = 'en-US';
+  /*eslint-disable */
   return Intl.DateTimeFormat(locale, {
     timeZone: 'UTC'
   });
+  /*eslint-enable */
 })();
 
-OEDateUtils.DateUtils.parse = function (date, inputFormat) {
+OEDateUtils.DateUtils.parse = function parse(date, inputFormat) {
   if (typeof date === 'undefined' || date.length < 4) {
     return;
   }
   inputFormat = (inputFormat && inputFormat.toUpperCase()) || 'UK';
-  if(inputFormat.indexOf('DD') > inputFormat.indexOf('MM')){
+  if (inputFormat.indexOf('DD') > inputFormat.indexOf('MM')) {
     inputFormat = 'US';
   }
 
@@ -33,20 +35,20 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
   // separators with date string;
   var separator = '-';
 
-  //replacing all special characters with '-'; and if it contains month name then replace with standard integer value;
+  // replacing all special characters with '-'; and if it contains month name then replace with standard integer value;
   date = date.toLowerCase();
-  OEDateUtils.DateUtils.months.forEach(function (d) {
+  OEDateUtils.DateUtils.months.forEach(function eachMonth(d) {
     if (date.indexOf(d) > -1) {
       date = date.replace(d, months.indexOf(d) + 1);
     }
   });
   date = date.replace(/[^0-9]/g, separator);
 
-  //check if the date is with or without delimiter.
+  // check if the date is with or without delimiter.
   var withSeperator = (date.indexOf(separator) > -1);
 
-  //if the date is without delimiter then it may be containing some alphabets.
-  var isNan = (function (d) {
+  // if the date is without delimiter then it may be containing some alphabets.
+  var isNan = (function nanCheck(d) {
     return isNaN(d);
   })(date);
 
@@ -66,7 +68,7 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
           {
             day = '0' + date.slice(1, 2);
             month = '0' + date.slice(0, 1);
-            year = parseInt(date.slice(2, 4)) >= 70 ? '19' + date.slice(2, 4) : '20' + date.slice(2, 4);
+            year = parseInt(date.slice(2, 4), 10) >= 70 ? '19' + date.slice(2, 4) : '20' + date.slice(2, 4);
             dateString = day + month + year;
             resultDate = setDate(dateString);
             break;
@@ -77,16 +79,16 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
         case 7:
 
           if (length === 5) {
-            year = parseInt(date.slice(3, 5)) >= 70 ? '19' + date.slice(3, 5) : '20' + date.slice(3, 5);
+            year = parseInt(date.slice(3, 5), 10) >= 70 ? '19' + date.slice(3, 5) : '20' + date.slice(3, 5);
           } else {
             year = date.slice(3, 7);
           }
           day = '00';
           month = '00';
-          var a = parseInt(date.slice(0, 1));
-          var b = parseInt(date.slice(1, 2));
-          var c = parseInt(date.slice(2, 3));
-          var nextTwo = parseInt(date.slice(1, 3));
+          var a = parseInt(date.slice(0, 1), 10);
+          var b = parseInt(date.slice(1, 2), 10);
+          var c = parseInt(date.slice(2, 3), 10);
+          var nextTwo = parseInt(date.slice(1, 3), 10);
 
           if (a >= 2 || (c === 0 && a !== 0) || b > 2) {
             month = '0' + date.slice(0, 1);
@@ -95,10 +97,10 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
             month = date.slice(0, 2);
             day = '0' + date.slice(2, 3);
           } else if (a <= 3 && a !== 0 && b === 1 && c <= 2) {
-            //conflict = true;
+            // conflict = true;
             break;
           } else {
-            //conflict = true;
+            // conflict = true;
             break;
           }
 
@@ -110,7 +112,7 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
         case 6:
           day = date.slice(2, 4);
           month = date.slice(0, 2);
-          year = parseInt(date.slice(4, 6)) >= 70 ? '19' + date.slice(4, 6) : '20' + date.slice(4, 6);
+          year = parseInt(date.slice(4, 6), 10) >= 70 ? '19' + date.slice(4, 6) : '20' + date.slice(4, 6);
           dateString = day + month + year;
           resultDate = setDate(dateString);
           break;
@@ -133,14 +135,16 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
     }
   } else {
     // for non-US based dates.
+    /*eslint-disable */
     if (!withSeperator && !isNan) {
+    /*eslint-enable */
       switch (length) {
         // if the length of date is 4 then first letter will be considered as day, second for month and rest two for year.
         case 4:
           day = '0' + date.slice(0, 1);
           month = '0' + date.slice(1, 2);
           // if year is of length 2 then add a prefix of 19 if greater than 70 and add 20 if less than 70.
-          year = parseInt(date.slice(2, 4)) >= 70 ? '19' + date.slice(2, 4) : '20' + date.slice(2, 4);
+          year = parseInt(date.slice(2, 4), 10) >= 70 ? '19' + date.slice(2, 4) : '20' + date.slice(2, 4);
           dateString = day + month + year;
           resultDate = setDate(dateString);
           break;
@@ -151,16 +155,16 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
           dateString = '';
           year = '';
           if (length === 5) {
-            year = parseInt(date.slice(3, 5)) >= 70 ? '19' + date.slice(3, 5) : '20' + date.slice(3, 5);
+            year = parseInt(date.slice(3, 5), 10) >= 70 ? '19' + date.slice(3, 5) : '20' + date.slice(3, 5);
           } else if (length === 7) {
             year = date.slice(3, 7);
           }
           day = '00';
           month = '00';
-          a = parseInt(date.slice(0, 1));
-          b = parseInt(date.slice(1, 2));
-          c = parseInt(date.slice(2, 3));
-          nextTwo = parseInt(date.slice(1, 3));
+          a = parseInt(date.slice(0, 1), 10);
+          b = parseInt(date.slice(1, 2), 10);
+          c = parseInt(date.slice(2, 3), 10);
+          nextTwo = parseInt(date.slice(1, 3), 10);
 
           if (a >= 4) {
             day = '0' + date.slice(0, 1);
@@ -169,13 +173,13 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
             day = '0' + date.slice(0, 1);
             month = date.slice(1, 3);
           } else if (a <= 3 && a !== 0 && b === 1 && c <= 2) {
-            //conflict = true;
+            // conflict = true;
             break;
           } else if (nextTwo > 12 || (a >= 0 && b >= 0 && c >= 1)) {
             day = date.slice(0, 2);
             month = '0' + date.slice(2, 3);
           } else {
-            //conflict = true;
+            // conflict = true;
             break;
           }
 
@@ -187,7 +191,7 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
           day = date.slice(0, 2);
           month = date.slice(2, 4);
           // if year is of length 2 then add a prefix of 19 if greater than 70 and add 20 if less than 70.
-          year = parseInt(date.slice(4, 6)) >= 70 ? '19' + date.slice(4, 6) : '20' + date.slice(4, 6);
+          year = parseInt(date.slice(4, 6), 10) >= 70 ? '19' + date.slice(4, 6) : '20' + date.slice(4, 6);
           dateString = day + month + year;
           resultDate = setDate(dateString);
           break;
@@ -210,12 +214,11 @@ OEDateUtils.DateUtils.parse = function (date, inputFormat) {
     }
   }
 
-  //return parsed date object with appropriate date value.
+  // return parsed date object with appropriate date value.
   return resultDate;
 };
 
-OEDateUtils.DateUtils.format = function (date, format) {
-
+OEDateUtils.DateUtils.format = function format(date, format) {
   if (format === '') {
     return date;
   }
@@ -233,26 +236,26 @@ OEDateUtils.DateUtils.format = function (date, format) {
   }
 
   if (format.indexOf('MMM') >= 0) {
-    month = parseInt(date.getUTCMonth());
+    month = parseInt(date.getUTCMonth(), 10);
     format = format.replace('MMM', months[month]);
   } else if (format.indexOf('MM') >= 0) {
-    var month = parseInt(date.getUTCMonth() + 1);
+    var month = parseInt(date.getUTCMonth() + 1, 10);
     if (month < 10) {
       format = format.replace('MM', '0' + month);
     } else {
       format = format.replace('MM', month);
     }
   } else if (format.indexOf('M') >= 0) {
-    month = parseInt(date.getUTCMonth() + 1);
+    month = parseInt(date.getUTCMonth() + 1, 10);
     format = format.replace('M', month);
   }
 
   if (format.indexOf('DDD') >= 0) {
-    var day = parseInt(date.getUTCDay());
+    var day = parseInt(date.getUTCDay(), 10);
     format = format.replace('DDD', days[day]);
   }
   if (format.indexOf('DD') >= 0) {
-    var dayDate = parseInt(date.getUTCDate());
+    var dayDate = parseInt(date.getUTCDate(), 10);
     if (dayDate < 10) {
       format = format.replace('DD', '0' + dayDate);
     } else {
@@ -260,12 +263,12 @@ OEDateUtils.DateUtils.format = function (date, format) {
     }
   }
   if (format.indexOf('D') >= 0) {
-    day = parseInt(date.getUTCDate());
+    day = parseInt(date.getUTCDate(), 10);
     format = format.replace('D', day);
   }
 
   if (format.indexOf('dddd') >= 0) {
-    day = parseInt(date.getUTCDay());
+    day = parseInt(date.getUTCDay(), 10);
     format = format.replace('dddd', daysFull[day]);
   }
 
@@ -287,23 +290,24 @@ OEDateUtils.DateUtils.format = function (date, format) {
 function setDate(date) {
   var result;
   if (date && date.length === 8 && !isNaN(date)) {
-    var day = parseInt(date.slice(0, 2));
-    var month = parseInt(date.slice(2, 4)) - 1;
-    var year = parseInt(date.slice(4, 8));
+    var day = parseInt(date.slice(0, 2), 10);
+    var month = parseInt(date.slice(2, 4), 10) - 1;
+    var year = parseInt(date.slice(4, 8), 10);
 
     if (month >= 0 && month <= 11 && day > 0 && day <= 31) {
-
-      //UTC
+      // UTC
       result = new Date(Date.UTC(year, month, day));
 
-      //if date is more than number of days in month, the month is incremented.
+      // if date is more than number of days in month, the month is incremented.
       if (result.getUTCMonth() !== month || result.getUTCFullYear() !== year) {
+        /* eslint-disable */
         result = undefined;
+        /* eslint-enable */
       }
     }
   }
 
-  //return dateObject .
+  // return dateObject .
   return result;
 }
 
@@ -312,7 +316,7 @@ function split(date, separator) {
   var dateArray = [];
   dateArray = date.split(separator);
 
-  //if year is in beginning
+  // if year is in beginning
   if (dateArray[0].length === 4 && dateArray[2].length !== 4) {
     dateArray[1] = dateArray[1] && dateArray[1].length === 1 ? '0' + dateArray[1] : dateArray[1];
     dateArray[2] = dateArray[2] && dateArray[2].length === 1 ? '0' + dateArray[2] : dateArray[2];
@@ -324,7 +328,7 @@ function split(date, separator) {
     dateArray[1] = dateArray[1] && dateArray[1].length === 1 ? '0' + dateArray[1] : dateArray[1];
 
     // if year is of length 2 then add a prefix of 19 if greater than 70 and add 20 if less than 70.
-    dateArray[2] = (dateArray[2] && dateArray[2].length === 2) ? (parseInt(dateArray[2]) >= 70 ? '19' + dateArray[2] : '20' + dateArray[2]) : dateArray[2];
+    dateArray[2] = (dateArray[2] && dateArray[2].length === 2) ? (parseInt(dateArray[2], 10) >= 70 ? '19' + dateArray[2] : '20' + dateArray[2]) : dateArray[2];
   }
   return dateArray;
 }

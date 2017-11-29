@@ -16,7 +16,7 @@ var StateDelta = require('../../process-state-delta.js');
 var flowObjectEvaluator = require('../workflow-nodes/evaluate-flow-object.js');
 var dateUtils = require('../utils/date-utils.js');
 var sandbox = require('../workflow-nodes/sandbox.js');
-var RecrevaluatePayload = require('../workflow-nodes/businessruletask-node.js').evaluatePayload;
+var recrevaluatePayload = require('../workflow-nodes/businessruletask-node.js').evaluatePayload;
 var _ = require('lodash');
 
 var INTERMEDIATE_CATCH_EVENT = 'INTERMEDIATE_CATCH_EVENT';
@@ -62,10 +62,11 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           'processTokenId': token.id
         };
 
-
-        if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters){
-          var inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
-          var evalInput = RecrevaluatePayload(inputParameters, token.message, currentProcess);
+        var inputParameters;
+        var evalInput;
+        if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters) {
+          inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
+          evalInput = recrevaluatePayload(inputParameters, token.message, currentProcess);
           Object.assign(taskObj.stepVariables, evalInput);
         }
 
@@ -239,11 +240,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         taskObj.formVariables = variables;
         taskObj.processInstanceId = currentProcess.id;
         taskObj.workflowInstanceId = currentProcess.workflowInstanceId;
-        var ioparams = currentFlowObject.inputOutputParameters;
         var dateFormat = 'DD-MM-YYYY';
-        // if (ioparams && ioparams.inputParameters && ioparams.inputParameters.__dateFormat__) {
-          // dateFormat = ioparams.inputParameters.__dateFormat__;
-        // }
 
         if (currentFlowObject.followUpDate) {
           let evaluatedList = evalEntity([currentFlowObject.followUpDate]);
@@ -254,13 +251,13 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         if (currentFlowObject.dueDate) {
           let evaluatedList = evalEntity([currentFlowObject.dueDate]);
           if (evaluatedList !== null) {
-             taskObj.dueDate = dateUtils.parse_date(evaluatedList[0], dateFormat);
+            taskObj.dueDate = dateUtils.parse_date(evaluatedList[0], dateFormat);
           }
         }
         if (currentFlowObject.priority) {
           let evaluatedList = evalEntity([currentFlowObject.priority]);
           if (evaluatedList !== null) {
-             taskObj.priority = evaluatedList[0];
+            taskObj.priority = evaluatedList[0];
           }
         }
         ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
@@ -282,7 +279,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           '_parentProcessVariables': processVariablesToPass,
           'workflowInstanceId': currentProcess.workflowInstanceId,
           'processVariables': {
-            '_modelInstance' : {}
+            '_modelInstance': {}
           }
         };
 
@@ -296,27 +293,29 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
 
         // Map the required process variables to call activity
         if (currentFlowObject.isCallActivity) {
-          if (currentFlowObject.inOutMappings && currentFlowObject.inputMappings) {
+          if (currentFlowObject.inOutMappings && currentFlowObject.inOutMappings.inputMappings) {
             var inputMappings = currentFlowObject.inOutMappings.inputMappings;
             for (var source in inputMappings) {
               if (source === 'variables' && inputMappings[source] === 'all') {
-                Object.assign(subProcessesIns.processVariables, currentProcess._processVariables)
-              } else if(source in currentProcess._processVariables) {
+                Object.assign(subProcessesIns.processVariables, currentProcess._processVariables);
+              } else if (source in currentProcess._processVariables) {
                 source = sandbox.evaluate$Expression(options, source, message, currentProcess);
                 var target = inputMappings[source];
                 if (typeof currentProcess._processVariables[source] === 'object') {
                   subProcessesIns.processVariables[target] = {};
                   Object.assign(subProcessesIns.processVariables[target], currentProcess._processVariables[source]);
                 } else {
-                  subProcessIns.processVariables[target] = currentProcess._processVariables[source];
+                  subProcessesIns.processVariables[target] = currentProcess._processVariables[source];
                 }
               }
             }
+          } else {
+            Object.assign(subProcessesIns.processVariables, currentProcess._processVariables);
           }
         }
-        if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters){
-          var inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
-          var evalInput = RecrevaluatePayload(inputParameters, token.message, currentProcess);
+        if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters) {
+          inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
+          evalInput = recrevaluatePayload(inputParameters, token.message, currentProcess);
           Object.assign(subProcessesIns.processVariables, evalInput);
         }
 
@@ -332,6 +331,11 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         }
         ProcessInstance.app.models.WorkflowDefinition.find({'where': filter}, options,
           function fetchCallActivityWD(err, workflowDefinition) {
+            if (err) {
+              var errx = new Error('call activity or Subprocess definition fetch error');
+              log.error(options, errx);
+              return;
+            }
             var pdfilter = {'and': [{'name': evaluatedProcessName}, {'workflowDefinitionId': workflowDefinition[0].id}]};
             ProcessInstance.app.models.ProcessDefinition.find({'where': pdfilter
             }, options, function fetchCallActivityPD(err, pDefinition) {

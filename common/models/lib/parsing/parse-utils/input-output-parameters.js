@@ -11,7 +11,7 @@ module.exports.extractInputOutputParameters = function extractInputOutputParamet
   var inputOutputParameters = {'inputParameters': createInputOuputParameters(inputParametersObj),
     'outputParameters': createInputOuputParameters(outputParametersObj) };
   return inputOutputParameters;
-}
+};
 
 /**
  * Return the input/output parameters
@@ -23,8 +23,11 @@ function createInputOuputParameters(inputOutputParameter) {
   var inputVal;
   var objKey;
   var inputParameters = {};
+  var input;
+  var listVals;
+  var mapVals;
   if (typeof inputOutputParameter !== 'undefined' && inputOutputParameter.constructor.name === 'Array') {
-    for (var input of inputOutputParameter) {
+    for (input of inputOutputParameter) {
       if (input.attributes_ && input.attributes_.name) {
         inputId = input.attributes_.name.value;
       }
@@ -32,14 +35,14 @@ function createInputOuputParameters(inputOutputParameter) {
         inputVal = input['camunda:script'].text;
       }
       if (input.hasOwnProperty('camunda:list')) {
-        var listVals = input['camunda:list']['camunda:value'];
+        listVals = input['camunda:list']['camunda:value'];
         inputVal = [];
         for (var val of listVals) {
           inputVal.push(val.text);
         }
       }
       if (input.hasOwnProperty('camunda:map')) {
-        var mapVals = input['camunda:map']['camunda:entry'];
+        mapVals = input['camunda:map']['camunda:entry'];
         inputVal = {};
         objKey = '';
         for (var obj of mapVals) {
@@ -55,36 +58,35 @@ function createInputOuputParameters(inputOutputParameter) {
       inputParameters[inputId] = inputVal;
     }
   } else if (typeof inputOutputParameter !== 'undefined' && inputOutputParameter.constructor.name === 'Object') {
-      var input = inputOutputParameter;
-      if (input.attributes_ && input.attributes_.name) {
-        inputId = input.attributes_.name.value;
+    input = inputOutputParameter;
+    if (input.attributes_ && input.attributes_.name) {
+      inputId = input.attributes_.name.value;
+    }
+    if (input.hasOwnProperty('camunda:script')) {
+      inputVal = input['camunda:script'].text;
+    }
+    if (input.hasOwnProperty('camunda:list')) {
+      listVals = input['camunda:list']['camunda:value'];
+      inputVal = [];
+      for (let val of listVals) {
+        inputVal.push(val.text);
       }
-      if (input.hasOwnProperty('camunda:script')) {
-        inputVal = input['camunda:script'].text;
-      }
-      if (input.hasOwnProperty('camunda:list')) {
-        var listVals = input['camunda:list']['camunda:value'];
-        inputVal = [];
-        for (var val of listVals) {
-          inputVal.push(val.text);
+    }
+    if (input.hasOwnProperty('camunda:map')) {
+      mapVals = input['camunda:map']['camunda:entry'];
+      inputVal = {};
+      objKey = '';
+      for (let obj of mapVals) {
+        if (obj.attributes_ && obj.attributes_.key) {
+          objKey = obj.attributes_.key.value;
         }
+        inputVal[objKey] = obj.text;
       }
-      if (input.hasOwnProperty('camunda:map')) {
-        var mapVals = input['camunda:map']['camunda:entry'];
-        inputVal = {};
-        objKey = '';
-        for (var obj of mapVals) {
-          if (obj.attributes_ && obj.attributes_.key) {
-            objKey = obj.attributes_.key.value;
-          }
-          inputVal[objKey] = obj.text;
-        }
-      }
-      if (input.hasOwnProperty('text')) {
-        inputVal = input.text;
-      }
-      inputParameters[inputId] = inputVal;
- 
+    }
+    if (input.hasOwnProperty('text')) {
+      inputVal = input.text;
+    }
+    inputParameters[inputId] = inputVal;
   }
   return inputParameters;
 }

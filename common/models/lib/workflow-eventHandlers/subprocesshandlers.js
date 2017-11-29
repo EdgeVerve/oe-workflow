@@ -12,8 +12,9 @@
 var logger = require('oe-logger');
 var log = logger('ProcessInstance');
 var StateDelta = require('../../process-state-delta.js');
+var sandbox = require('../workflow-nodes/sandbox.js');
 
-var RecrevaluatePayload = require('../workflow-nodes/businessruletask-node.js').evaluatePayload;
+var recrevaluatePayload = require('../workflow-nodes/businessruletask-node.js').evaluatePayload;
 var SUBPROCESS_INTERRUPT_EVENT = 'SUBPROCESS_INTERRUPT_EVENT';
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
 
@@ -32,13 +33,13 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
 
     // Map the required process variables to call activity
     if (currentFlowObject.isCallActivity) {
-      if (currentFlowObject.inOutMappings && currentFlowObject.outputMappings) {
+      if (currentFlowObject.inOutMappings && currentFlowObject.inOutMappings.outputMappings) {
         var outputMappings = currentFlowObject.inOutMappings.outputMappings;
         for (var source in outputMappings) {
           if (source === 'variables' && outputMappings[source] === 'all') {
-            Object.assign(mappedVariables, processVariables)
-          } else if(source in processVariables) {
-            source = sandbox.evaluate$Expression(options, source, message, currentProcess);
+            Object.assign(mappedVariables, processVariables);
+          } else if (source in processVariables) {
+            source = sandbox.evaluate$Expression(options, source, token.message, currentProcess);
             var target = outputMappings[source];
             if (typeof processVariables[source] === 'object') {
               mappedVariables[target] = {};
@@ -48,11 +49,13 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
             }
           }
         }
+      } else {
+        Object.assign(mappedVariables, processVariables);
       }
     }
-    if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.outputParameters){
+    if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.outputParameters) {
       var outputParameters = currentFlowObject.inputOutputParameters.outputParameters;
-      var evalInput = RecrevaluatePayload(outputParameters, token.message, currentProcess);
+      var evalInput = recrevaluatePayload(outputParameters, token.message, currentProcess);
       Object.assign(mappedVariables, evalInput);
     }
 

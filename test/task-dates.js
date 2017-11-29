@@ -17,10 +17,6 @@ var request = require('request');
 var stateVerifier = require('./utils/stateverifier');
 
 var BaseUser = models.BaseUser;
-var BaseRole = models.BaseRole;
-var BaseRoleMapping = models.BaseRoleMapping;
-var UserProfile = models.UserProfile;
-
 var ctxUser1 = {
   ctx: {
     'tenantId': 'default',
@@ -141,10 +137,10 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
       assert.lengthOf(task, 1);
       testVars.task = task[0];
       var today = new Date();
-      today.setUTCDate(today.getUTCDate() + 15); // 15 days
+      today.setUTCDate(today.getUTCDate() + 15);
       assert.equalDate(today, task[0].dueDate);
       today = new Date();
-      today.setUTCMonth(today.getUTCMonth() + 2); // 2 months
+      today.setUTCMonth(today.getUTCMonth() + 2);
       assert.equalDate(today, task[0].followUpDate);
       setTimeout(done, 2000);
     });
@@ -251,9 +247,9 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
       testVars.task = task[0];
       var today = new Date();
       assert.equalDate(today, task[0].dueDate);
-      today.setUTCDate(today.getUTCDate() + 1) // tomorrow
+      today.setUTCDate(today.getUTCDate() + 1);
       assert.equalDate(today, task[0].followUpDate);
-      assert.strictEqual(task[0].priority, "3");
+      assert.strictEqual(task[0].priority, '3');
       setTimeout(done, 2000);
     });
   });
