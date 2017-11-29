@@ -309,8 +309,45 @@ module.exports = function Task(Task) {
           }
           pdata.pv.__action__ = data.__action__;
 
-          // TODO : update the change request
-          return self.complete_(pdata, options, next);
+          ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options); 
+          ChangeWorkflowRequest.find({
+            where: {
+              'workflowInstanceId': workflowInstanceId
+            }
+          }, options, function fetchRM(err, requests) {
+            if (err) {
+              log.error(options, 'unable to find request to end', err);
+              return next(err);
+            }
+            if (requests.length === 0) {
+              let errInvalidid;
+              errInvalidid = new Error('No corresponding workflow request found for verification update the Maker-Checker Process.');
+              log.error(options, errInvalidid);
+              return next(errInvalidid);
+            }
+            if (requests.length > 1) {
+              let errInvalidid;
+              errInvalidid = new Error('Multiple workflow requests found for verification update the Maker-Checker Process.');
+              log.error(options, errInvalidid);
+              return next(errInvalidid);
+            }
+            var request = requests[0];
+            let _verifiedBy = 'workflow-system';
+            if(options.ctx && options.ctx.username){
+              _verifiedBy = options.ctx.username;
+            }
+            let updates = {
+              _verifiedBy : _verifiedBy
+            }
+            request.updateAttributes(updates, options, function updateVerifiedByField(err, inst){
+              if (err) {
+                log.error(options, 'error in updating change workflow instance verifiedBy field', err);
+                return next(err);
+              }
+              log.debug(options, 'updated verified by field in change request by checker');
+              return self.complete_(pdata, options, next);
+            })
+          });
         } else if (taskObj.isCheckerAutoFinalize) {
           // do handling of finalize transaction first, only then complete the task
           // user task wont complete till finalize transaction is successful
