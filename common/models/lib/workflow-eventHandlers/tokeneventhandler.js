@@ -14,7 +14,9 @@ var log = logger('ProcessInstance-TokenEventHandler');
 var throwObject = require('../throwobject.js');
 var StateDelta = require('../../process-state-delta.js');
 var flowObjectEvaluator = require('../workflow-nodes/evaluate-flow-object.js');
+var dateUtils = require('../utils/date-utils.js');
 var sandbox = require('../workflow-nodes/sandbox.js');
+var RecrevaluatePayload = require('../workflow-nodes/businessruletask-node.js').evaluatePayload;
 var _ = require('lodash');
 
 var INTERMEDIATE_CATCH_EVENT = 'INTERMEDIATE_CATCH_EVENT';
@@ -55,6 +57,19 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         // do nothing here
       } else if (currentFlowObject.isWaitTask) {
         var poolInfo = processDefinitionInstance.findPoolInfo(currentFlowObject);
+        var taskObj = {
+          'name': currentFlowObject.name,
+          'processTokenId': token.id
+        };
+
+
+        if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters){
+          var inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
+          var evalInput = RecrevaluatePayload(inputParameters, token.message, currentProcess);
+          Object.assign(taskObj.stepVariables, evalInput);
+        }
+
+        Object.assign(token.message, taskObj.stepVariables);
         var evalEntity = function evalEntity(entityList) {
           entityList = updateExpBackComp(entityList);
           entityList = sandbox.evaluate$Expression(options, entityList, token.message, currentProcess, token);
@@ -79,11 +94,6 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
             log.error(new Error('Unable to dynamically evaluate Users/Roles, please check expression in UserTask'));
             return null;
           }
-        };
-
-        var taskObj = {
-          'name': currentFlowObject.name,
-          'processTokenId': token.id
         };
 
         if (currentFlowObject.candidateUsers) {
@@ -229,7 +239,30 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         taskObj.formVariables = variables;
         taskObj.processInstanceId = currentProcess.id;
         taskObj.workflowInstanceId = currentProcess.workflowInstanceId;
+        var ioparams = currentFlowObject.inputOutputParameters;
+        var dateFormat = 'DD-MM-YYYY';
+        // if (ioparams && ioparams.inputParameters && ioparams.inputParameters.__dateFormat__) {
+          // dateFormat = ioparams.inputParameters.__dateFormat__;
+        // }
 
+        if (currentFlowObject.followUpDate) {
+          let evaluatedList = evalEntity([currentFlowObject.followUpDate]);
+          if (evaluatedList !== null) {
+            taskObj.followUpDate = dateUtils.parse_date(evaluatedList[0], dateFormat);
+          }
+        }
+        if (currentFlowObject.dueDate) {
+          let evaluatedList = evalEntity([currentFlowObject.dueDate]);
+          if (evaluatedList !== null) {
+             taskObj.dueDate = dateUtils.parse_date(evaluatedList[0], dateFormat);
+          }
+        }
+        if (currentFlowObject.priority) {
+          let evaluatedList = evalEntity([currentFlowObject.priority]);
+          if (evaluatedList !== null) {
+             taskObj.priority = evaluatedList[0];
+          }
+        }
         ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
           if (err) {
             log.error(options, err);
@@ -248,15 +281,43 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           'parentToken': parentToken,
           '_parentProcessVariables': processVariablesToPass,
           'workflowInstanceId': currentProcess.workflowInstanceId,
-          'processVariables': {}
+          'processVariables': {
+            '_modelInstance' : {}
+          }
         };
 
         if (currentProcess._processVariables._modelInstance) {
-          Object.assign(subProcessesIns.processVariables, currentProcess._processVariables._modelInstance);
+          Object.assign(subProcessesIns.processVariables._modelInstance, currentProcess._processVariables._modelInstance);
         }
         // additionally pass any local variables as process variables -> step variables/ multi instance variables
         if (token.inVariables) {
           Object.assign(subProcessesIns.processVariables, token.inVariables);
+        }
+
+        // Map the required process variables to call activity
+        if (currentFlowObject.isCallActivity) {
+          if (currentFlowObject.inOutMappings && currentFlowObject.inputMappings) {
+            var inputMappings = currentFlowObject.inOutMappings.inputMappings;
+            for (var source in inputMappings) {
+              if (source === 'variables' && inputMappings[source] === 'all') {
+                Object.assign(subProcessesIns.processVariables, currentProcess._processVariables)
+              } else if(source in currentProcess._processVariables) {
+                source = sandbox.evaluate$Expression(options, source, message, currentProcess);
+                var target = inputMappings[source];
+                if (typeof currentProcess._processVariables[source] === 'object') {
+                  subProcessesIns.processVariables[target] = {};
+                  Object.assign(subProcessesIns.processVariables[target], currentProcess._processVariables[source]);
+                } else {
+                  subProcessIns.processVariables[target] = currentProcess._processVariables[source];
+                }
+              }
+            }
+          }
+        }
+        if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters){
+          var inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
+          var evalInput = RecrevaluatePayload(inputParameters, token.message, currentProcess);
+          Object.assign(subProcessesIns.processVariables, evalInput);
         }
 
         var evaluatedProcessName = currentFlowObject.subProcessId;

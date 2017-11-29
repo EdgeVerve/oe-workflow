@@ -13,19 +13,50 @@ var logger = require('oe-logger');
 var log = logger('ProcessInstance');
 var StateDelta = require('../../process-state-delta.js');
 
+var RecrevaluatePayload = require('../workflow-nodes/businessruletask-node.js').evaluatePayload;
 var SUBPROCESS_INTERRUPT_EVENT = 'SUBPROCESS_INTERRUPT_EVENT';
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
 
 var exports = module.exports = {};
 
 exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options, currentProcess, token, processVariables) {
+  var mappedVariables = {};
   var delta = new StateDelta();
-  delta.setProcessVariables(processVariables);
   currentProcess.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
     if (err) {
       log.error(options, err);
       return;
     }
+
+    var currentFlowObject = processDefinitionInstance.getFlowObjectByName(token.name);
+
+    // Map the required process variables to call activity
+    if (currentFlowObject.isCallActivity) {
+      if (currentFlowObject.inOutMappings && currentFlowObject.outputMappings) {
+        var outputMappings = currentFlowObject.inOutMappings.outputMappings;
+        for (var source in outputMappings) {
+          if (source === 'variables' && outputMappings[source] === 'all') {
+            Object.assign(mappedVariables, processVariables)
+          } else if(source in processVariables) {
+            source = sandbox.evaluate$Expression(options, source, message, currentProcess);
+            var target = outputMappings[source];
+            if (typeof processVariables[source] === 'object') {
+              mappedVariables[target] = {};
+              Object.assign(mappedVariables[target], processVariables[source]);
+            } else {
+              mappedVariables[target] = processVariables[source];
+            }
+          }
+        }
+      }
+    }
+    if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.outputParameters){
+      var outputParameters = currentFlowObject.inputOutputParameters.outputParameters;
+      var evalInput = RecrevaluatePayload(outputParameters, token.message, currentProcess);
+      Object.assign(mappedVariables, evalInput);
+    }
+
+    delta.setProcessVariables(mappedVariables);
     setImmediate(function setImmediateCb(options) {
       currentProcess._endFlowObject(options, token, processDefinitionInstance, delta);
     }, options);

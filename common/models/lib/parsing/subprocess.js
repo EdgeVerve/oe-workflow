@@ -11,6 +11,7 @@ var util = require('util');
 var BPMNActivity = require('./activity.js').BPMNActivity;
 var BPMNCallActivity = require('./callactivity.js').BPMNCallActivity;
 var checkAndAddMultiInstanceCharacteristics = require('./taskmarkers.js').checkAndAddMultiInstanceCharacteristics;
+var extractInputOutputParameters = require('./parse-utils/input-output-parameters.js').extractInputOutputParameters;
 
 var logger = require('oe-logger');
 var log = logger('SubProcess-Parser');
@@ -36,6 +37,9 @@ exports.createBPMNSubProcess = function createBPMNSubProcess(flowObject, subProc
   }
   var subprocessObject = new BPMNSubProcess(bpmnId, name, type, triggeredByEvent, subProcessDefinition);
   checkAndAddMultiInstanceCharacteristics(flowObject, subprocessObject);
+  if (flowObject['bpmn2:extensionElements'] && flowObject['bpmn2:extensionElements']['camunda:inputOutput']) {
+    subprocessObject.inputOutputParameters = extractInputOutputParameters(flowObject['bpmn2:extensionElements']['camunda:inputOutput']);
+  }
   return subprocessObject;
 };
 
