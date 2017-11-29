@@ -12,7 +12,7 @@ var BPMNActivity = require('./activity.js').BPMNActivity;
 var logger = require('oe-logger');
 var log = logger('Tasks-Parser');
 var checkAndAddMultiInstanceCharacteristics = require('./taskmarkers.js').checkAndAddMultiInstanceCharacteristics;
-
+var extractInputOutputParameters = require('./parse-utils/input-output-parameters.js').extractInputOutputParameters;
 /**
  * Subsumes all kind of tasks
  * @param {String} bpmnId BpmnID
@@ -102,9 +102,17 @@ BPMNTask.prototype.addUserTaskAttributes = function addUserTaskAttributes(defObj
     var excludedGroups = defObject.attributes_['camunda:excludedGroups'].value;
     currentProcessElement.excludedGroups = excludedGroups.split(',');
   }
-
+  if (defObject.attributes_['camunda:dueDate']) {
+    currentProcessElement.dueDate = defObject.attributes_['camunda:dueDate'].value;
+  }
+  if (defObject.attributes_['camunda:followUpDate']) {
+    currentProcessElement.followUpDate = defObject.attributes_['camunda:followUpDate'].value;
+  }
+  if (defObject.attributes_['camunda:priority']) {
+    currentProcessElement.priority = defObject.attributes_['camunda:priority'].value;
+  }
   if (defObject['bpmn2:extensionElements'] && defObject['bpmn2:extensionElements']['camunda:inputOutput']) {
-    this.inputOutputParameters = extractInputOutputParameters(defObject['bpmn2:extensionElements']['camunda:inputOutput']);
+    currentProcessElement.inputOutputParameters = extractInputOutputParameters(defObject['bpmn2:extensionElements']['camunda:inputOutput']);
   }
   addUserTaskFormVariables(defObject, currentProcessElement);
 };
@@ -117,7 +125,7 @@ BPMNTask.prototype.addServiceTaskAttributes = function addServiceTaskAttributes(
   this.inputOutputParameters = {};
   var serviceConnectorObject;
   if (defObject['bpmn2:extensionElements'] && defObject['bpmn2:extensionElements']['camunda:connector'] &&
-        defObject['bpmn2:extensionElements']['camunda:inputOutput']) {
+    defObject['bpmn2:extensionElements']['camunda:inputOutput']) {
     this.inputOutputParameters = extractInputOutputParameters(defObject['bpmn2:extensionElements']['camunda:inputOutput']);
   }
   if (defObject['bpmn2:extensionElements'] && defObject['bpmn2:extensionElements']['camunda:oeConnector']) {
@@ -292,66 +300,6 @@ function extractFormField(formFieldObject) {
   }
   return formField;
 }
-
-/**
- * Add Extension Elements to the task object
- * @param {BPMNProcessDefinition} defObject ProcessDefinition
- * @returns {Object} inputOutputParameters
-
- */
-function extractInputOutputParameters(defObject) {
-  var inputParametersObj = defObject['camunda:inputParameter'];
-  var outputParametersObj = defObject['camunda:outputParameter'];
-  var inputOutputParameters = {'inputParameters': createInputOuputParameters(inputParametersObj),
-    'outputParameters': createInputOuputParameters(outputParametersObj) };
-  return inputOutputParameters;
-}
-
-/**
- * Return the input/output parameters
- * @param {Object} inputOutputParameter inputOutputParameter
- * @returns {boolean} isServiceTask
- */
-function createInputOuputParameters(inputOutputParameter) {
-  var inputId;
-  var inputVal;
-  var objKey;
-  var inputParameters = {};
-  if (typeof inputOutputParameter !== 'undefined' && inputOutputParameter.constructor.name === 'Array') {
-    for (var input of inputOutputParameter) {
-      if (input.attributes_ && input.attributes_.name) {
-        inputId = input.attributes_.name.value;
-      }
-      if (input.hasOwnProperty('camunda:script')) {
-        inputVal = input['camunda:script'].text;
-      }
-      if (input.hasOwnProperty('camunda:list')) {
-        var listVals = input['camunda:list']['camunda:value'];
-        inputVal = [];
-        for (var val of listVals) {
-          inputVal.push(val.text);
-        }
-      }
-      if (input.hasOwnProperty('camunda:map')) {
-        var mapVals = input['camunda:map']['camunda:entry'];
-        inputVal = {};
-        objKey = '';
-        for (var obj of mapVals) {
-          if (obj.attributes_ && obj.attributes_.key) {
-            objKey = obj.attributes_.key.value;
-          }
-          inputVal[objKey] = obj.text;
-        }
-      }
-      if (input.hasOwnProperty('text')) {
-        inputVal = input.text;
-      }
-      inputParameters[inputId] = inputVal;
-    }
-  }
-  return inputParameters;
-}
-
 
 /**
  * Add oe-connector attributes to service task

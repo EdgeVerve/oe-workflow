@@ -47,7 +47,15 @@
       "type": ["string"],
       "required" : false
     },
-    "formKey" : {
+    "dueDate" : {
+      "type" : "date",
+      "required" : false
+    },
+    "followUpDate" : {
+      "type" : "date",
+      "required" : false
+    },
+    "priority" : {
       "type" : "string",
       "required" : false
     },
@@ -56,6 +64,10 @@
       "required" : false
     },
     "formVariables" : {
+      "type" : "object",
+      "required" : false
+    },
+    "stepVariables" : {
       "type" : "object",
       "required" : false
     }   

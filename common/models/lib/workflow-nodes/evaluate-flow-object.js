@@ -32,7 +32,7 @@ module.exports.evaluate = function EvaluateFO(options, flowObject, incomingMsg, 
   } else if (script) {
     var scriptVariables = incomingMsg || {};
     if (flowObject.inputOutputParameters && flowObject.inputOutputParameters.inputParameters)      {
-      stepVariables = evaluatePayload(options, flowObject.inputOutputParameters.inputParameters, message, process);
+      stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, message, process);
       _.assign(scriptVariables, stepVariables);
     }
     var message = sandbox.evaluateScript(options, script, scriptVariables, process, delta, token);
@@ -40,7 +40,7 @@ module.exports.evaluate = function EvaluateFO(options, flowObject, incomingMsg, 
   } else if (service) {
     var serviceVariables = incomingMsg || {};
     if (flowObject.inputOutputParameters && flowObject.inputOutputParameters.inputParameters)      {
-      stepVariables = evaluatePayload(options, flowObject.inputOutputParameters.inputParameters, message, process);
+      stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, message, process);
       _.assign(serviceVariables, stepVariables);
     }
     serviceNode.run(options, flowObject, serviceVariables, process, token, done);
