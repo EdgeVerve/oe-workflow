@@ -286,8 +286,10 @@ module.exports = function Task(Task) {
             return next(err);
           }
 
-          let validActArr = taskObj.stepVariables.__action__ || [];
-          validActArr = validActArr.concat([ 'approved' , 'rejected' ]);
+          let validActArr = [ 'approved' , 'rejected' ];
+          if( taskObj.stepVariables && taskObj.stepVariables.__action__ ){
+            validActArr = valdActArr.concat(taskObj.stepVariables.__action__); 
+          }
 
           let isValid = ( validActArr.indexOf(data.__action__) > -1 );
           if(!isValid){
