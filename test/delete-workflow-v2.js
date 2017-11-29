@@ -162,7 +162,6 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
         'workflowDefinitionName': wfName
       },
       'operation': 'delete',
-      'wfDependent': true,
       'version': 'v2'
     };
 
@@ -234,23 +233,13 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
       }
       log.debug(instance);
-      done();
-    });
-  });
-
-  it('findById - user2', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
+      assert.isNotNull(instance);
       done();
     });
   });
@@ -262,7 +251,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -275,153 +264,6 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
         log.debug(instance);
         done();
       }
-    });
-  });
-
-  it('findById [REST] - user2', function CB(done) {
-    bootstrap.login(User2Credentials, function CB(err, login) {
-      if (err) {
-        return done(err);
-      }
-      assert.isNotNull(login.id);
-
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
-
-      request({ url: url, method: 'GET' }, onGet);
-
-      function onGet(err, response) {
-        if (err) {
-          return done(err);
-        }
-        var instance = JSON.parse(response.body);
-        log.debug(instance);
-        done();
-      }
-    });
-  });
-
-  xit('should not be able to update instance [UpdateAttributes/PUT by Id] - user1', function CB(done) {
-    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
-
-      instance.updateAttributes({
-        'luckydraw': '3333'
-      }, User1Context, function CB(err, inst) {
-        if (err) {
-          log.debug(err);
-          assert.isNotNull(err);
-          assert.strictEqual(err.statusCode, 400);
-          assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-          return done();
-        }
-
-        log.debug(inst);
-        var errx = new Error('Instance should not have been updated.');
-        log.error(errx);
-        done(errx);
-      });
-    });
-  });
-
-  xit('should not be able to update instance [UpdateAttributes/PUT by Id]- user2 (Any Other User)', function CB(done) {
-    models[modelName].findById(testVars.instanceId, User2Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-
-      log.debug(instance);
-      assert.isNull(instance);
-      return done();
-      // instance is already null so anyway instance.updateAttributes is not applicable
-    });
-  });
-
-  xit('should not be able to update instance [Upsert/PUT] - user1', function CB(done) {
-    models[modelName].upsert({
-      'luckydraw': '3333',
-      'id': testVars.instanceId,
-      '_version': testVars.instanceVersion
-    }, User1Context, function CB(err, inst) {
-      if (err) {
-        log.debug(err);
-        assert.isNotNull(err);
-        assert.strictEqual(err.statusCode, 400);
-        assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-        return done();
-      }
-
-      log.debug(inst);
-      var errx = new Error('Instance should not have been updated.');
-      log.error(errx);
-      done(errx);
-    });
-  });
-
-  xit('should not be able to update instance [Upsert/PUT]- user2 (Any Other User)', function CB(done) {
-    models[modelName].upsert({
-      'luckydraw': '3333',
-      'id': testVars.instanceId,
-      '_version': testVars.instanceVersion
-    }, User2Context, function CB(err, inst) {
-      if (err) {
-        log.debug(err);
-        assert.isNotNull(err);
-        assert.strictEqual(err.statusCode, 400);
-        assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-        return done();
-      }
-
-      log.debug(inst);
-      var errx = new Error('Instance should not have been updated.');
-      log.error(errx);
-      done(errx);
-    });
-  });
-
-  // till delete part is updated by user2 - user1
-  xit('should not be able to delete instance - user1', function CB(done) {
-    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
-
-      models[modelName].deleteWithVersion(instance.id, instance._version, User1Context, function CB(err, inst) {
-        if (err) {
-          log.debug(err);
-          assert.isNotNull(err);
-          assert.strictEqual(err.statusCode, 400);
-          assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-          return done();
-        }
-
-        log.debug(inst);
-        var errx = new Error('Instance should not have been deleted.');
-        log.error(errx);
-        done(errx);
-      });
-    });
-  });
-
-  xit('should not be able to delete instance - user2 (Any other user)', function CB(done) {
-    models[modelName].deleteWithVersion(testVars.instanceId, testVars.instanceVersion, User2Context, function CB(err, inst) {
-      if (err) {
-        log.debug(err);
-        assert.isNotNull(err);
-        log.debug(JSON.stringify(testVars, null, '\t'));
-        return done();
-      }
-
-      log.debug(inst);
-      var errx = new Error('Instance should not have been deleted.');
-      log.error(errx);
-      done(errx);
     });
   });
 
@@ -440,23 +282,13 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
       }
       log.debug(instance);
-      done();
-    });
-  });
-
-  it('findById - user2', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
+      assert.isNull(instance)
       done();
     });
   });
@@ -469,7 +301,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -478,37 +310,14 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
           return done(err);
         }
         var instance = JSON.parse(response.body);
-        assert.strictEqual(response.statusCode, 200);
+        assert.strictEqual(response.statusCode, 404);
         log.debug(instance);
         done();
       }
     });
   });
 
-  it('findById [REST] - user2', function CB(done) {
-    bootstrap.login(User2Credentials, function CB(err, login) {
-      if (err) {
-        return done(err);
-      }
-      assert.isNotNull(login.id);
-
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
-
-      request({ url: url, method: 'GET' }, onGet);
-
-      function onGet(err, response) {
-        if (err) {
-          return done(err);
-        }
-        var instance = JSON.parse(response.body);
-        assert.strictEqual(response.statusCode, 200);
-        log.debug(instance);
-        done();
-      }
-    });
-  });
-
-  xit('remove model instances [clean-up]', function CB(done) {
+  it('remove model instances [clean-up]', function CB(done) {
     models[modelName].destroyAll({}, User1Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -519,7 +328,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
     });
   });
 
-  xit('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
+  it('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
     var id = testVars.modelDetails.id;
     var version = testVars.modelDetails._version;
     models.ModelDefinition.deleteWithVersion(id, version, User1Context, function CB(err) {
@@ -531,7 +340,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
     });
   });
 
-  xit('remove workflow mapping [clean-up]', function CB(done) {
+  it('remove workflow mapping [clean-up]', function CB(done) {
     models.WorkflowMapping.destroyAll({}, User1Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -610,7 +419,6 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
         'workflowDefinitionName': wfName
       },
       'operation': 'delete',
-      'wfDependent': true,
       'version': 'v2'
     };
 
@@ -682,27 +490,17 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
       }
       log.debug(instance);
+      assert.isNotNull(instance);
       done();
     });
   });
-
-  it('findById - user2', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
-      done();
-    });
-  });
-
+  
   it('findById [REST] - user1', function CB(done) {
     bootstrap.login(User1Credentials, function CB(err, login) {
       if (err) {
@@ -710,7 +508,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
       }
       assert.isNotNull(login.id);
 
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -723,153 +521,6 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
         log.debug(instance);
         done();
       }
-    });
-  });
-
-  it('findById [REST] - user2', function CB(done) {
-    bootstrap.login(User2Credentials, function CB(err, login) {
-      if (err) {
-        return done(err);
-      }
-      assert.isNotNull(login.id);
-
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
-
-      request({ url: url, method: 'GET' }, onGet);
-
-      function onGet(err, response) {
-        if (err) {
-          return done(err);
-        }
-        var instance = JSON.parse(response.body);
-        log.debug(instance);
-        done();
-      }
-    });
-  });
-
-  xit('should not be able to update instance [UpdateAttributes/PUT by Id] - user1', function CB(done) {
-    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
-
-      instance.updateAttributes({
-        'luckydraw': '3333'
-      }, User1Context, function CB(err, inst) {
-        if (err) {
-          log.debug(err);
-          assert.isNotNull(err);
-          assert.strictEqual(err.statusCode, 400);
-          assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-          return done();
-        }
-
-        log.debug(inst);
-        var errx = new Error('Instance should not have been updated.');
-        log.error(errx);
-        done(errx);
-      });
-    });
-  });
-
-  xit('should not be able to update instance [UpdateAttributes/PUT by Id]- user2 (Any Other User)', function CB(done) {
-    models[modelName].findById(testVars.instanceId, User2Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-
-      log.debug(instance);
-      assert.isNull(instance);
-      return done();
-      // instance is already null so anyway instance.updateAttributes is not applicable
-    });
-  });
-
-  xit('should not be able to update instance [Upsert/PUT] - user1', function CB(done) {
-    models[modelName].upsert({
-      'luckydraw': '3333',
-      'id': testVars.instanceId,
-      '_version': testVars.instanceVersion
-    }, User1Context, function CB(err, inst) {
-      if (err) {
-        log.debug(err);
-        assert.isNotNull(err);
-        assert.strictEqual(err.statusCode, 400);
-        assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-        return done();
-      }
-
-      log.debug(inst);
-      var errx = new Error('Instance should not have been updated.');
-      log.error(errx);
-      done(errx);
-    });
-  });
-
-  xit('should not be able to update instance [Upsert/PUT]- user2 (Any Other User)', function CB(done) {
-    models[modelName].upsert({
-      'luckydraw': '3333',
-      'id': testVars.instanceId,
-      '_version': testVars.instanceVersion
-    }, User2Context, function CB(err, inst) {
-      if (err) {
-        log.debug(err);
-        assert.isNotNull(err);
-        assert.strictEqual(err.statusCode, 400);
-        assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-        return done();
-      }
-
-      log.debug(inst);
-      var errx = new Error('Instance should not have been updated.');
-      log.error(errx);
-      done(errx);
-    });
-  });
-
-  // till delete part is updated by user2 - user1
-  xit('should not be able to delete instance - user1', function CB(done) {
-    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
-
-      models[modelName].deleteWithVersion(instance.id, instance._version, User1Context, function CB(err, inst) {
-        if (err) {
-          log.debug(err);
-          assert.isNotNull(err);
-          assert.strictEqual(err.statusCode, 400);
-          assert.strictEqual(err.code, 'ATTACH_WORKFLOW_BAD_REQUEST');
-          return done();
-        }
-
-        log.debug(inst);
-        var errx = new Error('Instance should not have been deleted.');
-        log.error(errx);
-        done(errx);
-      });
-    });
-  });
-
-  xit('should not be able to delete instance - user2 (Any other user)', function CB(done) {
-    models[modelName].deleteWithVersion(testVars.instanceId, testVars.instanceVersion, User2Context, function CB(err, inst) {
-      if (err) {
-        log.debug(err);
-        assert.isNotNull(err);
-        log.debug(JSON.stringify(testVars, null, '\t'));
-        return done();
-      }
-
-      log.debug(inst);
-      var errx = new Error('Instance should not have been deleted.');
-      log.error(errx);
-      done(errx);
     });
   });
 
@@ -888,23 +539,13 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
   });
 
   it('findById - user1', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User1Context, function cb(err, instance) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
         return done(err);
       }
       log.debug(instance);
-      done();
-    });
-  });
-
-  it('findById - user2', function CB(done) {
-    models[modelName].findX(testVars.instanceId, User2Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
+      assert.isNotNull(instance)
       done();
     });
   });
@@ -917,7 +558,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
       assert.isNotNull(login.id);
       //   var token = login.id;
 
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
 
       request({ url: url, method: 'GET' }, onGet);
 
@@ -933,30 +574,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
     });
   });
 
-  it('findById [REST] - user2', function CB(done) {
-    bootstrap.login(User2Credentials, function CB(err, login) {
-      if (err) {
-        return done(err);
-      }
-      assert.isNotNull(login.id);
-
-      var url = bootstrap.basePath + '/' + modelName + 's/maker-checker/' + testVars.instanceId + '?access_token=' + bootstrap.token;
-
-      request({ url: url, method: 'GET' }, onGet);
-
-      function onGet(err, response) {
-        if (err) {
-          return done(err);
-        }
-        var instance = JSON.parse(response.body);
-        assert.strictEqual(response.statusCode, 200);
-        log.debug(instance);
-        done();
-      }
-    });
-  });
-
-  xit('remove model instances [clean-up]', function CB(done) {
+  it('remove model instances [clean-up]', function CB(done) {
     models[modelName].destroyAll({}, User1Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -967,7 +585,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
     });
   });
 
-  xit('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
+  it('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
     var id = testVars.modelDetails.id;
     var version = testVars.modelDetails._version;
     models.ModelDefinition.deleteWithVersion(id, version, User1Context, function CB(err) {
@@ -979,7 +597,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
     });
   });
 
-  xit('remove workflow mapping [clean-up]', function CB(done) {
+  it('remove workflow mapping [clean-up]', function CB(done) {
     models.WorkflowMapping.destroyAll({}, User1Context, function cb(err, res) {
       if (err) {
         log.error(err);

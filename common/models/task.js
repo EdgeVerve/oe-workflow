@@ -288,12 +288,12 @@ module.exports = function Task(Task) {
 
           let validActArr = [ 'approved' , 'rejected' ];
           if( taskObj.stepVariables && taskObj.stepVariables.__action__ ){
-            validActArr = valdActArr.concat(taskObj.stepVariables.__action__); 
+            validActArr = validActArr.concat(taskObj.stepVariables.__action__); 
           }
 
           let isValid = ( validActArr.indexOf(data.__action__) > -1 );
           if(!isValid){
-            let err = new Error('Provided action is not valid. Possible valid actions : ', JSON.stringify(validActArr));
+            let err = new Error('Provided action is not valid. Possible valid actions : '+ JSON.stringify(validActArr));
             log.error(options, err);
             return next(err);
           }
@@ -310,13 +310,16 @@ module.exports = function Task(Task) {
           if (process._processVariables._maker_checker_impl === 'v2') {
             postData.version = 'v2';
           }
-          var pdata = {};
-          if(typeof data.pv !== undefined){
+          var pdata = {
+            pv : {}
+          };
+          if(typeof data.pv !== 'undefined'){
             pdata.pv = data.pv;
           }
-          if(typeof data.msg !== undefined){
+          if(typeof data.msg !== 'undefined'){
             pdata.msg = data.msg;
           }
+          pdata.pv.__action__ = data.__action__;
 
           WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
             if (err) {

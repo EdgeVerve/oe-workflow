@@ -31,12 +31,8 @@
       "type": "string",
       "required": true
     },
-    "_verifiers": {
-      "type": [ "string" ] ,
-      "required": false
-    },
-    "_modifiers": {
-      "type": [ "string" ] ,
+    "_verifiedBy": {
+      "type": "string" ,
       "required": false
     }
   },

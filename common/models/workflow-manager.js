@@ -143,7 +143,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
       }
 
       var operation = data.operation;
-      var wfDependent = data.wfDependent;
+      var wfDependent = data.wfDependent || true;
       var Model = loopback.getModel(modelName, options);
       var actualModelName = Model.modelName;
 

@@ -89,11 +89,13 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
 };
 
 function rejectedDeleteInstance(app, request, options, next) {
-  var _verifiers = request._verifiers || [];
-  _verifiers.push(options.ctx.username+':rejected');
+  var _verifiedBy = 'workflow-system';
+  if(options.ctx && options.ctx.username){
+    _verifiedBy = options.ctx.username;
+  }
   var updates = {
     status : 'complete',
-    _verifiers: _verifiers,
+    _verifiedBy: _verifiedBy,
     _version: request._version
   }
   request.updateAttributes(updates, options, function cb(err, inst) {
@@ -115,11 +117,13 @@ function approvedDeleteInstance(app, request, options, next) {
       return next(err);
     }
 
-    var _verifiers = request._verifiers || [];
-    _verifiers.push(options.ctx.username+':approved');
+    var _verifiedBy = 'workflow-system';
+    if(options.ctx && options.ctx.username){
+      _verifiedBy = options.ctx.username;
+    }
     var updates = {
       status : 'complete',
-      _verifiers: _verifiers,
+      _verifiedBy: _verifiedBy,
       _version: request._version
     }
     request.updateAttributes(updates, options, function cb(err, inst) {
@@ -135,11 +139,13 @@ function approvedDeleteInstance(app, request, options, next) {
 
 function rejectedUpdateInstance(app, request, options, next) {
   // TODO : create better error message so that user can understand why it failed
-  var _verifiers = request._verifiers || [];
-  _verifiers.push(options.ctx.username+':rejected');
+  var _verifiedBy = 'workflow-system';
+  if(options.ctx && options.ctx.username){
+    _verifiedBy = options.ctx.username;
+  }
   var updates = {
     status : 'complete',
-    _verifiers: _verifiers,
+    _verifiedBy: _verifiedBy,
     _version: request._version
   }
   request.updateAttributes(updates, options, function cb(err, inst) {
@@ -172,7 +178,10 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
       applyWorkflowUpdates(updates, wfupdates);
     }
 
-    updates._verifiedBy = options.ctx.username || 'workflow-system';
+    updates._verifiedBy = 'workflow-system';
+    if(options.ctx && options.ctx.username){
+      updates._verifiedBy = options.ctx.username;
+    }
     instance.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
         log.error(options, err);
@@ -180,11 +189,13 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
         // otherwise the instance will be stuck because of workflow
         return next(err);
       }
-      var _verifiers = request._verifiers || [];
-      _verifiers.push(options.ctx.username+':approved');
+      var _verifiedBy = 'workflow-system';
+      if(options.ctx && options.ctx.username){
+        _verifiedBy = options.ctx.username;
+      }
       var updates = {
         status : 'complete',
-        _verifiers: _verifiers,
+        _verifiedBy: _verifiedBy,
         _version: request._version
       }
       request.updateAttributes(updates, options, function cb(err, dinst) {
@@ -201,11 +212,13 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
 
 function rejectedCreateInstance(app, request, options, next) {
   // TODO : create better error message so that user can understand why it failed
-  var _verifiers = request._verifiers || [];
-  _verifiers.push(options.ctx.username+':rejected');
+  var _verifiedBy = 'workflow-system';
+  if(options.ctx && options.ctx.username){
+    _verifiedBy = options.ctx.username;
+  }
   var updates = {
     status : 'complete',
-    _verifiers: _verifiers,
+    _verifiedBy: _verifiedBy,
     _version: request._version
   }
   request.updateAttributes(updates, options, function cb(err, inst) {
@@ -226,17 +239,23 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
     applyWorkflowUpdates(data, wfupdates);
   }
 
-  data._verifiedBy = options.ctx.username || 'workflow-system';
+  var _verifiedBy = 'workflow-system';
+  if(options.ctx && options.ctx.username){
+    _verifiedBy = options.ctx.username;
+  }
+  data._verifiedBy = data._verifiedBy; 
   model.create(data, options, function createTrueInstance(err, instance) {
     if (err) {
       log.error(options, err);
       return next(err);
     }
-    var _verifiers = request._verifiers || [];
-    _verifiers.push(options.ctx.username+':approved');
+    var _verifiedBy = 'workflow-system';
+    if(options.ctx && options.ctx.username){
+      _verifiedBy = options.ctx.username;
+    }
     var updates = {
       status : 'complete',
-      _verifiers: _verifiers,
+      _verifiedBy: _verifiedBy,
       _version: request._version
     }
     request.updateAttributes(updates, options, function cb(err, inst) {
