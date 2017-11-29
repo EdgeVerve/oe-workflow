@@ -82,8 +82,11 @@ BPMNTask.prototype.addUserTaskAttributes = function addUserTaskAttributes(defObj
     if(defObject.attributes_['camunda:taskCategory'].value == 'multiMaker'){
       currentProcessElement.isMultiMaker = true;
     }
-    if(defObject.attributes_['camunda:taskCategory'].value == 'autoFinalize'){
-      currentProcessElement.isAutoFinalize = true;
+    if(defObject.attributes_['camunda:taskCategory'].value == 'checker'){
+      currentProcessElement.isChecker = true;
+    }
+    if(defObject.attributes_['camunda:taskCategory'].value == 'checkerAutoFinalize'){
+      currentProcessElement.isCheckerAutoFinalize = true;
     }
   }
   if (defObject.attributes_['camunda:candidateUsers']) {

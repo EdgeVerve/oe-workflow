@@ -274,7 +274,44 @@ module.exports = function Task(Task) {
             }, options, instx);
 
           });
-        } else if (taskObj.isAutoFinalize) {
+        } else if (taskObj.isChecker) {
+          // do handling of finalize transaction first, only then complete the task
+          // user task wont complete till finalize transaction is successful
+          var WorkflowManager = loopback.getModel('WorkflowManager', options);
+          var workflowInstanceId = process._processVariables._workflowInstanceId;
+
+          if( typeof data.__action__ === 'undefined' ){
+            let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+            log.error(options, err);
+            return next(err);
+          }
+
+          let validActArr = [ 'approved' , 'rejected' ];
+          if( taskObj.stepVariables && taskObj.stepVariables.__action__ ){
+            validActArr = validActArr.concat(taskObj.stepVariables.__action__); 
+          }
+
+          let isValid = ( validActArr.indexOf(data.__action__) > -1 );
+          if(!isValid){
+            let err = new Error('Provided action is not valid. Possible valid actions : '+ JSON.stringify(validActArr));
+            log.error(options, err);
+            return next(err);
+          }
+
+          var pdata = {
+            pv : {}
+          };
+          if(typeof data.pv !== 'undefined'){
+            pdata.pv = data.pv;
+          }
+          if(typeof data.msg !== 'undefined'){
+            pdata.msg = data.msg;
+          }
+          pdata.pv.__action__ = data.__action__;
+
+          // TODO : update the change request
+          return self.complete_(pdata, options, next);
+        } else if (taskObj.isCheckerAutoFinalize) {
           // do handling of finalize transaction first, only then complete the task
           // user task wont complete till finalize transaction is successful
           var WorkflowManager = loopback.getModel('WorkflowManager', options);

@@ -9,7 +9,7 @@
       <bpmn2:incoming>SequenceFlow_11a6y3c</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_11a6y3c" sourceRef="UserTask_1efljdb" targetRef="EndEvent_1jdoo71" />
-    <bpmn2:userTask id="UserTask_1efljdb" name="Checker" camunda:candidateUsers="user3" camunda:taskCategory="autoFinalize">
+    <bpmn2:userTask id="UserTask_1efljdb" name="Checker" camunda:candidateUsers="user3" camunda:taskCategory="checkerAutoFinalize">
       <bpmn2:incoming>SequenceFlow_1xnxi32</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_11a6y3c</bpmn2:outgoing>
     </bpmn2:userTask>
