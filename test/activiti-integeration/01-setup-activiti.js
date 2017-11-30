@@ -76,7 +76,7 @@ describe('Activiti Setup Creation', function CB() {
 
   it('should initiate activiti models dynamically', function cb(done) {
     var ActivitiManager = models.Activiti_Manager;
-    var url = 'http://' + process.env.ACTIVITI_HOST + '/activiti-rest/service/';
+    var url = process.env.ACTIVITI_HOST + '/activiti-rest/service/';
 
     ActivitiManager.enable(url, User1Context, function cb(err, res) {
       if (err) {

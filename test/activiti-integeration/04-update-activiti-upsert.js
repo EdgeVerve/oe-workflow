@@ -133,7 +133,7 @@ describe('Test case for Trigger on Update Activiti [ not workflow dependent ]', 
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'update',
       'wfDependent': false
@@ -206,7 +206,7 @@ describe('Test case for Trigger on Update Activiti [ not workflow dependent ]', 
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -386,7 +386,7 @@ describe('Test case for Trigger on Update Activiti [ workflow dependent ] - appr
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'update',
       'wfDependent': true
@@ -456,7 +456,7 @@ describe('Test case for Trigger on Update Activiti [ workflow dependent ] - appr
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -739,7 +739,7 @@ describe('Test case for Trigger on Update Activiti [ workflow dependent ] - reje
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'update',
       'wfDependent': true
@@ -808,7 +808,7 @@ describe('Test case for Trigger on Update Activiti [ workflow dependent ] - reje
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -1057,7 +1057,7 @@ describe('Test case for Trigger on Update Activiti - Retrigger Case [ workflow d
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'update',
       'wfDependent': true
@@ -1129,7 +1129,7 @@ describe('Test case for Trigger on Update Activiti - Retrigger Case [ workflow d
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -1241,7 +1241,7 @@ describe('Test case for Trigger on Update Activiti - Retrigger Case [ workflow d
       log.debug(instance);
       testVars._workflowRefNew = instance.id;
       assert.isNotNull(instance.processDefinitionId);
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -1255,7 +1255,7 @@ describe('Test case for Trigger on Update Activiti - Retrigger Case [ workflow d
         }
         log.debug(res);
         assert.isNotNull(res);
-        assert.equal(res.processDefinitionId, 'escalationExample:1:36');
+        assert.equal(res.processDefinitionId, 'escalationExample:1:33');
         assert.equal(res.suspended, true);
         done();
       });
