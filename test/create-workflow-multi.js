@@ -59,10 +59,6 @@ var User1Credentials = {
   'username': 'user1',
   'password': 'user1'
 };
-var User2Credentials = {
-  'username': 'user2',
-  'password': 'user2'
-};
 
 describe('User Creation', function CB() {
   this.timeout(10000);
@@ -252,7 +248,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
         return done(err);
       }
       log.debug(instance);
-      assert.isNull(instance)
+      assert.isNull(instance);
       done();
     });
   });
@@ -282,9 +278,9 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
 
   it('complete user task by maker2', function CB(done) {
     testVars.taskInstance.complete({
-      'luckydraw' : '22222',
-      'pv' : {
-        'comment_by_maker2' : 'sample comment'
+      'luckydraw': '22222',
+      'pv': {
+        'comment_by_maker2': 'sample comment'
       }
     }, User1Context, function cb(err, res) {
       if (err) {
@@ -304,7 +300,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
         return done(err);
       }
       log.debug(instance);
-      assert.isNull(instance)
+      assert.isNull(instance);
       done();
     });
   });
@@ -351,9 +347,9 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
 
   it('complete user task by checker', function CB(done) {
     testVars.checkerTaskInstance.complete({
-      '__action__' : 'approved',
-      'pv' : {
-        'comment_by_checker' : 'sample comment'
+      '__action__': 'approved',
+      'pv': {
+        'comment_by_checker': 'sample comment'
       }
     }, User3Context, function cb(err, res) {
       if (err) {
@@ -373,7 +369,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
         return done(err);
       }
       log.debug(instance);
-      assert.isNotNull(instance)
+      assert.isNotNull(instance);
       done();
     });
   });

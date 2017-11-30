@@ -13,7 +13,7 @@
 var loopback = require('loopback');
 var util = require('./lib/util-v2.js');
 const uuidv4 = require('uuid/v4');
-var validationError = require('loopback-datasource-juggler/lib/validations.js').ValidationError
+var validationError = require('loopback-datasource-juggler/lib/validations.js').ValidationError;
 
 var logger = require('oe-logger');
 var log = logger('maker-checker-mixin-v2');
@@ -371,18 +371,18 @@ function addOERemoteMethods(Model) {
             return next(err);
           }
           if (crinsts.length === 1) {
-            // existing change request found, need to delete existing request and interrupt
-            // but only if user has provided the existing change request id
-            // so that we can verify he is aware he had previously made a update which is not
-            // yet complete, this logic might change later
+          // existing change request found, need to delete existing request and interrupt
+          // but only if user has provided the existing change request id
+          // so that we can verify he is aware he had previously made a update which is not
+          // yet complete, this logic might change later
             var crinst = crinsts[0];
             if (typeof data._changeRequestId === 'undefined' || crinst.id.toString() !== data._changeRequestId.toString()) {
               let err = new Error('change request id is not provided or mismatch');
               log.error(options, err);
               return next(err);
             }
-            // now its safe to remove previous change request and interrupt previous workflow
-            // we are async ly terminating not holding the main request , might change
+          // now its safe to remove previous change request and interrupt previous workflow
+          // we are async ly terminating not holding the main request , might change
             util.terminateWorkflow('oe-workflow', crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
               if (err) {
                 let err = new Error('Unable to interrupt workflow in update retrigger case');
@@ -393,7 +393,7 @@ function addOERemoteMethods(Model) {
             });
           }
 
-          // retrigger handling done, moving forward
+        // retrigger handling done, moving forward
           let idName = Model.definition.idName();
           data[idName] = id;
           var mData = {
@@ -429,7 +429,7 @@ function addOERemoteMethods(Model) {
                   log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
                   next(err);
                 } else if (res && res.length === 0) {
-                  // this case should never occur
+                // this case should never occur
                   log.debug(options, 'no create mapping found');
                   next();
                 } else if (res.length === 1) {
@@ -440,30 +440,18 @@ function addOERemoteMethods(Model) {
                   workflowBody.processVariables._operation = mData.operation;
                   workflowBody.processVariables._modelInstance = mData.data;
                   workflowBody.processVariables._modelInstance._type = modelName;
-                  // this is to identify while executing Finalize Transaction to follow which implementation
+                // this is to identify while executing Finalize Transaction to follow which implementation
                   workflowBody.processVariables._maker_checker_impl = 'v2';
                   WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
-                    if (err) {
-                      log.error(options, err);
-                      return next(err);
-                    }
-                    mData.workflowInstanceId = winst.id;
-                    // TODO : make this check better
-                    if (crinsts.length > 0) {
-                      delete mData.data._changeRequestId;
-                      crinst.updateAttributes(mData, options, function createChangeModel(err, inst) {
-                        if (err) {
-                          log.error(options, err);
-                          return next(err);
-                        }
-                        log.debug(options, inst);
-                        // wrapping back data properly
-                        let cinst = unwrapChangeRequest(inst);
-                        return next(null, cinst);
-                      });
-                      return;
-                    }
-                    ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                  mData.workflowInstanceId = winst.id;
+                  // TODO : make this check better
+                  if (crinsts.length > 0) {
+                    delete mData.data._changeRequestId;
+                    crinst.updateAttributes(mData, options, function createChangeModel(err, inst) {
                       if (err) {
                         log.error(options, err);
                         return next(err);
@@ -473,20 +461,32 @@ function addOERemoteMethods(Model) {
                       let cinst = unwrapChangeRequest(inst);
                       return next(null, cinst);
                     });
+                    return;
+                  }
+                  ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+                    if (err) {
+                      log.error(options, err);
+                      return next(err);
+                    }
+                    log.debug(options, inst);
+                    // wrapping back data properly
+                    let cinst = unwrapChangeRequest(inst);
+                    return next(null, cinst);
                   });
-                } else {
-                  let err = new Error('Multiple workflows attached to same Model.');
-                  log.error(options, err);
-                  return next(err);
-                }
+                });
+              } else {
+                let err = new Error('Multiple workflows attached to same Model.');
+                log.error(options, err);
+                return next(err);
+              }
               });
-            } else {
-              let err = validationError(obj); 
-              log.error(options, err);
-              return next(err);
-            }
-          }, options, data);
-        });
+          } else {
+            let err = validationError(obj);
+            log.error(options, err);
+            return next(err);
+          }
+        }, options, data);
+      });
     });
   };
 
@@ -586,9 +586,9 @@ function addOERemoteMethods(Model) {
 
     ChangeWorkflowRequest.find({
       where: {
-        and : [{
+        and: [{
           status: 'pending'
-        },{
+        }, {
           modelName: modelName
         }]
       }
@@ -686,7 +686,7 @@ function addOERemoteMethods(Model) {
       let username = options.ctx.username;
       let modifiers = inst[0]._modifiers;
 
-      if(modifiers.indexOf(username) === -1){
+      if (modifiers.indexOf(username) === -1) {
         let err = new Error('Not authorized to recall');
         log.options(options, err);
         return cb(err);

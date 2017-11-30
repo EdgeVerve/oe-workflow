@@ -23,13 +23,6 @@ var User1Context = {
     'username': 'user1'
   }
 };
-var User2Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'user2',
-    'username': 'user2'
-  }
-};
 var User3Context = {
   ctx: {
     'tenantId': 'default',
@@ -52,10 +45,6 @@ var User2Details = {
 var User1Credentials = {
   'username': 'user1',
   'password': 'user1'
-};
-var User2Credentials = {
-  'username': 'user2',
-  'password': 'user2'
 };
 
 describe('User Creation', function CB() {
@@ -288,7 +277,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
         return done(err);
       }
       log.debug(instance);
-      assert.isNull(instance)
+      assert.isNull(instance);
       done();
     });
   });
@@ -500,7 +489,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
       done();
     });
   });
-  
+
   it('findById [REST] - user1', function CB(done) {
     bootstrap.login(User1Credentials, function CB(err, login) {
       if (err) {
@@ -545,7 +534,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      assert.isNotNull(instance)
+      assert.isNotNull(instance);
       done();
     });
   });

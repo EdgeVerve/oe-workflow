@@ -12,7 +12,6 @@
 var loopback = require('loopback');
 var logger = require('oe-logger');
 var log = logger('Task');
-var evaluateJSON = require('./lib/workflow-nodes/service-node.js').evaluateJSON;
 
 var taskEventHandler = require('./lib/workflow-eventHandlers/taskeventhandler.js');
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
@@ -194,17 +193,20 @@ module.exports = function Task(Task) {
           log.error(options, err);
           return next(err);
         }
+        var pdata;
+        var workflowInstanceId;
+        var WorkflowManager;
         let taskObj = processDef.getFlowObjectByName(tname);
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           // TODO : validate the object first
           var updates = data;
-          var pdata = {};
-          if(typeof data.pv !== undefined){
+          pdata = {};
+          if (typeof data.pv !== undefined) {
             pdata.pv = data.pv;
             delete updates.pv;
           }
-          if(typeof data.msg !== undefined){
+          if (typeof data.msg !== undefined) {
             pdata.msg = data.msg;
             delete updates.msg;
           }
@@ -219,12 +221,12 @@ module.exports = function Task(Task) {
             }
           }, options, function fetchChangeModel(err, inst) {
             if (err) {
-              log.error(ctx, err);
+              log.error(options, err);
               return next(err);
             }
             if (inst.length > 1) {
               let err = new Error('Multiple instances found with same id in Change Workflow Request');
-              log.error(ctx, err);
+              log.error(options, err);
               return next(err);
             } else if (inst.length === 0) {
               // no instance found in change request model
@@ -267,49 +269,48 @@ module.exports = function Task(Task) {
                   return self.complete_(xdata, options, next);
                 });
               } else {
-                let err = validationError(obj);
+                let err = new Error('Validation Error');
                 log.error(options, err);
                 return next(err);
               }
             }, options, instx);
-
           });
         } else if (taskObj.isChecker) {
           // do handling of finalize transaction first, only then complete the task
           // user task wont complete till finalize transaction is successful
-          var WorkflowManager = loopback.getModel('WorkflowManager', options);
-          var workflowInstanceId = process._processVariables._workflowInstanceId;
+          WorkflowManager = loopback.getModel('WorkflowManager', options);
+          workflowInstanceId = process._processVariables._workflowInstanceId;
 
-          if( typeof data.__action__ === 'undefined' ){
+          if ( typeof data.__action__ === 'undefined' ) {
             let err = new Error('__action__ not provided. Checker enabled task requires this field.');
             log.error(options, err);
             return next(err);
           }
 
-          let validActArr = [ 'approved' , 'rejected' ];
-          if( taskObj.stepVariables && taskObj.stepVariables.__action__ ){
-            validActArr = validActArr.concat(taskObj.stepVariables.__action__); 
+          let validActArr = [ 'approved', 'rejected' ];
+          if ( taskObj.stepVariables && taskObj.stepVariables.__action__ ) {
+            validActArr = validActArr.concat(taskObj.stepVariables.__action__);
           }
 
           let isValid = ( validActArr.indexOf(data.__action__) > -1 );
-          if(!isValid){
-            let err = new Error('Provided action is not valid. Possible valid actions : '+ JSON.stringify(validActArr));
+          if (!isValid) {
+            let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
             log.error(options, err);
             return next(err);
           }
 
-          var pdata = {
-            pv : {}
+          pdata = {
+            pv: {}
           };
-          if(typeof data.pv !== 'undefined'){
+          if (typeof data.pv !== 'undefined') {
             pdata.pv = data.pv;
           }
-          if(typeof data.msg !== 'undefined'){
+          if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
           }
           pdata.pv.__action__ = data.__action__;
 
-          ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options); 
+          ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
           ChangeWorkflowRequest.find({
             where: {
               'workflowInstanceId': workflowInstanceId
@@ -333,41 +334,41 @@ module.exports = function Task(Task) {
             }
             var request = requests[0];
             let _verifiedBy = 'workflow-system';
-            if(options.ctx && options.ctx.username){
+            if (options.ctx && options.ctx.username) {
               _verifiedBy = options.ctx.username;
             }
             let updates = {
-              _verifiedBy : _verifiedBy
-            }
-            request.updateAttributes(updates, options, function updateVerifiedByField(err, inst){
+              _verifiedBy: _verifiedBy
+            };
+            request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
               if (err) {
                 log.error(options, 'error in updating change workflow instance verifiedBy field', err);
                 return next(err);
               }
               log.debug(options, 'updated verified by field in change request by checker');
               return self.complete_(pdata, options, next);
-            })
+            });
           });
         } else if (taskObj.isCheckerAutoFinalize) {
           // do handling of finalize transaction first, only then complete the task
           // user task wont complete till finalize transaction is successful
-          var WorkflowManager = loopback.getModel('WorkflowManager', options);
-          var workflowInstanceId = process._processVariables._workflowInstanceId;
+          WorkflowManager = loopback.getModel('WorkflowManager', options);
+          workflowInstanceId = process._processVariables._workflowInstanceId;
 
-          if( typeof data.__action__ === 'undefined' ){
+          if ( typeof data.__action__ === 'undefined' ) {
             let err = new Error('__action__ not provided. Checker enabled task requires this field.');
             log.error(options, err);
             return next(err);
           }
 
-          let validActArr = [ 'approved' , 'rejected' ];
-          if( taskObj.stepVariables && taskObj.stepVariables.__action__ ){
-            validActArr = validActArr.concat(taskObj.stepVariables.__action__); 
+          let validActArr = [ 'approved', 'rejected' ];
+          if ( taskObj.stepVariables && taskObj.stepVariables.__action__ ) {
+            validActArr = validActArr.concat(taskObj.stepVariables.__action__);
           }
 
           let isValid = ( validActArr.indexOf(data.__action__) > -1 );
-          if(!isValid){
-            let err = new Error('Provided action is not valid. Possible valid actions : '+ JSON.stringify(validActArr));
+          if (!isValid) {
+            let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
             log.error(options, err);
             return next(err);
           }
@@ -384,13 +385,13 @@ module.exports = function Task(Task) {
           if (process._processVariables._maker_checker_impl === 'v2') {
             postData.version = 'v2';
           }
-          var pdata = {
-            pv : {}
+          pdata = {
+            pv: {}
           };
-          if(typeof data.pv !== 'undefined'){
+          if (typeof data.pv !== 'undefined') {
             pdata.pv = data.pv;
           }
-          if(typeof data.msg !== 'undefined'){
+          if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
           }
           pdata.pv.__action__ = data.__action__;

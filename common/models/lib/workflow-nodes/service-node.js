@@ -16,7 +16,6 @@ var vm = require('vm');
 
 var logger = require('oe-logger');
 var log = logger('Service-Node');
-
 /**
  * Common Interface to execute Connectors
  * @param  {Object} options Options
@@ -39,6 +38,37 @@ module.exports.run = function run(options, flowObject, message, process, token, 
     evaluateCustomImplementation(options, flowObject, message, process, done);
   }
 };
+var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
+  var sandbox = {
+    msg: incomingMsg,
+    pv: function pv(name) {
+      if (name === 'accessToken') {
+        return options.accessToken;
+      }
+      var val = process._processVariables[name];
+      if (typeof val === 'undefined' && process._parentProcessVariables) {
+        val = process._parentProcessVariables[name];
+      }
+      return val;
+    },
+    data: data,
+    _output: null
+  };
+
+  var script = '_output = ' + data;
+  // eslint-disable-next-line
+  var context = new vm.createContext(sandbox);
+  try {
+    var compiledScript = new vm.Script(script);
+    compiledScript.runInContext(context, { timeout: 1000 });
+  } catch (e) {
+    log.error(options, e);
+    return e;
+  }
+  return sandbox._output;
+};
+
+module.exports.evaluateJSON = evaluateJSON;
 
 /**
  * Evaluates Finalize Transaciton Connector
@@ -241,7 +271,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   var id;
   var data;
 
-  if(modelName == 'ChangeRequest'){
+  if (modelName === 'ChangeRequest') {
     var updates = evaluateJSON(flowObject.props.data, message, process, options);
     var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
     ChangeWorkflowRequest.find({
@@ -254,17 +284,17 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       }
     }, options, function fetchChangeModel(err, inst) {
       if (err) {
-        log.error(ctx, err);
+        log.error(options, err);
         return done(err);
       }
       if (inst.length > 1) {
         let err = new Error('Multiple instances found with same id in Change Workflow Request');
-        log.error(ctx, err);
+        log.error(options, err);
         return done(err);
       } else if (inst.length === 0) {
         // no instance found in change request model
-        return done(null,{
-          'change_request_update' : 'failed - no instance found'
+        return done(null, {
+          'change_request_update': 'failed - no instance found'
         });
       }
       var instx = JSON.parse(JSON.stringify(inst[0].data));
@@ -275,17 +305,17 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
         }
       }
       inst[0].updateAttributes({
-        data : instx
-      }, options, function updateCM(err, res){
-        if(err){
+        data: instx
+      }, options, function updateCM(err, res) {
+        if (err) {
           log.error(options, err);
           return done(err);
         }
         process._processVariables._modelInstance = instx;
-        return done(null,{
-          'change_request_update' : 'successful'
+        return done(null, {
+          'change_request_update': 'successful'
         });
-      })
+      });
     });
     return;
   }
@@ -337,35 +367,6 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   }
 }
 
-module.exports.evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
-  var sandbox = {
-    msg: incomingMsg,
-    pv: function pv(name) {
-      if (name === 'accessToken') {
-        return options.accessToken;
-      }
-      var val = process._processVariables[name];
-      if (typeof val === 'undefined' && process._parentProcessVariables) {
-        val = process._parentProcessVariables[name];
-      }
-      return val;
-    },
-    data: data,
-    _output: null
-  };
-
-  var script = '_output = ' + data;
-  // eslint-disable-next-line
-  var context = new vm.createContext(sandbox);
-  try {
-    var compiledScript = new vm.Script(script);
-    compiledScript.runInContext(context, { timeout: 1000 });
-  } catch (e) {
-    log.error(options, e);
-    return e;
-  }
-  return sandbox._output;
-}
 
 function evaluateProp(data, incomingMsg, process, options) {
   // check if prop needs to be evaluated

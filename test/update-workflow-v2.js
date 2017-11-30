@@ -23,13 +23,6 @@ var User1Context = {
     'username': 'user1'
   }
 };
-var User2Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'user2',
-    'username': 'user2'
-  }
-};
 var User3Context = {
   ctx: {
     'tenantId': 'default',
@@ -52,10 +45,6 @@ var User2Details = {
 var User1Credentials = {
   'username': 'user1',
   'password': 'user1'
-};
-var User2Credentials = {
-  'username': 'user2',
-  'password': 'user2'
 };
 
 describe('User Creation', function CB() {
@@ -243,7 +232,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       log.debug(instance);
       assert.isNotNull(instance);
-      assert.strictEqual(instance.luckydraw,'00000')
+      assert.strictEqual(instance.luckydraw, '00000');
       done();
     });
   });
@@ -266,7 +255,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw,'00000')
+        assert.strictEqual(instance.luckydraw, '00000');
         done();
       }
     });
@@ -294,7 +283,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       log.debug(instance);
       assert.isNotNull(instance);
-      assert.strictEqual(instance.luckydraw, '11111')
+      assert.strictEqual(instance.luckydraw, '11111');
       done();
     });
   });
@@ -318,7 +307,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw, '11111')
+        assert.strictEqual(instance.luckydraw, '11111');
         done();
       }
     });
@@ -611,7 +600,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      assert.strictEqual(instance.luckydraw, '00000')
+      assert.strictEqual(instance.luckydraw, '00000');
       done();
     });
   });
@@ -634,7 +623,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw, '00000')
+        assert.strictEqual(instance.luckydraw, '00000');
         done();
       }
     });
@@ -661,11 +650,11 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      assert.strictEqual(instance.luckydraw, '22222')
+      assert.strictEqual(instance.luckydraw, '22222');
       done();
     });
   });
-  
+
   it('findById [REST] - user1', function CB(done) {
     bootstrap.login(User1Credentials, function CB(err, login) {
       if (err) {
@@ -685,12 +674,12 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw, '22222')
+        assert.strictEqual(instance.luckydraw, '22222');
         done();
       }
     });
   });
-  
+
   it('remove model instances [clean-up]', function CB(done) {
     models[modelName].destroyAll({}, User1Context, function cb(err, res) {
       if (err) {

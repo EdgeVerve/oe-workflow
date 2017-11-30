@@ -23,13 +23,6 @@ var User1Context = {
     'username': 'user1'
   }
 };
-var User2Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'user2',
-    'username': 'user2'
-  }
-};
 var User3Context = {
   ctx: {
     'tenantId': 'default',
@@ -58,10 +51,6 @@ var User3Details = {
 var User1Credentials = {
   'username': 'user1',
   'password': 'user1'
-};
-var User2Credentials = {
-  'username': 'user2',
-  'password': 'user2'
 };
 
 describe('User Creation', function CB() {
@@ -133,14 +122,14 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
       'mixins': {},
       'properties': {
         'luckydraw': {
-          'in' : [
+          'in': [
             '00000',
             '11111'
           ],
           'type': 'string',
           'required': true
         },
-        '_verifiedBy' : {
+        '_verifiedBy': {
           'type': 'string',
           'required': false
         }
@@ -389,7 +378,7 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
           'type': 'string',
           'required': true
         },
-        '_verifiedBy' : {
+        '_verifiedBy': {
           'type': 'string',
           'required': false
         }
