@@ -1,0 +1,43 @@
+{
+  "name": "ChangeWorkflowRequest",
+  "base": "BaseEntity",
+  "description" : "Manages change request created during maker-checker",
+  "idInjection": true,
+  "properties": {
+    "data": {
+      "type": "any",
+      "required": true
+    },
+    "operation" : {
+      "type": "string",
+      "required": true
+    },
+    "modelName" : {
+      "type": "string",
+      "required": true,
+      "index": true
+    },
+    "modelId": {
+      "type": "string",
+      "required": true,
+      "index": true
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "default": "pending"
+    },
+    "workflowInstanceId": {
+      "type": "string",
+      "required": true
+    },
+    "_verifiedBy": {
+      "type": "string" ,
+      "required": false
+    }
+  },
+  "validations": [],
+  "relations": {
+  },
+  "acls": []
+}

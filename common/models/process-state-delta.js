@@ -122,7 +122,9 @@ Delta.prototype.removePendingTimer = function removePendingTimer(name) {
  * @returns {Object} Updates
  */
 Delta.prototype.apply = function apply(zInstance, options) {
-  var instance = _.cloneDeep(zInstance.toObject(true));
+  // check why this failes with error items must be an array
+  // var instance = _.cloneDeep(zInstance.toObject(true));
+  var instance = JSON.parse(JSON.stringify(zInstance.toObject(true)));
   var tokens = instance._processTokens;
   var processVariables = instance._processVariables;
   var processTimerEvents = instance._processTimerEvents;

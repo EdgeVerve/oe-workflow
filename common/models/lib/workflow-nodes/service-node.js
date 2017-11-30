@@ -74,6 +74,10 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
     postData.updates = process._processVariables._updates;
   }
 
+  if (process._processVariables._maker_checker_impl === 'v2') {
+    postData.version = 'v2';
+  }
+
   WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
     if (err) {
       log.error(err);
@@ -237,6 +241,55 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   var id;
   var data;
 
+  if(modelName == 'ChangeRequest'){
+    var updates = evaluateJSON(flowObject.props.data, message, process, options);
+    var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
+    ChangeWorkflowRequest.find({
+      where: {
+        and: [{
+          modelName: process._processVariables._modelInstance._type
+        }, {
+          modelId: process._processVariables._modelInstance.id
+        }]
+      }
+    }, options, function fetchChangeModel(err, inst) {
+      if (err) {
+        log.error(ctx, err);
+        return done(err);
+      }
+      if (inst.length > 1) {
+        let err = new Error('Multiple instances found with same id in Change Workflow Request');
+        log.error(ctx, err);
+        return done(err);
+      } else if (inst.length === 0) {
+        // no instance found in change request model
+        return done(null,{
+          'change_request_update' : 'failed - no instance found'
+        });
+      }
+      var instx = JSON.parse(JSON.stringify(inst[0].data));
+      for (let key in updates) {
+        if (Object.prototype.hasOwnProperty.call(updates, key)) {
+          var val = updates[key];
+          instx[key] = val;
+        }
+      }
+      inst[0].updateAttributes({
+        data : instx
+      }, options, function updateCM(err, res){
+        if(err){
+          log.error(options, err);
+          return done(err);
+        }
+        process._processVariables._modelInstance = instx;
+        return done(null,{
+          'change_request_update' : 'successful'
+        });
+      })
+    });
+    return;
+  }
+
   if (operation === 'create') {
     data = evaluateJSON(flowObject.props.data, message, process, options);
     model.create(data, options, function createMI(err, res) {
@@ -284,7 +337,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   }
 }
 
-function evaluateJSON(data, incomingMsg, process, options) {
+module.exports.evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
   var sandbox = {
     msg: incomingMsg,
     pv: function pv(name) {
