@@ -67,10 +67,12 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.inputParameters) {
           inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
           evalInput = recrevaluatePayload(inputParameters, token.message, currentProcess);
+          taskObj.stepVariables = {};
           Object.assign(taskObj.stepVariables, evalInput);
         }
-
-        Object.assign(token.message, taskObj.stepVariables);
+        if (taskObj.stepVariables && token.message && typeof token.message === 'object' && typeof taskObj.stepVariables === 'object') {
+          Object.assign(token.message, taskObj.stepVariables);
+        }
         var evalEntity = function evalEntity(entityList) {
           entityList = updateExpBackComp(entityList);
           entityList = sandbox.evaluate$Expression(options, entityList, token.message, currentProcess, token);
@@ -317,6 +319,8 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           inputParameters = currentFlowObject.inputOutputParameters.inputParameters;
           evalInput = recrevaluatePayload(inputParameters, token.message, currentProcess);
           Object.assign(subProcessesIns.processVariables, evalInput);
+        } else if (currentFlowObject.isSubProcess) {
+          Object.assign(subProcessesIns.processVariables, currentProcess._processVariables);
         }
 
         var evaluatedProcessName = currentFlowObject.subProcessId;

@@ -57,6 +57,8 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
       var outputParameters = currentFlowObject.inputOutputParameters.outputParameters;
       var evalInput = recrevaluatePayload(outputParameters, token.message, currentProcess);
       Object.assign(mappedVariables, evalInput);
+    } else if (currentFlowObject.isSubProcess) {
+      Object.assign(mappedVariables, processVariables);
     }
 
     delta.setProcessVariables(mappedVariables);

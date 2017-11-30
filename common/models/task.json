@@ -59,6 +59,10 @@
       "type" : "string",
       "required" : false
     },
+    "formKey" : {
+      "type" : "string",
+      "required" : false
+    },
     "formType" : {
       "type" : "string",
       "required" : false
