@@ -143,7 +143,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
       }
 
       var operation = data.operation;
-      var wfDependent = data.wfDependent || true;
+      var wfDependent = true;
+      if (typeof data === 'object' && typeof data.wfDependent === 'boolean') {
+        wfDependent = data.wfDependent;
+      }
       var Model = loopback.getModel(modelName, options);
       var actualModelName = Model.modelName;
 
