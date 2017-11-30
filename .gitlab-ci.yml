@@ -4,19 +4,18 @@
 buildlinux:
   stage: build
   script:
-    - "source ~/.bash_profile"
-    - "export ACTIVITI_HOST=10.73.53.206:8080"
-    - "npm config set registry http://10.188.25.62:9009"
-    - "npm config set fetch-retries 0"
-    - "npm install --no-optional"
-    - "mongo server/dropdb.js"
-    - "status_unittest=0"
-    - "if ./node_modules/.bin/grunt eslint-test-coverage;then status_unittest=0; else status_unittest=1;fi"
-    - "mongo server/dropdb.js"
-    - "exit_status=0"
-    - "if [ $status_unittest == 1 ]; then exit_status=1 && echo \"Test cases are failing\"; fi"
-    - "exit $exit_status"
-  only:
-    - master
+    - export ACTIVITI_HOST=https://activiti.oecloud.local
+    - npm config set registry http://10.188.25.62:9009
+    - npm config set fetch-retries 0
+    - npm install --no-optional
+    - export NODE_ENV=docker
+    - export MONGO_HOST=10.73.53.144
+    - export DB_NAME=${CI_PIPELINE_ID}_mongo
+    - node tools/cleandb.js
+    - ./node_modules/.bin/grunt eslint-test-coverage
+  after_script:
+    - export MONGO_HOST="10.73.53.144"
+    - export DB_NAME=${CI_PIPELINE_ID}_mongo
+    - node tools/cleandb.js
   tags:
-    - evf-workflow
+    - CEP_RUNNER
