@@ -480,13 +480,13 @@ function addOERemoteMethods(Model) {
                   return next(err);
                 }
               });
-          } else {
-            let err = validationError(obj);
-            log.error(options, err);
-            return next(err);
-          }
-        }, options, data);
-      });
+            } else {
+              let err = validationError(obj);
+              log.error(options, err);
+              return next(err);
+            }
+          }, options, data);
+        });
     });
   };
 

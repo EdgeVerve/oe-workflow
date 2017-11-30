@@ -202,11 +202,11 @@ module.exports = function Task(Task) {
           // TODO : validate the object first
           var updates = data;
           pdata = {};
-          if (typeof data.pv !== undefined) {
+          if (typeof data.pv !== 'undefined') {
             pdata.pv = data.pv;
             delete updates.pv;
           }
-          if (typeof data.msg !== undefined) {
+          if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
             delete updates.msg;
           }
