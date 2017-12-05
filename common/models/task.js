@@ -167,9 +167,9 @@ module.exports = function Task(Task) {
             return next(err);
           }
         }
-        self.status = status;
-
-        self.save(options, function saveTask(saveError, instance) {
+        // self.status = status;
+        var updates = { 'status': status };
+        self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
             return next(err || saveError);
@@ -448,9 +448,9 @@ module.exports = function Task(Task) {
             return next(err);
           }
         }
-        self.status = status;
-
-        self.save(options, function saveTask(saveError, instance) {
+        // self.status = status;
+        var updates = {'status': status};
+        self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
             return next(err || saveError);
