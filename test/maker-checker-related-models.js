@@ -49,7 +49,7 @@ var RelatedWorkflow = 'RelatedWorkflowTemplate';
 var BaseModel = 'PersonModel';
 var RelatedModel = 'EmailModel';
 
-describe('User Creation', function cb() {
+describe.skip('User Creation', function cb() {
   this.timeout(10000);
   var BaseUser = models.BaseUser;
 
@@ -86,7 +86,7 @@ describe('User Creation', function cb() {
   });
 });
 
-describe('Initialization', function cb() {
+describe.skip('Initialization', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -225,7 +225,7 @@ describe('Initialization', function cb() {
   });
 });
 
-describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approved All via Base Task', function cb() {
+describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approved All via Base Task', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -611,7 +611,7 @@ describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependen
   });
 });
 
-describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - rejected All via Base Task', function cb() {
+describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - rejected All via Base Task', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -986,7 +986,7 @@ describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependen
   });
 });
 
-describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approve All Tasks separately', function cb() {
+describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approve All Tasks separately', function cb() {
   this.timeout(300000);
   var testVars = {};
 

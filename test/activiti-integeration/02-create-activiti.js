@@ -130,7 +130,7 @@ describe('Test case for Trigger on Create Activiti [ not workflow dependent ]', 
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'create',
       'wfDependent': false
@@ -179,7 +179,7 @@ describe('Test case for Trigger on Create Activiti [ not workflow dependent ]', 
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -354,7 +354,7 @@ describe('Test case for Trigger on Create Activiti [ workflow dependent ] - appr
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'create',
       'wfDependent': true
@@ -405,7 +405,7 @@ describe('Test case for Trigger on Create Activiti [ workflow dependent ] - appr
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
@@ -803,7 +803,7 @@ describe('Test case for Trigger on Create Activiti [ workflow dependent ] - reje
     var attachWorkflowDef = {
       'modelName': modelName,
       'workflowBody': {
-        'processDefinitionId': 'escalationExample:1:36'
+        'processDefinitionId': 'escalationExample:1:33'
       },
       'operation': 'create',
       'wfDependent': true
@@ -853,7 +853,7 @@ describe('Test case for Trigger on Create Activiti [ workflow dependent ] - reje
       log.debug(instance);
       assert.isNotNull(instance.processDefinitionId);
       testVars._workflowRef = instance.id;
-      assert.equal(instance.processDefinitionId, 'escalationExample:1:36');
+      assert.equal(instance.processDefinitionId, 'escalationExample:1:33');
       done();
     });
   });
