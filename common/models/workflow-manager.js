@@ -265,35 +265,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
 
   WorkflowManager.detachWorkflowWithVersion = detachWorkflowWithVersion;
 
-  WorkflowManager.detachWorkflow = detachWorkflow;
-
   WorkflowManager.endAttachWfRequest = endAttachWfRequest;
 
   WorkflowManager.viewAttachedWorkflows = viewAttachedWorkflows;
-
-  function detachWorkflow(id, options, cb) {
-    var app = WorkflowManager.app;
-
-    if (!id) {
-      cb(new Error('id parameter is required to dettachWorkflow'));
-      return;
-    }
-
-    app.models.WorkflowMapping.findById(id, options, function fetchWM(err, instance) {
-      if (err) {
-        log.error(err);
-        return cb(err);
-      }
-      instance.destroy(options, function destoryWM(err, res) {
-        if (err) {
-          err = new Error('Unable to dettach Workflow.');
-          log.error(err);
-          return cb(err);
-        }
-        cb(null, res);
-      });
-    });
-  }
 
   function detachWorkflowWithVersion(id, version, options, cb) {
     var app = WorkflowManager.app;
@@ -491,27 +465,6 @@ module.exports = function WorkflowManager(WorkflowManager) {
       path: '/workflows'
     },
     returns: {
-      type: 'object',
-      root: true
-    }
-  });
-
-  WorkflowManager.remoteMethod('detachWorkflow', {
-    http: {
-      path: '/workflows/:id',
-      verb: 'delete'
-    },
-    description: 'Detach OE workflow from a Model.',
-    accepts: [{
-      arg: 'id',
-      type: 'string',
-      required: true,
-      http: {
-        source: 'path'
-      }
-    }],
-    returns: {
-      arg: 'response',
       type: 'object',
       root: true
     }

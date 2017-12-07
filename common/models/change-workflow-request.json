@@ -34,6 +34,10 @@
     "_verifiedBy": {
       "type": "string" ,
       "required": false
+    },
+    "_modifiers": {
+      "type": "string" ,
+      "required": false
     }
   },
   "validations": [],

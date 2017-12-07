@@ -9,7 +9,6 @@ var BPMNTask = require('./tasks.js');
 var BPMNEvent = require('./events.js');
 var BPMNSequenceFlow = require('./sequenceflows.js');
 var BPMNSubProcess = require('./subprocess.js');
-var BPMNAssociation = require('./association.js');
 var BPMNProcessDefinition = require('./processdefinition.js');
 var BPMNLane = require('./lanes.js');
 var BPMNGateway = require('./gateways.js');
@@ -22,7 +21,6 @@ var log = logger('Build-Flow-Objects-Parser');
 function createFlowObject(flowObject, processElements) {
   var finalFlowObject;
   var finalSequenceFlow;
-  var finalassociation;
   var finalLaneObject;
   var flowObjectBpmnId;
   var flowObjectType;
@@ -53,9 +51,9 @@ function createFlowObject(flowObject, processElements) {
   } else if (flowObjectType.indexOf('call') >= 0) {
     finalFlowObject = BPMNCallActivity.createBPMNCallActivity(flowObject);
     processElements.flowObjects.push(finalFlowObject);
-  } else if (flowObjectType.indexOf('association') >= 0) {
-    finalassociation = BPMNAssociation.createBPMNAssociationElement(flowObject);
-    processElements.associations.push(finalassociation);
+  // } else if (flowObjectType.indexOf('association') >= 0) {
+  //   finalassociation = BPMNAssociation.createBPMNAssociationElement(flowObject);
+  //   processElements.associations.push(finalassociation);
   } else if (flowObjectType.indexOf('laneSet') >= 0) {
     finalLaneObject = BPMNLane.createBPMNLane(flowObject);
     processElements.lanes = finalLaneObject;
