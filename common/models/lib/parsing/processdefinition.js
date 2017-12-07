@@ -7,7 +7,6 @@
 
 var logger = require('oe-logger');
 var log = logger('ProcessDefinition-Parser');
-var parserUtils = require('./parserutils');
 var BPMNFlowObject = require('./buildFlowObjects.js');
 var BPMNProcessDefinition;
 
