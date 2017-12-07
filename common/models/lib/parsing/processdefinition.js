@@ -87,6 +87,19 @@ BPMNProcessDefinition.prototype.hasIncomingSequenceFlows = function hasIncomingS
 };
 
 /**
+ * get the process element
+ * @param {String} bpmnId BpmnId
+ * @return {*} getProcessElement
+ */
+BPMNProcessDefinition.prototype.getProcessElement = function getProcessElement(bpmnId) {
+  if (!(this.processElementIndex)) {
+    this.processElementIndex = this._buildIndex();
+  }
+
+  return this.processElementIndex[bpmnId];
+};
+
+/**
  * get the outgoing sequence flows
  * @param {BPMNFlowObject} flowObject FlowObject
  * @return {[BPMNSequenceFlow]} getOutgoingSequenceFlows
