@@ -447,9 +447,8 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
     });
   });
 
-
-  it('fetch task instance', function callback(done) {
-    testVars.processes[0].tasks({}, ctxUser2, function callback(err, task) {
+  it('fetch task instance via user1', function callback(done) {
+    testVars.processes[0].tasks({}, ctxUser1, function callback(err, task) {
       if (err) {
         return done(err);
       }
@@ -460,6 +459,16 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
     });
   });
 
+  it('delegate task to user2', function callback(done) {
+    testVars.task.delegate({
+      assignee : 'user2'
+    }, ctxUser1, function callback(err, task) {
+      if (err) {
+        return done(err);
+      }
+      setTimeout(done, 2000);
+    });
+  });
 
   it('try to complete task', function callback(done) {
     var putURL = 'http://localhost:3000/api/Tasks/' + testVars.task.id + '/completeTask?access_token=' + testVars.accessToken.id;

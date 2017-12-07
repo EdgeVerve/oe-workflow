@@ -64,6 +64,7 @@ module.exports = function WorkflowSignal(WorkflowSignal) {
   /*
    * Send Workflow Signal to dedicated Process Instance Execution
    */
+  /**
   WorkflowSignal.send = function send(signalRef, processInstanceId, options, next) {
     if (!signalRef || !processInstanceId) {
       var error = new Error('SignalRef & Process Instance Id required to send dedicated signal');
@@ -104,4 +105,5 @@ module.exports = function WorkflowSignal(WorkflowSignal) {
       }
     });
   };
+   ***/
 };

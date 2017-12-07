@@ -193,6 +193,18 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
     });
   });
 
+  it('find instance of ' + modelName + ' via findByIdX : author - user1', function CB(done) {
+    models[modelName].findByIdX(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.strictEqual(instance.luckydraw, '11111');
+      done();
+    });
+  });
+  
   it('check if workflow instance is up', function CB(done) {
     models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
       if (err) {
@@ -272,6 +284,18 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       log.debug(res);
       assert.isNotNull(res);
       setTimeout(done, 2000);
+    });
+  });
+
+  it('find instance of ' + modelName + ' via findByIdX : author - user1', function CB(done) {
+    models[modelName].findByIdX(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
     });
   });
 
@@ -458,6 +482,18 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
     });
   });
 
+  it('find instance of ' + modelName + ' via findByIdX : author - user1', function CB(done) {
+    models[modelName].findByIdX(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.strictEqual(instance.luckydraw, '11111');
+      done();
+    });
+  });
+
   it('check if workflow instance is up', function CB(done) {
     models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
       if (err) {
@@ -631,7 +667,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
 
   it('complete user task by checker', function CB(done) {
     testVars.taskInstance.complete({
-      '__action__': 'approved'
+      '__action__': 'rejected'
     }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -643,6 +679,18 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
     });
   });
 
+  it('find instance of ' + modelName + ' via findByIdX : author - user1', function CB(done) {
+    models[modelName].findByIdX(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
+    });
+  });
+
   it('findById - user1', function CB(done) {
     models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
@@ -650,7 +698,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      assert.strictEqual(instance.luckydraw, '22222');
+      assert.strictEqual(instance.luckydraw, '00000');
       done();
     });
   });
@@ -674,7 +722,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw, '22222');
+        assert.strictEqual(instance.luckydraw, '00000');
         done();
       }
     });

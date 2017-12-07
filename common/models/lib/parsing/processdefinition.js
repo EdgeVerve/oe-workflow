@@ -12,25 +12,6 @@ var BPMNFlowObject = require('./buildFlowObjects.js');
 var BPMNProcessDefinition;
 
 /**
- * Check if the name is of process
- * @param {String} localName name without namespace prefix
- * @return {Boolean} isProcessName
- */
-exports.isProcessName = function isProcessName(localName) {
-  return (localName === 'process');
-};
-
-/**
- * Check if  node is executable
- * @param {Object} node Node
- * @return {Boolean} isExecutable
- */
-exports.isExecutable = function isExecutable(node) {
-  var isExecutable = parserUtils.getAttributesValue(node, 'isExecutable');
-  return (!isExecutable || isExecutable === 'true');
-};
-
-/**
  * create a bpmn process definition
  * @param {Object} defObject DefinitionObject
  * @constructor
@@ -85,139 +66,6 @@ BPMNProcessDefinition.prototype.validate = function validate(errorQueue) {
 };
 
 /**
- * get the process element
- * @param {String} bpmnId BpmnId
- * @return {*} getProcessElement
- */
-BPMNProcessDefinition.prototype.getProcessElement = function getProcessElement(bpmnId) {
-  if (!(this.processElementIndex)) {
-    this.processElementIndex = this._buildIndex();
-  }
-
-  return this.processElementIndex[bpmnId];
-};
-
-/**
- * get the flow object
- * @param {String} bpmnId BpmnId
- * @return {BPMNFlowObject} getFlowObject
- */
-BPMNProcessDefinition.prototype.getFlowObject = function getFlowObject(bpmnId) {
-  return this.getProcessElement(bpmnId);
-};
-
-/**
- * get the source flow object
- * @param {{sourceRef: String}} flow Flow
- * @return {BPMNFlowObject} getSourceFlowObject
- */
-BPMNProcessDefinition.prototype.getSourceFlowObject = function getSourceFlowObject(flow) {
-  return this.getProcessElement(flow.sourceRef);
-};
-
-/**
- * get the start events
- * @return {[BPMNActivity]} getStartEvents
- */
-exports.getStartEvents = function getStartEvents() {
-  return this.flowObjects.filter(function iterateFlowObjects(flowObject) {
-    return (flowObject.isStartEvent);
-  });
-};
-
-/**
- * get the boundary events
- * @return {[BPMNActivity]} getBoundaryEvents
- */
-BPMNProcessDefinition.prototype.getBoundaryEvents = function getBoundaryEvents() {
-  return this.flowObjects.filter(function iterateFlowObjects(flowObject) {
-    return (flowObject.isBoundaryEvent);
-  });
-};
-
-/**
- * get the the boundary events at bpmn id
- * @param {BPMNActivity} activity Activity
- * @return {[BPMNActivity]} getBoundaryEventsAt
- */
-BPMNProcessDefinition.prototype.getBoundaryEventsAt = function getBoundaryEventsAt(activity) {
-  if (!this.boundaryEventsByAttachmentIndex) {
-    this.boundaryEventsByAttachmentIndex = this.buildBoundaryEventsByAttachmentIndex();
-  }
-  return (this.boundaryEventsByAttachmentIndex[activity.bpmnId] || []);
-};
-
-/*
- * build boundary events by attachment index
- */
-BPMNProcessDefinition.prototype.buildBoundaryEventsByAttachmentIndex = function buildBoundaryEventsByAttachmentIndex() {
-  var index = {};
-  var self = this;
-  var boundaryEvents = this.getBoundaryEvents();
-
-  boundaryEvents.forEach(function iterateBoundaryEvents(boundaryEvent) {
-    var attachedToRef = boundaryEvent.attachedToRef;
-    var activity = self.getFlowObject(attachedToRef);
-
-    if (activity) {
-      if (activity.isWaitTask || activity.isSubProcess || activity.isInsideTransaction) {
-        var entry = index[attachedToRef];
-        if (entry) {
-          entry.push(boundaryEvent);
-        } else {
-          index[attachedToRef] = [boundaryEvent];
-        }
-      } else {
-        log.error(log.defaultContext(), "The activity '" + activity.name + "' has a boundary event but this is allowed only for wait tasks such as user or receive tasks.");
-      }
-    } else {
-      log.error(log.defaultContext(), "Cannot find the activity the boundary event '" + boundaryEvent.name +
-                "' is attached to (activity BPMN ID: '" + boundaryEvent.attachedToRef + "'.");
-    }
-  });
-
-  return index;
-};
-
-/**
- * get the flow object name
- * @param {String} name Name
- * @return {BPMNFlowObject} getFlowObjectByName
- */
-BPMNProcessDefinition.prototype.getFlowObjectByName = function getFlowObjectByName(name) {
-  var bpmnId = this.getIdByName(name);
-  return this.getFlowObject(bpmnId);
-};
-
-/**
- * get the id by name
- * @param {String} name Name
- * @return {String} getIdByName
- */
-BPMNProcessDefinition.prototype.getIdByName = function getIdByName(name) {
-  if (!(this.nameMap)) {
-    this.nameMap = buildNameMap(this.getFlowObjects());
-  }
-  return this.nameMap[name];
-};
-
-/**
- * get the nextt flow objects
- * @param {BPMNFlowObject} flowObject FlowObject
- * @return {Array.<BPMNFlowObject>} getNextFlowObjects
- */
-BPMNProcessDefinition.prototype.getNextFlowObjects = function getNextFlowObjects(flowObject) {
-  var nextFlowObjects = [];
-  var self = this;
-  var outgoingSequenceFlows = this.getOutgoingSequenceFlows(flowObject);
-
-  outgoingSequenceFlows.forEach(function iterateOutgoingSequenceFlows(flow) {
-    nextFlowObjects.push(self.getProcessElement(flow.targetRef));
-  });
-  return nextFlowObjects;
-};
-
-/**
  * get the incoming sequence flows
  * @param {BPMNFlowObject} flowObject FlowObject
  * @return {[BPMNSequenceFlow]} getIncomingSequenceFlows
@@ -249,16 +97,6 @@ BPMNProcessDefinition.prototype.getOutgoingSequenceFlows = function getOutgoingS
 };
 
 /**
- * add a sequence flow entry
- * @param {BPMNSequenceFlow} sequenceFlow SequenceFlow
- */
-BPMNProcessDefinition.prototype.addSequenceFlow = function addSequenceFlow(sequenceFlow) {
-  this.sequenceFlowBySourceIndex = null;
-  this.sequenceFlowByTargetIndex = null;
-  this.sequenceFlows.push(sequenceFlow);
-};
-
-/**
  * Check if flow object has outgoing sequence flows
  * @param {BPMNFlowObject} flowObject FlowObject
  * @return {Boolean} hasOutgoingSequenceFlows
@@ -272,45 +110,11 @@ BPMNProcessDefinition.prototype.hasOutgoingSequenceFlows = function hasOutgoingS
 };
 
 /**
- * Add a flow object entry
- * @param {BPMNFlowObject} flowObject FlowObject
- */
-BPMNProcessDefinition.prototype.addFlowObject = function addFlowObject(flowObject) {
-  this.processElementIndex = null;
-  this.nameMap = null;
-  this.boundaryEventsByAttachmentIndex = null;
-  this.flowObjects.push(flowObject);
-};
-
-/**
  * get the flow objects
  * @return {[BPMNFlowObject]} getFlowObjects
  */
 BPMNProcessDefinition.prototype.getFlowObjects = function getFlowObjects() {
   return this.flowObjects;
-};
-
-/**
- * add an association entry
- * @param {Object} association Association
- */
-BPMNProcessDefinition.prototype.addAssociations = function addAssociations(association) {
-  this.associations.push(association);
-};
-
-/**
- * get associations
- * @returns {Array} Associations
- */
-BPMNProcessDefinition.prototype.getAssociations = function getAssociations() {
-  return this.associations;
-};
-BPMNProcessDefinition.prototype.addLane = function addLane(lane) {
-  this.lanes.push(lane);
-};
-
-BPMNProcessDefinition.prototype.getLanes = function getLanes() {
-  return this.lanes;
 };
 
 
@@ -359,18 +163,6 @@ BPMNProcessDefinition.prototype.getParticipantByName = function getParticipantBy
 };
 
 /**
- * get the participant by participant id
- * @param {String} processDefinitionId ProcessDefinitionId
- * @return {BPMNParticipant} ParticipantById
- */
-BPMNProcessDefinition.prototype.getParticipantById = function getParticipantById(processDefinitionId) {
-  var participants = this.collaboratingParticipants.filter(function iterateParticipants(participant) {
-    return (participant.processRef === processDefinitionId);
-  });
-  return participants[0];
-};
-
-/**
  * get the collaborating participants
  * @return {[BPMNParticipant]} CollaboratingParticipants
  */
@@ -389,39 +181,6 @@ BPMNProcessDefinition.prototype.addCollaboratingParticipants = function addColla
             // self.collaboratingParticipants.push(participant);
     }
   });
-};
-
-/**
- * get the incoming message flows
- * @param {BPMNFlowObject} flowObject FlowObject
- * @return {[BPMNMessageFlow]} IncomingMessageFlows
- */
-BPMNProcessDefinition.prototype.getIncomingMessageFlows = function getIncomingMessageFlows(flowObject) {
-  return this._getFlows('messageFlowByTargetIndex', 'messageFlows', flowObject, false);
-};
-
-/**
- * get the outgoing message flows
- * @param {BPMNFlowObject} flowObject FlowObject
- * @return {[BPMNMessageFlow]} OutgoingMessageFlows
- */
-BPMNProcessDefinition.prototype.getOutgoingMessageFlows = function getOutgoingMessageFlows(flowObject) {
-  return this._getFlows('messageFlowBySourceIndex', 'messageFlows', flowObject, true);
-};
-
-/**
- * get the message flows by flowb object name
- * @param {String} flowObjectName FlowObjectName
- * @return {[BPMNMessageFlow]} MessageFlowsBySourceName
- */
-BPMNProcessDefinition.prototype.getMessageFlowsBySourceName = function getMessageFlowsBySourceName(flowObjectName) {
-  var flowObject = this.getFlowObjectByName(flowObjectName);
-  return this.getOutgoingMessageFlows(flowObject);
-};
-
-BPMNProcessDefinition.prototype.getRestEndPoint = function getRestEndPoint(currentActivity) {
-  var flowObject = this.getFlowObjectByName(currentActivity);
-  return JSON.parse(flowObject.restEndpoint);
 };
 
 /**
@@ -492,65 +251,6 @@ function buildFlowIndex(flows, indexBySource) {
   });
   return index;
 }
-
-/**
- * build name for map
- * @param {[{name: string, bpmnId: string}]} objects Objects name and bpmid
- * @return {Object} buildNameMapObjects
- * @private
- */
-function buildNameMap(objects) {
-  var map = {};
-
-  objects.forEach(function iterateObjects(object) {
-    var name = object.name;
-
-    if (map[name]) {
-      log.error(log.defaultContext(), "Process element name '" + name + "' must be unique.");
-    } else {
-      map[name] = object.bpmnId;
-    }
-  });
-
-  return map;
-}
-
-/**
- * add data object reference
- * @param {Object} dataObjectReference DataObjectReference
- */
-BPMNProcessDefinition.prototype.addDataObjectReference = function addDataObjectReference(dataObjectReference) {
-  this.dataObjectReferences.push(dataObjectReference);
-};
-
-/**
- * get data object reference
- * @returns {*|Array} DataObjectReferences
- */
-BPMNProcessDefinition.prototype.getDataObjectReferences = function getDataObjectReferences() {
-  return this.dataObjectReferences;
-};
-
-/**
- * get event sub processes
- * @returns {Array.<*>} EventSubProcesses
- */
-BPMNProcessDefinition.prototype.getEventSubProcesses = function getEventSubProcesses() {
-  return this.flowObjects.filter(function iterateFlowObjects(flowObject) {
-    return (flowObject.isSubProcess && flowObject.triggeredByEvent === 'true');
-  });
-};
-
-/**
- * get the transaction sub processes
- * @returns {Array.<*>} TransactionSubProcesses
- */
-BPMNProcessDefinition.prototype.getTransactionSubProcesses = function getTransactionSubProcesses() {
-  return this.flowObjects.filter(function iterateFlowObjects(flowObject) {
-    return (flowObject.isSubProcess && flowObject.type === 'transaction');
-  });
-};
-
 
 /**
  * create a bpmn process definition

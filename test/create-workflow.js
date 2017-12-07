@@ -964,6 +964,20 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
     });
   });
 
+  // TODO : create a real scenario around this
+  it('fetch tasks if any', function CB(done) {
+    models[modelName].tasks(testVars.instanceId,User1Context,
+    function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      done();
+    });
+  });
+
   it('end create request [ through OE Workflow ]', function CB(done) {
     models.WorkflowManager.endAttachWfRequest({
       workflowInstanceId: testVars._workflowRef,

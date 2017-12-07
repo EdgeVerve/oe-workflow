@@ -16,6 +16,7 @@ var vm = require('vm');
 
 var logger = require('oe-logger');
 var log = logger('Service-Node');
+
 /**
  * Common Interface to execute Connectors
  * @param  {Object} options Options
@@ -26,18 +27,19 @@ var log = logger('Service-Node');
  * @param  {Function} done Callback
  */
 module.exports.run = function run(options, flowObject, message, process, token, done) {
-  if (flowObject.isCustom) {
-    evaluateCustomImplementation(options, flowObject, message, process, done);
-  } else if (flowObject.connectorType && flowObject.connectorType === 'rest') {
+  if (flowObject.connectorType && flowObject.connectorType === 'rest') {
     evaluateRestConnector(options, flowObject, message, process, token, done);
   } else if (flowObject.connectorType && flowObject.connectorType === 'finalizeTransaction') {
     evaluateFTConnector(options, flowObject, message, process, done);
   } else if (flowObject.connectorType && flowObject.connectorType === 'oeConnector') {
     evaluateOEConnector(options, flowObject, message, process, done);
   } else {
-    evaluateCustomImplementation(options, flowObject, message, process, done);
+    let err = new Error('Invalid connector type found.');
+    log.error(options, err);
+    return done(err);
   }
 };
+
 var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
   var sandbox = {
     msg: incomingMsg,
@@ -224,37 +226,6 @@ function makeRESTCalls(urlOptions, retry, callback) {
     }
   });
 }
-/**
- * Custom Function calling EVF Models
- * @param  {Object} options Options
- * @param  {Object} flowObject FlowObject
- * @param  {Object} message Message
- * @param  {Object} process Process-Instance
- * @param  {Function} done Callback
- */
-function evaluateCustomImplementation(options, flowObject, message, process, done) {
-  var method = flowObject.formData.method;
-  var value = flowObject.formData.json;
-  var attachedModelName = process._processVariables._attachedModelName;
-  var attachedModel = loopback.getModel(attachedModelName, options);
-
-  var attachedInstanceId = process._processVariables._attachedModelInstanceId;
-
-  // TODO : separate Id and put try catch to save the server from crashing in case of invalid id
-  attachedModel.findById(JSON.parse(attachedInstanceId), options, function callback(err, instance) {
-    if (err) {
-      return done(err);
-    }
-    var data = {};
-    data[method] = value;
-    if (instance._version) {
-      data._version = instance._version;
-    }
-    instance.updateAttributes(data, options, function updateMI(err) {
-      done(err, message);
-    });
-  });
-}
 
 /**
  * OE Connector for Workflow Engine
@@ -270,55 +241,6 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   var model = loopback.getModel(modelName, options);
   var id;
   var data;
-
-  if (modelName === 'ChangeRequest') {
-    var updates = evaluateJSON(flowObject.props.data, message, process, options);
-    var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
-    ChangeWorkflowRequest.find({
-      where: {
-        and: [{
-          modelName: process._processVariables._modelInstance._type
-        }, {
-          modelId: process._processVariables._modelInstance.id
-        }]
-      }
-    }, options, function fetchChangeModel(err, inst) {
-      if (err) {
-        log.error(options, err);
-        return done(err);
-      }
-      if (inst.length > 1) {
-        let err = new Error('Multiple instances found with same id in Change Workflow Request');
-        log.error(options, err);
-        return done(err);
-      } else if (inst.length === 0) {
-        // no instance found in change request model
-        return done(null, {
-          'change_request_update': 'failed - no instance found'
-        });
-      }
-      var instx = JSON.parse(JSON.stringify(inst[0].data));
-      for (let key in updates) {
-        if (Object.prototype.hasOwnProperty.call(updates, key)) {
-          var val = updates[key];
-          instx[key] = val;
-        }
-      }
-      inst[0].updateAttributes({
-        data: instx
-      }, options, function updateCM(err, res) {
-        if (err) {
-          log.error(options, err);
-          return done(err);
-        }
-        process._processVariables._modelInstance = instx;
-        return done(null, {
-          'change_request_update': 'successful'
-        });
-      });
-    });
-    return;
-  }
 
   if (operation === 'create') {
     data = evaluateJSON(flowObject.props.data, message, process, options);

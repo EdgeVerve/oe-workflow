@@ -532,54 +532,6 @@ function beforeSaveCommonHook(ctx, next) {
 
     log.debug(ctx.options, 'beforeSaveWorkflowHook : UDPATE');
     beforeSaveUpdateHook(ctx, next);
-  } else if (ctx.data) {
-        // for UPDATE query - Upsert Variant
-    log.debug(ctx.options, 'beforeSaveWorkflowHook : UDPATE (Upsert)');
-
-    if (ctx.data._status === 'private' && ctx.data._isDeleted === true) {
-      err = new Error();
-      err.code = 'ATTACH_WORKFLOW_BAD_REQUEST';
-      err.statusCode = 400;
-      err.message = 'Delete not allowed while instance is in private state.';
-      err.retriable = false;
-      log.error(ctx.options, err);
-      return next(err);
-    } else if (ctx.data._isDeleted === true) {
-            // came from soft delete mixin but the instance is not intermediate instance
-      return next();
-    }
-
-    ctx.Model.findById(ctx.data.id, ctx.options, function fetchMI(err, currentInstance) {
-      if (err) {
-        err.statusCode = 400;
-        err.message = 'Unable to fetch currentInstance in Update(Upsert) [Thrown by Workflow Engine]';
-        log.error(ctx.options, err);
-        return next(err);
-      }
-
-      if (currentInstance._status === 'private' && currentInstance._transactionType !== 'update') {
-        err = new Error();
-        err.code = 'ATTACH_WORKFLOW_BAD_REQUEST';
-        err.statusCode = 400;
-        err.message = 'Update not allowed while instance is in private state.';
-        err.retriable = false;
-        log.error(ctx.options, err);
-        return next(err);
-      }
-
-      if (currentInstance._status === 'private' && currentInstance._transactionType === 'update' && ctx.options.ctx && ctx.options.ctx.username && currentInstance._modifiedBy !== ctx.options.ctx.username) {
-        err = new Error();
-        err.code = 'ATTACH_WORKFLOW_BAD_REQUEST';
-        err.statusCode = 400;
-        err.message = 'Update not allowed by a different user in private state.';
-        err.retriable = false;
-        log.error(ctx.options, err);
-        return next(err);
-      }
-
-      ctx.currentInstance = currentInstance;
-      beforeSaveUpdateHook(ctx, next);
-    });
   } else {
     log.debug(ctx.options, 'beforeSaveWorkflowHook : neither UPDATE nor CREATE');
     next();
