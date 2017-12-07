@@ -21,7 +21,6 @@ var log = logger('Build-Flow-Objects-Parser');
 function createFlowObject(flowObject, processElements) {
   var finalFlowObject;
   var finalSequenceFlow;
-  var finalassociation;
   var finalLaneObject;
   var flowObjectBpmnId;
   var flowObjectType;

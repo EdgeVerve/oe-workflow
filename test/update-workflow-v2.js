@@ -204,7 +204,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       done();
     });
   });
-  
+
   it('check if workflow instance is up', function CB(done) {
     models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
       if (err) {

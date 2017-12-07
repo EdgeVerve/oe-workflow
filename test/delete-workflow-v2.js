@@ -201,7 +201,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
       done();
     });
   });
-  
+
   it('check if workflow instance is up', function CB(done) {
     models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
       if (err) {
@@ -293,7 +293,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
       done();
     });
   });
-  
+
   it('findById - user1', function CB(done) {
     models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {
@@ -482,7 +482,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
       done();
     });
   });
-  
+
   it('check if workflow instance is up', function CB(done) {
     models[modelName].workflow(testVars.instanceId, User1Context, function CB(err, instance) {
       if (err) {
@@ -574,7 +574,7 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
       done();
     });
   });
-  
+
   it('findById - user1', function CB(done) {
     models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
       if (err) {

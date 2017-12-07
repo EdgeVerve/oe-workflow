@@ -7,7 +7,6 @@
 
 var fs = require('fs');
 var path = require('path');
-var request = require('request');
 
 var bootstrap = require('./bootstrap');
 var chai = bootstrap.chai;
@@ -23,69 +22,11 @@ var User1Context = {
     'username': 'user1'
   }
 };
-var User2Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'user2',
-    'username': 'user2'
-  }
-};
-var VIP1Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'vip1',
-    'username': 'vip1'
-  }
-};
-var VIP2Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'vip2',
-    'username': 'vip2',
-    'roles': [
-      'vip'
-    ]
-  }
-};
 var User1Details = {
   'username': 'user1',
   'email': 'user1@oe.com',
   'password': 'user1',
   'id': 'user1'
-};
-var User2Details = {
-  'username': 'user2',
-  'email': 'user2@oe.com',
-  'password': 'user2',
-  'id': 'user2'
-};
-var VIP1Details = {
-  'username': 'vip1',
-  'email': 'vip1@oe.com',
-  'password': 'vip1',
-  'id': 'vip1'
-};
-var VIP2Details = {
-  'username': 'vip2',
-  'email': 'vip2@oe.com',
-  'password': 'vip2',
-  'id': 'vip2'
-};
-var User1Credentials = {
-  'username': 'user1',
-  'password': 'user1'
-};
-var User2Credentials = {
-  'username': 'user2',
-  'password': 'user2'
-};
-var VIP1Credentials = {
-  'username': 'vip1',
-  'password': 'vip1'
-};
-var VIP2Credentials = {
-  'username': 'vip2',
-  'password': 'vip2'
 };
 
 describe('User Creation', function CB() {
@@ -105,87 +46,6 @@ describe('User Creation', function CB() {
         assert.isNotNull(users);
         done();
       }
-    });
-  });
-
-  it('should create user - user2', function CB(done) {
-    BaseUser.create(User2Details, bootstrap.defaultContext, function CB(err, users) {
-      if (bootstrap.checkDuplicateKeyError(err)) {
-        log.debug(users);
-        done();
-      } else if (err) {
-        log.error(err);
-        return done(err);
-      } else {
-        log.debug(users);
-        assert.isNotNull(users);
-        done();
-      }
-    });
-  });
-
-  it('should create user - vip1', function CB(done) {
-    BaseUser.create(VIP1Details, bootstrap.defaultContext, function CB(err, users) {
-      if (bootstrap.checkDuplicateKeyError(err)) {
-        log.debug(users);
-        done();
-      } else if (err) {
-        log.error(err);
-        return done(err);
-      } else {
-        log.debug(users);
-        assert.isNotNull(users);
-        done();
-      }
-    });
-  });
-
-  it('should create user - vip2', function CB(done) {
-    BaseUser.create(VIP2Details, bootstrap.defaultContext, function CB(err, users) {
-      if (bootstrap.checkDuplicateKeyError(err)) {
-        log.debug(users);
-        done();
-      } else if (err) {
-        log.error(err);
-        return done(err);
-      } else {
-        log.debug(users);
-        assert.isNotNull(users);
-        done();
-      }
-    });
-  });
-
-  it('should create the role : vip', function callback(done) {
-    models.BaseRole.create({ name: 'vip', id: 'vip' }, bootstrap.defaultContext, function callback(err, role) {
-      if (bootstrap.checkDuplicateKeyError(err)) {
-        done();
-      } else if (err) {
-        return done(err);
-      } else {
-        assert.isNotNull(role);
-        done();
-      }
-    });
-  });
-
-  it('should create the role mapping : vip2 to vip', function callback(done) {
-    models.BaseRoleMapping.findOrCreate({
-      where: {
-        and: [{
-          principalType: 'USER'
-        }, {
-          principalId: 'vip2'
-        }, {
-          roleId: 'vip'
-        }
-        ]}
-    }, { principalType: 'USER', principalId: 'vip2', roleId: 'vip' }, bootstrap.defaultContext, function callback(err, roleMap) {
-      if (err) {
-        return done(err);
-      }
-      assert.isNotNull(roleMap);
-      done();
     });
   });
 });

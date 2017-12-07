@@ -25,6 +25,7 @@ var log = logger('Service-Node');
  * @param  {Object} process Process-Instance
  * @param  {Object} token Token
  * @param  {Function} done Callback
+ * @returns  {void}
  */
 module.exports.run = function run(options, flowObject, message, process, token, done) {
   if (flowObject.connectorType && flowObject.connectorType === 'rest') {

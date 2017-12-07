@@ -278,7 +278,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
 
   it('complete user task by checker 1', function CB(done) {
     testVars.taskInstance.complete({
-      '__action__' : 'approved',
+      '__action__': 'approved',
       'pv': {
         'comment_by_checker1': 'sample comment'
       }
@@ -432,4 +432,3 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
     });
   });
 });
-
