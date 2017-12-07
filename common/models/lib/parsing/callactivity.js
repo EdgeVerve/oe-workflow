@@ -14,6 +14,8 @@ var BPMNActivity = require('./activity.js').BPMNActivity;
 var util = require('util');
 var BPMNCallActivity;
 var checkAndAddMultiInstanceCharacteristics = require('./taskmarkers.js').checkAndAddMultiInstanceCharacteristics;
+var extractInputOutputParameters = require('./parse-utils/input-output-parameters.js').extractInputOutputParameters;
+var extractInOutMappings = require('./parse-utils/in-out-mappings.js').extractInOutMappings;
 
 /**
  * create a bpmn call activity
@@ -32,6 +34,12 @@ exports.createBPMNCallActivity = function createBPMNCallActivity(flowObject) {
 
   var callActivityObject = new BPMNCallActivity(bpmnId, name, type, calledElement);
   checkAndAddMultiInstanceCharacteristics(flowObject, callActivityObject);
+  if (flowObject['bpmn2:extensionElements'] && flowObject['bpmn2:extensionElements']['camunda:inputOutput']) {
+    callActivityObject.inputOutputParameters = extractInputOutputParameters(flowObject['bpmn2:extensionElements']['camunda:inputOutput']);
+  }
+  if (flowObject['bpmn2:extensionElements'] ) {
+    callActivityObject.inOutMappings = extractInOutMappings(flowObject['bpmn2:extensionElements']);
+  }
   return callActivityObject;
 };
 
