@@ -147,7 +147,6 @@ module.exports = function Task(Task) {
    */
   Task.prototype.completeTask = function completeTask(message, processVariables, options, next) {
     var self = this;
-
     if (self.status !== 'pending') {
       return next(new Error('Task Already Completed'));
     }
@@ -168,7 +167,7 @@ module.exports = function Task(Task) {
           }
         }
         // self.status = status;
-        var updates = { 'status': status };
+        var updates = { 'status': status, '_version': self._version };
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
@@ -449,7 +448,7 @@ module.exports = function Task(Task) {
           }
         }
         // self.status = status;
-        var updates = {'status': status};
+        var updates = {'status': status, '_version': self._version};
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
