@@ -361,8 +361,8 @@ module.exports = function Task(Task) {
           }
 
           let validActArr = [ 'approved', 'rejected' ];
-          if ( taskObj.stepVariables && taskObj.stepVariables.__action__ ) {
-            validActArr = validActArr.concat(taskObj.stepVariables.__action__);
+          if ( self.stepVariables && self.stepVariables.__action__ ) {
+            validActArr = validActArr.concat(self.stepVariables.__action__);
           }
 
           let isValid = ( validActArr.indexOf(data.__action__) > -1 );
@@ -395,13 +395,17 @@ module.exports = function Task(Task) {
           }
           pdata.pv.__action__ = data.__action__;
 
-          WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
-            if (err) {
-              log.error(err);
-              return next(err);
-            }
+          if (['approved', 'rejected'].indexOf(data.__action__) > -1 ) {
+            WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
+              if (err) {
+                log.error(err);
+                return next(err);
+              }
+              return self.complete_(pdata, options, next);
+            });
+          } else {
             return self.complete_(pdata, options, next);
-          });
+          }
         } else {
           return self.complete_(data, options, next);
         }

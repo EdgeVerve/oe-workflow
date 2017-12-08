@@ -72,6 +72,7 @@ var User1Credentials = {
   'username': 'user1',
   'password': 'user1'
 };
+var globalVars = {};
 
 describe('User Creation', function CB() {
   this.timeout(10000);
@@ -140,7 +141,7 @@ describe('User Creation', function CB() {
   });
 });
 
-describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dependent ] - approved', function CB() {
+describe('Test case for creating and attaching model', function CB() {
   this.timeout(15000);
   var modelName = 'TestReworkMC';
   var wfName = 'rework-maker-checker';
@@ -188,6 +189,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
         expect(Object.keys(models[modelName].definition.properties)).
           to.include.members(Object.keys(models.BaseEntity.definition.properties));
         testVars.modelDetails = res;
+        globalVars.modelDetails = res;
         done();
       }
     });
@@ -231,6 +233,12 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
       done();
     });
   });
+});
+
+describe('Test case for Multi Maker Rework OE Workflow [ workflow dependent ] - approved (directly)', function CB() {
+  this.timeout(15000);
+  var modelName = 'TestReworkMC';
+  var testVars = {};
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
     models[modelName].createX({
@@ -318,7 +326,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
       'pv': {
         'comment_by_maker2': 'sample comment'
       }
-    }, User1Context, function cb(err, res) {
+    }, User2Context, function cb(err, res) {
       if (err) {
         log.error(err);
         return done(err);
@@ -383,11 +391,11 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
 
   it('complete user task by maker3', function CB(done) {
     testVars.taskInstance.complete({
-      'prop4': '22222',
+      'prop3': '22222',
       'pv': {
         'comment_by_maker3': 'sample comment'
       }
-    }, User1Context, function cb(err, res) {
+    }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);
         return done(err);
@@ -456,7 +464,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
       'pv': {
         'comment_by_checker': 'sample comment'
       }
-    }, User3Context, function cb(err, res) {
+    }, User4Context, function cb(err, res) {
       if (err) {
         log.error(err);
         return done(err);
@@ -502,6 +510,470 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
       }
     });
   });
+});
+
+describe('Test case for Multi Maker Rework OE Workflow [ workflow dependent ] - approved (via maker2)', function CB() {
+  this.timeout(15000);
+  var modelName = 'TestReworkMC';
+  var testVars = {};
+
+  it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
+    models[modelName].createX({
+      'prop1': '00000'
+    }, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      testVars.instanceId = instance.id;
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '/?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 404);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('check if workflow instance is up', function CB(done) {
+    models[modelName].workflow(testVars.instanceId, User2Context, function CB(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (instance === null) {
+        var errNoWinstance = new Error('No workflow instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(instance);
+      setTimeout(done, 1000);
+    });
+  });
+
+  it('check if maker 2 task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User2Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by maker2', function CB(done) {
+    testVars.taskInstance.complete({
+      'prop2': '11111',
+      'pv': {
+        'comment_by_maker2': 'sample comment'
+      }
+    }, User2Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+      //   var token = login.id;
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 404);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('check if maker 3 task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User3Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by maker3', function CB(done) {
+    testVars.taskInstance.complete({
+      'prop4': '22222',
+      'pv': {
+        'comment_by_maker3': 'sample comment'
+      }
+    }, User3Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+      //   var token = login.id;
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 404);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('check if checker task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, User4Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.checkerTaskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by checker', function CB(done) {
+    testVars.checkerTaskInstance.complete({
+      '__action__': 'rework_by_m2',
+      'pv': {
+        'comment_by_checker': 'sample comment'
+      }
+    }, User4Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('check if maker 2 task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, {
+      where: {
+        status: 'pending'
+      }
+    }, User2Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by maker2', function CB(done) {
+    testVars.taskInstance.complete({
+      'prop2': '11111_iter2',
+      'pv': {
+        'comment_by_maker2': 'sample comment'
+      }
+    }, User2Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+      //   var token = login.id;
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 404);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('check if maker 3 task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, {
+      where: {
+        status: 'pending'
+      }
+    }, User3Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.taskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by maker3', function CB(done) {
+    testVars.taskInstance.complete({
+      'prop4': '22222_iter2',
+      'pv': {
+        'comment_by_maker3': 'sample comment'
+      }
+    }, User3Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
+    });
+  });
+
+  it('findById - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNull(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+      //   var token = login.id;
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 404);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+
+  it('check if checker task instance is created', function CB(done) {
+    models[modelName].tasks(testVars.instanceId, {
+      where: {
+        status: 'pending'
+      }
+    }, User4Context, function CB(err, tasks) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      } else if (tasks.length === 0) {
+        var errNoWinstance = new Error('No task instance found');
+        log.error(errNoWinstance);
+        return done(errNoWinstance);
+      }
+      log.debug(tasks);
+      testVars.checkerTaskInstance = tasks[0];
+      done();
+    });
+  });
+
+  it('complete user task by checker', function CB(done) {
+    testVars.checkerTaskInstance.complete({
+      '__action__': 'approved',
+      'pv': {
+        'comment_by_checker': 'sample comment'
+      }
+    }, User4Context, function cb(err, res) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(res);
+      assert.isNotNull(res);
+      setTimeout(done, 2000);
+    });
+  });
+  it('findById - user1', function CB(done) {
+    models[modelName].findById(testVars.instanceId, User1Context, function cb(err, instance) {
+      if (err) {
+        log.error(err);
+        return done(err);
+      }
+      log.debug(instance);
+      assert.isNotNull(instance);
+      done();
+    });
+  });
+
+  it('findById [REST] - user1', function CB(done) {
+    bootstrap.login(User1Credentials, function CB(err, login) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(login.id);
+      //   var token = login.id;
+
+      var url = bootstrap.basePath + '/' + modelName + 's/' + testVars.instanceId + '?access_token=' + bootstrap.token;
+
+      request({ url: url, method: 'GET' }, onGet);
+
+      function onGet(err, response) {
+        if (err) {
+          return done(err);
+        }
+        var instance = JSON.parse(response.body);
+        assert.strictEqual(response.statusCode, 200);
+        log.debug(instance);
+        done();
+      }
+    });
+  });
+});
+
+describe('Test case for Multi Maker Rework OE Workflow [ workflow dependent ] - cleanup', function CB() {
+  this.timeout(15000);
+  var modelName = 'TestReworkMC';
 
   it('remove model instances [clean-up]', function CB(done) {
     models[modelName].destroyAll({}, User1Context, function cb(err, res) {
@@ -515,8 +987,8 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
   });
 
   it('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
-    var id = testVars.modelDetails.id;
-    var version = testVars.modelDetails._version;
+    var id = globalVars.modelDetails.id;
+    var version = globalVars.modelDetails._version;
     models.ModelDefinition.deleteWithVersion(id, version, User1Context, function CB(err) {
       if (err) {
         done(err);

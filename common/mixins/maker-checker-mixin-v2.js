@@ -217,7 +217,12 @@ function addOERemoteMethods(Model) {
       http: {
         source: 'path'
       },
-      description: 'Model id'
+      description: 'Model id',
+      required: true
+    }, {
+      arg: 'filter',
+      type: 'object',
+      description: 'Filter defining fields and include'
     }],
     http: {
       verb: 'get',
@@ -792,16 +797,16 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  Model.tasks = function tasks(id, ctx, cb) {
+  Model.tasks = function tasks(id, tfilter, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var WorkflowRequest = app.models.ChangeWorkflowRequest;
     var WorkflowInstance = app.models.WorkflowInstance;
 
-    if (!id) {
-      var err = new Error('id is required to find attached Workflow Instance.');
-      log.error(ctx.options, err);
-      return cb(err);
+    if (typeof ctx === 'function') {
+      cb = ctx;
+      ctx = tfilter;
+      tfilter = {};
     }
 
     var filter = {
@@ -837,8 +842,7 @@ function addOERemoteMethods(Model) {
           return cb(err);
         }
 
-        workflowInstance.tasks({
-        }, ctx, function fetchProcesses(err, tasks) {
+        workflowInstance.tasks(tfilter, ctx, function fetchProcesses(err, tasks) {
           if (err) {
             log.error(ctx.options, err);
             return cb(err);
