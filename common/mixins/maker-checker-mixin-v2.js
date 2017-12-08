@@ -170,7 +170,7 @@ function addOERemoteMethods(Model) {
       },
       description: 'Model id',
       required: true
-    },{
+    }, {
       arg: 'filter',
       type: 'object',
       description: 'Filter defining fields and include'
@@ -605,8 +605,8 @@ function addOERemoteMethods(Model) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
-    
-    if(typeof ctx === 'function'){
+
+    if (typeof ctx === 'function') {
       cb = ctx;
       ctx = filter;
       filter = {};

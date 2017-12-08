@@ -280,7 +280,7 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
       }
     });
   });
-  
+
   it('check if workflow instance is up', function CB(done) {
     models[modelName].workflow(testVars.instanceId, User2Context, function CB(err, instance) {
       if (err) {
@@ -537,4 +537,3 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
     });
   });
 });
-
