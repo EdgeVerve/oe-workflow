@@ -318,7 +318,8 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - a
         return done(err);
       }
       log.debug(instance);
-      assert.isNull(instance);
+      assert.isNotNull(instance);
+      assert.strictEqual(instance.luckydraw, '00000');
       done();
     });
   });

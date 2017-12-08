@@ -12,7 +12,9 @@
 
 var loopback = require('loopback');
 const uuidv4 = require('uuid/v4');
+
 var validationError = require('loopback-datasource-juggler/lib/validations.js').ValidationError;
+var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
 
 var logger = require('oe-logger');
 var log = logger('maker-checker-mixin-v2');
@@ -151,8 +153,8 @@ function addOERemoteMethods(Model) {
       path: '/maker-checker'
     },
     returns: {
-      arg: 'response',
-      type: 'array',
+      arg: 'data',
+      type: ['object'],
       root: true
     }
   });
@@ -166,14 +168,19 @@ function addOERemoteMethods(Model) {
       http: {
         source: 'path'
       },
-      description: 'Model id'
+      description: 'Model id',
+      required: true
+    },{
+      arg: 'filter',
+      type: 'object',
+      description: 'Filter defining fields and include'
     }],
     http: {
       verb: 'get',
       path: '/maker-checker/:id'
     },
     returns: {
-      arg: 'response',
+      arg: 'data',
       type: 'object',
       root: true
     }
@@ -594,12 +601,19 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  Model.findByIdX = function findByIdX(id, ctx, cb) {
+  Model.findByIdX = function findByIdX(id, filter, ctx, cb) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+    
+    if(typeof ctx === 'function'){
+      cb = ctx;
+      ctx = filter;
+      filter = {};
+    }
 
-    ChangeWorkflowRequest.find({
+    var userQuery = JSON.parse(JSON.stringify(filter));
+    var baseQuery = {
       where: {
         and: [{
           modelName: modelName
@@ -609,7 +623,10 @@ function addOERemoteMethods(Model) {
           modelId: id
         }]
       }
-    }, ctx, function fetchChangeModel(err, inst) {
+    };
+    mergeQuery(userQuery, baseQuery);
+
+    ChangeWorkflowRequest.find(userQuery, ctx, function fetchChangeModel(err, inst) {
       if (err) {
         log.error(ctx, err);
         return cb(err);
@@ -620,7 +637,8 @@ function addOERemoteMethods(Model) {
         return cb(err);
       } else if (inst.length === 0) {
 				// no instance found in change request model
-        return cb(null, null);
+        var Model = app.models[modelName];
+        return Model.findById(id, filter, ctx, cb);
       }
 			// unwarap the object
       let cinst = unwrapChangeRequest(inst[0]);
