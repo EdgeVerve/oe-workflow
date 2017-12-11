@@ -551,9 +551,9 @@ module.exports = function Task(Task) {
     },
     description: 'Sends a request to complete a task, status will be updated later',
     http: {
-      verb: 'post'
+      verb: 'put'
     },
-    isStatic: true,
+    isStatic: false,
     returns: {
       type: 'object',
       root: true
@@ -574,7 +574,7 @@ module.exports = function Task(Task) {
     http: {
       verb: 'put'
     },
-    isStatic: true,
+    isStatic: false,
     returns: {
       type: 'object',
       root: true

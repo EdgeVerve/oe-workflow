@@ -188,7 +188,7 @@ function addOERemoteMethods(Model) {
 
   Model.remoteMethod('recall', {
     description: 'Recall the Maker-Checker Instance',
-    accessType: 'READ',
+    accessType: 'WRITE',
     accepts: [{
       arg: 'id',
       type: 'string',
