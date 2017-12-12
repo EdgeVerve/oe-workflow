@@ -272,7 +272,7 @@ module.exports = function Task(Task) {
                 log.error(options, err);
                 return next(err);
               }
-            }, options, instx);
+            }, {options : options}, instx);
           });
         } else if (taskObj.isChecker) {
           // do handling of finalize transaction first, only then complete the task

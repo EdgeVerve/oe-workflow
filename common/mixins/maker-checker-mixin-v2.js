@@ -487,7 +487,7 @@ function addOERemoteMethods(Model) {
               log.error(options, err);
               return next(err);
             }
-          }, options, data);
+          }, {options : options}, data);
         });
     });
   };
@@ -578,7 +578,7 @@ function addOERemoteMethods(Model) {
         log.error(options, err);
         return next(err);
       }
-    }, options, data);
+    }, { options : options }, data);
   };
 
   Model.findX = function findX(ctx, cb) {
