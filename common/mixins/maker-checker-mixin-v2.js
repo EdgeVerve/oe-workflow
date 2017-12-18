@@ -497,88 +497,99 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
-    let idName = Model.definition.idName();
-		// case id is not defined
-    if (typeof data[idName] === 'undefined') {
-      data[idName] =  uuidv4();
-    }
-
-    let modelId = data[idName];
-    var mData = {
-      modelName: modelName,
-      modelId: modelId,
-      operation: 'create',
-      data: data,
-      _modifiers: [
-        options.ctx.username
-      ]
+    var obj = new Model(data);
+    var context = {
+      Model: Model,
+      instance: obj,
+      isNewInstance: true,
+      hookState: {},
+      options: options
     };
-		// check instance data is Valid
-    let obj = new Model(data);
-    obj.isValid(function validate(valid) {
-      if (valid) {
-        log.debug(options, 'Instance has been validated during maker checker creation');
 
-        var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
-        var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+    Model.notifyObserversOf('before save', context, function (err) {
+      if (err) return cb(err);
 
-        WorkflowMapping.find({
-          where: {
-            'and': [
+      data = obj.toObject(true);
+
+      // validation required
+      obj.isValid(function (valid) {
+        if (valid) {
+          let idName = Model.definition.idName();
+          var _data = obj.toObject(true);
+          // case id is not defined
+          if (typeof _data[idName] === 'undefined') {
+            _data[idName] =  uuidv4();
+          }
+          var mData = {
+            modelName: modelName,
+            modelId: _data[idName],
+            operation: 'create',
+            data: _data,
+            _modifiers: [
+              options.ctx.username
+            ]
+          };
+          log.debug(options, 'Instance has been validated during maker checker creation');
+
+          var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+          var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+
+          WorkflowMapping.find({
+            where: {
+              'and': [
 							{ 'modelName': modelName },
 							{ 'engineType': 'oe-workflow' },
 							{ 'version': 'v2' },
 							{ 'operation': 'create' }
-            ]
-          }
-        }, options, function fetchWM(err, res) {
-          if (err) {
-            log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-            next(err);
-          } else if (res && res.length === 0) {
+              ]
+            }
+          }, options, function fetchWM(err, res) {
+            if (err) {
+              log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
+              next(err);
+            } else if (res && res.length === 0) {
 						// this case should never occur
-            log.debug(options, 'no create mapping found');
-            next();
-          } else if (res.length === 1) {
-            var mapping = res[0];
+              log.debug(options, 'no create mapping found');
+              next();
+            } else if (res.length === 1) {
+              var mapping = res[0];
 
-            let workflowBody = mapping.workflowBody;
-            workflowBody.processVariables = workflowBody.processVariables || {};
-            workflowBody.processVariables._operation = mData.operation;
-            workflowBody.processVariables._modelInstance = mData.data;
-            workflowBody.processVariables._modelInstance._type = modelName;
+              let workflowBody = mapping.workflowBody;
+              workflowBody.processVariables = workflowBody.processVariables || {};
+              workflowBody.processVariables._operation = mData.operation;
+              workflowBody.processVariables._modelInstance = mData.data;
+              workflowBody.processVariables._modelInstance._type = modelName;
 						// this is to identify while executing Finalize Transaction to follow which implementation
-            workflowBody.processVariables._maker_checker_impl = 'v2';
-            WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
-              if (err) {
-                log.error(options, err);
-                return next(err);
-              }
-              mData.workflowInstanceId = winst.id;
-              ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+              workflowBody.processVariables._maker_checker_impl = 'v2';
+              WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
                 if (err) {
                   log.error(options, err);
                   return next(err);
                 }
-                log.debug(options, inst);
+                mData.workflowInstanceId = winst.id;
+                ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                  log.debug(options, inst);
 								// wrapping back data properly
-                let cinst = unwrapChangeRequest(inst);
-                delete cinst.data;
-                return next(null, cinst);
+                  let cinst = unwrapChangeRequest(inst);
+                  delete cinst.data;
+                  return next(null, cinst);
+                });
               });
-            });
-          } else {
-            let err = new Error('Multiple workflows attached to same Model.');
-            log.error(options, err);
-            return next(err);
-          }
-        });
-      } else {
-        let err = validationError(obj);
-        log.error(options, err);
-        return next(err);
-      }
-    }, { options: options }, data);
+            } else {
+              let err = new Error('Multiple workflows attached to same Model.');
+              log.error(options, err);
+              return next(err);
+            }
+          });
+        } else {
+          cb(new ValidationError(obj), obj);
+        }
+      }, context, data);
+    });
   };
 
   Model.findX = function findX(ctx, cb) {
