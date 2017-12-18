@@ -49,7 +49,7 @@ var RelatedWorkflow = 'RelatedWorkflowTemplate';
 var BaseModel = 'PersonModel';
 var RelatedModel = 'EmailModel';
 
-describe.skip('User Creation', function cb() {
+describe('User Creation', function cb() {
   this.timeout(10000);
   var BaseUser = models.BaseUser;
 
@@ -86,7 +86,7 @@ describe.skip('User Creation', function cb() {
   });
 });
 
-describe.skip('Initialization', function cb() {
+describe('Initialization', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -114,7 +114,6 @@ describe.skip('Initialization', function cb() {
       'validations': []
     };
 
-
     models.ModelDefinition.create(postData, User1Context, function callback(err, res) {
       if (err) {
         log.error(err);
@@ -131,7 +130,6 @@ describe.skip('Initialization', function cb() {
       }
     });
   });
-
 
   it('should create testing model - ' + BaseModel, function callback(done) {
     var postData = {
@@ -225,7 +223,7 @@ describe.skip('Initialization', function cb() {
   });
 });
 
-describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approved All via Base Task', function cb() {
+describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approved All via Base Task', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -248,8 +246,8 @@ describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dep
       assert.isNotNull(instance._workflowRef);
       testVars._workflowRef = instance._workflowRef;
       testVars.instanceId = instance.id;
-      testVars.relatedInstance01Id = instance.emails[0].id;
-      testVars.relatedInstance02Id = instance.emails[1].id;
+      testVars.relatedInstance01Id = instance.__data.emails[0].id;
+      testVars.relatedInstance02Id = instance.__data.emails[1].id;
       setTimeout(done, 3000);
     });
   });
@@ -611,7 +609,7 @@ describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dep
   });
 });
 
-describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - rejected All via Base Task', function cb() {
+describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - rejected All via Base Task', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -634,8 +632,8 @@ describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dep
       assert.isNotNull(instance._workflowRef);
       testVars._workflowRef = instance._workflowRef;
       testVars.instanceId = instance.id;
-      testVars.relatedInstance01Id = instance.emails[0].id;
-      testVars.relatedInstance02Id = instance.emails[1].id;
+      testVars.relatedInstance01Id = instance.__data.emails[0].id;
+      testVars.relatedInstance02Id = instance.__data.emails[1].id;
       done();
     });
   });
@@ -986,7 +984,7 @@ describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dep
   });
 });
 
-describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approve All Tasks separately', function cb() {
+describe('Test case for Trigger on Implicit Post OE Workflow [ workflow dependent ] - approve All Tasks separately', function cb() {
   this.timeout(300000);
   var testVars = {};
 
@@ -1009,8 +1007,8 @@ describe.skip('Test case for Trigger on Implicit Post OE Workflow [ workflow dep
       assert.isNotNull(instance._workflowRef);
       testVars._workflowRef = instance._workflowRef;
       testVars.instanceId = instance.id;
-      testVars.relatedInstance01Id = instance.emails[0].id;
-      testVars.relatedInstance02Id = instance.emails[1].id;
+      testVars.relatedInstance01Id = instance.__data.emails[0].id;
+      testVars.relatedInstance02Id = instance.__data.emails[1].id;
       done();
     });
   });
