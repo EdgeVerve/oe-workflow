@@ -335,18 +335,19 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
-    Model.findById(id, options, function fetchInstance(err, sinst) {
+    Model.findById(id, options, function fetchInstance(err, cinst) {
       if (err) {
         log.error(options, err);
         return next(err);
       }
-      if (!err & !sinst) {
+      if (!err & !cinst) {
         let err = new Error('Model id is not valid.');
         log.error(options, err);
         return next(err);
       }
       // is the instance to be passed also ? if the user just passes the updates ?
-      let einst = sinst.toObject();
+      var currentInstance = cinst;
+      let einst = cinst.toObject();
       if (typeof data._version === 'undefined' || data._version !== einst._version) {
         let err = new Error('model instance version undefined or mismatch');
         log.error(options, err);
@@ -395,17 +396,20 @@ function addOERemoteMethods(Model) {
             });
           }
 
-          var obj = new Model(data);
           var context = {
             Model: Model,
+            where: {},
+            currentInstance: currentInstance,
             data: data,
             hookState: {},
             options: options
           };
 
-          Model.notifyObserversOf('before save', context, function (err) {
+          Model.notifyObserversOf('before save', context, function (err, ctx) {
             if (err) return next(err);
 
+            data = ctx.data;
+            var obj = new Model(data);
             // check instance data is Valid
             obj.isValid(function validate(valid) {
               if (valid) {
