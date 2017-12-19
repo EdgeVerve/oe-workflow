@@ -405,7 +405,16 @@ function addOERemoteMethods(Model) {
             options: options
           };
 
-          Model.notifyObserversOf('before save', context, function beforeSaveCb(err, ctx) {
+          var beforeSaveArray = Model._observers['before save'];
+          var dpBeforeSave = beforeSaveArray.filter(function(beforeSave){
+            return beforeSave.name === 'dataPersonalizationBeforeSave';
+          })
+          if(dpBeforeSave.length !== 1){
+            let err = new Error('DataPersonalizationMixin fetch failed.');
+            log.error(options, err);
+            return next(err);
+          }
+          dpBeforeSave[0](context, function beforeSaveCb(err, ctx) {
             if (err) return next(err);
 
             data = ctx.data;
@@ -523,10 +532,15 @@ function addOERemoteMethods(Model) {
     };
 
     var beforeSaveArray = Model._observers['before save'];
-    var dpBeforeSave = beforeSaveArray.filter(function(beforeSaveName){
-      return beforeSaveName === 'dataPersonalizationBeforeSave';
+    var dpBeforeSave = beforeSaveArray.filter(function(beforeSave){
+      return beforeSave.name === 'dataPersonalizationBeforeSave';
     })
-    dpBeforeSave(context, function beforeSaveCb(err) {
+    if(dpBeforeSave.length !== 1){
+      let err = new Error('DataPersonalizationMixin fetch failed.');
+      log.error(options, err);
+      return next(err);
+    }
+    dpBeforeSave[0](context, function beforeSaveCb(err) {
       if (err) return next(err);
 
       // validation required

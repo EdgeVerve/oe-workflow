@@ -234,6 +234,7 @@ module.exports = function Task(Task) {
               });
             }
 
+            var operation = inst[0].operation;
             var instx = JSON.parse(JSON.stringify(inst[0].data));
             for (let key in updates) {
               if (Object.prototype.hasOwnProperty.call(updates, key)) {
@@ -247,32 +248,74 @@ module.exports = function Task(Task) {
 
             let modelName = process._processVariables._modelInstance._type;
             let Model = loopback.getModel(modelName, options);
-            let obj = new Model(instx);
-            obj.isValid(function validate(valid) {
-              if (valid) {
-                log.debug(options, 'Instance has been validated during maker checker creation');
 
-                inst[0].updateAttributes({
-                  data: instx,
-                  _modifiers: modifiers
-                }, options, function updateCM(err, res) {
-                  if (err) {
-                    log.error(options, err);
-                    return next(err);
-                  }
-                  // process._processVariables._modelInstance = instx;
-                  var xdata = {};
-                  xdata.pv = pdata.pv || {};
-                  xdata.pv._modelInstance = instx;
-                  xdata.msg = pdata.msg;
-                  return self.complete_(xdata, options, next);
-                });
-              } else {
-                let err = new Error('Validation Error');
-                log.error(options, err);
-                return next(err);
+            var obj = new Model(data);
+            var context;
+            if(operation === 'create'){
+              context = {
+                Model: Model,
+                instance: obj,
+                isNewInstance: true,
+                hookState: {},
+                options: options
+              };
+            } else if(operation === 'update'){
+              context = {
+                Model: Model,
+                instance: obj,
+                isNewInstance: true,
+                hookState: {},
+                options: options
+              };
+            } else {
+              context = {
+                Model: Model,
+                hookState: {},
+                options: options
+              };
+            }
+
+            var beforeSaveArray = Model._observers['before save'];
+            var dpBeforeSave = beforeSaveArray.filter(function(beforeSave){
+              return beforeSave.name === 'dataPersonalizationBeforeSave';
+            })
+            if(dpBeforeSave.length !== 1){
+              let err = new Error('DataPersonalizationMixin fetch failed.');
+              log.error(options, err);
+              return next(err);
+            }
+            dpBeforeSave[0](context, function beforeSaveCb(err, ctx) {
+              if (err) return next(err);
+
+              if(operation === 'update'){
+                obj = new Model(ctx.data);
               }
-            }, {options: options}, instx);
+              obj.isValid(function validate(valid) {
+                if (valid) {
+                  log.debug(options, 'Instance has been validated during maker checker creation');
+
+                  inst[0].updateAttributes({
+                    data: instx,
+                    _modifiers: modifiers
+                  }, options, function updateCM(err, res) {
+                    if (err) {
+                      log.error(options, err);
+                      return next(err);
+                    }
+                    // process._processVariables._modelInstance = instx;
+                    var xdata = {};
+                    xdata.pv = pdata.pv || {};
+                    xdata.pv._modelInstance = instx;
+                    xdata.msg = pdata.msg;
+                    return self.complete_(xdata, options, next);
+                  });
+                } else {
+                  let err = new Error('Validation Error');
+                  log.error(options, err);
+                  return next(err);
+                }
+              }, context, instx);
+            });
           });
         } else if (taskObj.isChecker) {
           // do handling of finalize transaction first, only then complete the task
