@@ -570,7 +570,8 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - r
         return done(err);
       }
       log.debug(instance);
-      assert.isNull(instance);
+      assert.isNotNull(instance);
+      assert.strictEqual(instance.luckydraw, '00000');
       done();
     });
   });

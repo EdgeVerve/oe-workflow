@@ -426,7 +426,7 @@ describe('Test case for Service Task - Fail Case', function callback() {
     });
   });
 
-  it('validate process', function callback(done) {
+  xit('validate process', function callback(done) {
     models.ProcessInstance.findById(testVars.processes[0].id, bootstrap.defaultContext, function callback(err, instance) {
       if (err) {
         return done(err);
