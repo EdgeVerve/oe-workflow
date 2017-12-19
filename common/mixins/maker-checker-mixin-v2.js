@@ -522,7 +522,11 @@ function addOERemoteMethods(Model) {
       options: options
     };
 
-    Model.notifyObserversOf('before save', context, function beforeSaveCb(err) {
+    var beforeSaveArray = Model._observers['before save'];
+    var dpBeforeSave = beforeSaveArray.filter(function(beforeSaveName){
+      return beforeSaveName === 'dataPersonalizationBeforeSave';
+    })
+    dpBeforeSave(context, function beforeSaveCb(err) {
       if (err) return next(err);
 
       // validation required
