@@ -405,7 +405,7 @@ function addOERemoteMethods(Model) {
             options: options
           };
 
-          Model.notifyObserversOf('before save', context, function (err, ctx) {
+          Model.notifyObserversOf('before save', context, function beforeSaveCb(err, ctx) {
             if (err) return next(err);
 
             data = ctx.data;
@@ -522,11 +522,11 @@ function addOERemoteMethods(Model) {
       options: options
     };
 
-    Model.notifyObserversOf('before save', context, function (err) {
+    Model.notifyObserversOf('before save', context, function beforeSaveCb(err) {
       if (err) return next(err);
 
       // validation required
-      obj.isValid(function (valid) {
+      obj.isValid(function validateCb(valid) {
         if (valid) {
           let idName = Model.definition.idName();
           var _data = obj.toObject(true);
