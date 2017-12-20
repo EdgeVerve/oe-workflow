@@ -541,14 +541,11 @@ function addOERemoteMethods(Model) {
       log.error(options, err);
       return next(err);
     }
-    debugger;
     dpBeforeSave[0](context, function beforeSaveCb(err) {
-      debugger;
       if (err) return next(err);
 
       // validation required
       obj.isValid(function validateCb(valid) {
-        debugger;
         if (valid) {
           let idName = Model.definition.idName();
           var _data = obj.toObject(true);

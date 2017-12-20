@@ -211,7 +211,7 @@ module.exports = function Task(Task) {
           }
           var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
           var modelName = process._processVariables._modelInstance._type;
-          var modelId = process._processVariables.modelInstance._modelId;
+          var modelId = process._processVariables._modelInstance._modelId;
           ChangeWorkflowRequest.find({
             where: {
               and: [{
@@ -253,7 +253,7 @@ module.exports = function Task(Task) {
 
             var obj = new Model(data);
             var context;
-            if(operation === 'create'){
+            if (operation === 'create') {
               context = {
                 Model: Model,
                 instance: obj,
@@ -261,11 +261,13 @@ module.exports = function Task(Task) {
                 hookState: {},
                 options: options
               };
-            } else if(operation === 'update'){
+            } else if (operation === 'update') {
               context = {
                 Model: Model,
-                instance: obj,
-                isNewInstance: true,
+                where: {},
+                // fetch currentInstance and pass that also
+                // currentInstance: currentInstance,
+                data: obj,
                 hookState: {},
                 options: options
               };
@@ -278,10 +280,10 @@ module.exports = function Task(Task) {
             }
 
             var beforeSaveArray = Model._observers['before save'];
-            var dpBeforeSave = beforeSaveArray.filter(function(beforeSave){
+            var dpBeforeSave = beforeSaveArray.filter(function (beforeSave) {
               return beforeSave.name === 'dataPersonalizationBeforeSave';
-            })
-            if(dpBeforeSave.length !== 1){
+            });
+            if (dpBeforeSave.length !== 1) {
               let err = new Error('DataPersonalizationMixin fetch failed.');
               log.error(options, err);
               return next(err);
@@ -289,7 +291,7 @@ module.exports = function Task(Task) {
             dpBeforeSave[0](context, function beforeSaveCb(err, ctx) {
               if (err) return next(err);
 
-              if(operation === 'update'){
+              if (operation === 'update') {
                 obj = new Model(ctx.data);
               }
               obj.isValid(function validate(valid) {
