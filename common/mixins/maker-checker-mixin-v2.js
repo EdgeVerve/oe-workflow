@@ -415,10 +415,9 @@ function addOERemoteMethods(Model) {
             log.error(options, err);
             return next(err);
           }
-          dpBeforeSave[0](context, function beforeSaveCb(err, ctx) {
+          dpBeforeSave[0](context, function beforeSaveCb(err) {
             if (err) return next(err);
 
-            data = ctx.data;
             var obj = new Model(data);
             // check instance data is Valid
             obj.isValid(function validate(valid) {
