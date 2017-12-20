@@ -296,6 +296,7 @@ function addOERemoteMethods(Model) {
           workflowBody.processVariables._operation = mData.operation;
           workflowBody.processVariables._modelInstance = mData.data;
           workflowBody.processVariables._modelInstance._type = modelName;
+          workflowBody.processVariables._modelInstance._modelId = id;
           // this is to identify while executing Finalize Transaction to follow which implementation
           workflowBody.processVariables._maker_checker_impl = 'v2';
           WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -425,7 +426,7 @@ function addOERemoteMethods(Model) {
                 log.debug(options, 'Instance has been validated during maker checker creation');
 
                 // retrigger handling done, moving forward
-                let idName = Model.definition.idName();
+                var idName = Model.definition.idName();
                 var _data = obj.toObject(true);
                 _data[idName] = id;
                 var mData = {
@@ -466,6 +467,7 @@ function addOERemoteMethods(Model) {
                     workflowBody.processVariables._operation = mData.operation;
                     workflowBody.processVariables._modelInstance = mData.data;
                     workflowBody.processVariables._modelInstance._type = modelName;
+                    workflowBody.processVariables._modelInstance._modelId = id;
                     // this is to identify while executing Finalize Transaction to follow which implementation
                     workflowBody.processVariables._maker_checker_impl = 'v2';
                     WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -552,9 +554,10 @@ function addOERemoteMethods(Model) {
           if (typeof _data[idName] === 'undefined') {
             _data[idName] =  uuidv4();
           }
+          var id = _data[idName];
           var mData = {
             modelName: modelName,
-            modelId: _data[idName],
+            modelId: id,
             operation: 'create',
             data: _data,
             _modifiers: [
@@ -591,6 +594,7 @@ function addOERemoteMethods(Model) {
               workflowBody.processVariables._operation = mData.operation;
               workflowBody.processVariables._modelInstance = mData.data;
               workflowBody.processVariables._modelInstance._type = modelName;
+              workflowBody.processVariables._modelInstance._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
               WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {

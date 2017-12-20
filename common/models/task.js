@@ -210,12 +210,14 @@ module.exports = function Task(Task) {
             delete updates.msg;
           }
           var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
+          var modelName = process._processVariables._modelInstance._type;
+          var modelId = process._processVariables.modelInstance._modelId;
           ChangeWorkflowRequest.find({
             where: {
               and: [{
-                modelName: process._processVariables._modelInstance._type
+                modelName: modelName
               }, {
-                modelId: process._processVariables._modelInstance.id
+                modelId: modelId
               }]
             }
           }, options, function fetchChangeModel(err, inst) {
