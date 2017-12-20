@@ -407,7 +407,7 @@ function addOERemoteMethods(Model) {
           };
 
           var beforeSaveArray = Model._observers['before save'];
-          var dpBeforeSave = beforeSaveArray.filter(function (beforeSave) {
+          var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
             return beforeSave.name === 'dataPersonalizationBeforeSave';
           });
           if (dpBeforeSave.length !== 1) {
@@ -533,7 +533,7 @@ function addOERemoteMethods(Model) {
     };
 
     var beforeSaveArray = Model._observers['before save'];
-    var dpBeforeSave = beforeSaveArray.filter(function (beforeSave) {
+    var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
       return beforeSave.name === 'dataPersonalizationBeforeSave';
     });
     if (dpBeforeSave.length !== 1) {

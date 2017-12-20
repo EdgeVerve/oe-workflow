@@ -280,7 +280,7 @@ module.exports = function Task(Task) {
             }
 
             var beforeSaveArray = Model._observers['before save'];
-            var dpBeforeSave = beforeSaveArray.filter(function (beforeSave) {
+            var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
               return beforeSave.name === 'dataPersonalizationBeforeSave';
             });
             if (dpBeforeSave.length !== 1) {

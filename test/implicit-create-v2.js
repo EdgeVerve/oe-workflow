@@ -23,13 +23,6 @@ var User1Context = {
     'username': 'user1'
   }
 };
-var User2Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'user1',
-    'username': 'user1'
-  }
-};
 var User3Context = {
   ctx: {
     'tenantId': 'default',
@@ -56,14 +49,6 @@ var User3Details = {
   'id': 'user3'
 };
 var User1Credentials = {
-  'username': 'user1',
-  'password': 'user1'
-};
-var User2Credentials = {
-  'username': 'user1',
-  'password': 'user1'
-};
-var User3Credentials = {
   'username': 'user1',
   'password': 'user1'
 };
@@ -260,7 +245,7 @@ describe('Test case for Implicit Post scenario', function callback() {
       'mobiles': [
         {
           'num': '123'
-        },{
+        }, {
           'num': '321'
         }
       ]
@@ -283,7 +268,7 @@ describe('Test case for Implicit Post scenario', function callback() {
       }
       log.debug(instance);
       assert.strictEqual(instance.name, 'user1');
-      assert.strictEqual(instance.mobiles.length,2);
+      assert.strictEqual(instance.mobiles.length, 2);
       assert.strictEqual(instance.mobiles[0].num, '123');
       assert.strictEqual(instance.mobiles[1].num, '321');
       done();
@@ -300,7 +285,7 @@ describe('Test case for Implicit Post scenario', function callback() {
       assert.strictEqual(instances.length, 1);
       let instance = instances[0];
       assert.strictEqual(instance.name, 'user1');
-      assert.strictEqual(instance.mobiles.length,2);
+      assert.strictEqual(instance.mobiles.length, 2);
       assert.strictEqual(instance.mobiles[0].num, '123');
       assert.strictEqual(instance.mobiles[1].num, '321');
       done();
@@ -494,4 +479,3 @@ describe('Test case for Implicit Post scenario', function callback() {
     });
   });
 });
-
