@@ -407,10 +407,10 @@ function addOERemoteMethods(Model) {
           };
 
           var beforeSaveArray = Model._observers['before save'];
-          var dpBeforeSave = beforeSaveArray.filter(function(beforeSave){
+          var dpBeforeSave = beforeSaveArray.filter(function (beforeSave) {
             return beforeSave.name === 'dataPersonalizationBeforeSave';
-          })
-          if(dpBeforeSave.length !== 1){
+          });
+          if (dpBeforeSave.length !== 1) {
             let err = new Error('DataPersonalizationMixin fetch failed.');
             log.error(options, err);
             return next(err);
@@ -533,19 +533,22 @@ function addOERemoteMethods(Model) {
     };
 
     var beforeSaveArray = Model._observers['before save'];
-    var dpBeforeSave = beforeSaveArray.filter(function(beforeSave){
+    var dpBeforeSave = beforeSaveArray.filter(function (beforeSave) {
       return beforeSave.name === 'dataPersonalizationBeforeSave';
-    })
-    if(dpBeforeSave.length !== 1){
+    });
+    if (dpBeforeSave.length !== 1) {
       let err = new Error('DataPersonalizationMixin fetch failed.');
       log.error(options, err);
       return next(err);
     }
+    debugger;
     dpBeforeSave[0](context, function beforeSaveCb(err) {
+      debugger;
       if (err) return next(err);
 
       // validation required
       obj.isValid(function validateCb(valid) {
+        debugger;
         if (valid) {
           let idName = Model.definition.idName();
           var _data = obj.toObject(true);
@@ -554,6 +557,13 @@ function addOERemoteMethods(Model) {
             _data[idName] =  uuidv4();
           }
           var id = _data[idName];
+          // reapply data over _data to regain related Model data
+          for (let key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+              _data[key] = data[key];
+            }
+          }
+
           var mData = {
             modelName: modelName,
             modelId: id,
