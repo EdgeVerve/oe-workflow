@@ -336,6 +336,7 @@ function addOERemoteMethods(Model) {
   Model.updateX = function updateX(id, data, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
+    var operation = 'update';
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
     Model.findById(id, options, function fetchInstance(err, cinst) {
@@ -399,7 +400,7 @@ function addOERemoteMethods(Model) {
             });
           }
 
-          makerCheckerValidation(Model, 'update', data, currentInstance, options, function _validateCb(err, _data) {
+          Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
             if (err) {
               return next(err);
             }
@@ -491,7 +492,7 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  function makerCheckerValidation(Model, operation, data, currentInstance, options, next) {
+  function makerValidation(Model, operation, data, currentInstance, options, next) {
     var obj = new Model(data);
     var context = {};
     if (operation === 'create') {
@@ -512,16 +513,20 @@ function addOERemoteMethods(Model) {
         options: options
       };
     }
-    var beforeSaveArray = Model._observers['before save'];
+    var RootModel = Model;
+    var beforeSaveArray = Model._observers['before save'] || [];
+
+    while (Model.base.modelName !== 'BaseEntity') {
+      beforeSaveArray = beforeSaveArray.concat(Model.base._observers['before save'] || []);
+      Model = Model.base;
+    }
+    Model = RootModel;
+
     var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
       return beforeSave.name === 'dataPersonalizationBeforeSave';
     });
-    if (dpBeforeSave.length === 0) {
-      let err = new Error('DataPersonalizationMixin not found.');
-      log.error(options, err);
-      return next(err);
-    } else if (dpBeforeSave.length > 1) {
-      let err = new Error('Multiple DataPersonalizationMixins found.');
+    if (dpBeforeSave.length !== 1) {
+      let err = new Error('DataPersonalizationMixin fetch failed.');
       log.error(options, err);
       return next(err);
     }
@@ -542,133 +547,155 @@ function addOERemoteMethods(Model) {
     });
   }
 
+  Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
+    if (operation === 'create') {
+      var relations = [];
+      for (let r in Model.relations) {
+        if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
+          let relation = Model.relations[r];
+          if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
+            for (let i = 0; i < data[r].length; i++) {
+              let _relObj = {
+                Model: relation.modelTo,
+                data: data[r][i],
+                type: 'hasMany'
+              };
+              relations.push(_relObj);
+            }
+          } else if (relation.type && relation.type === 'hasOne' && typeof data[r] !== 'undefined') {
+            let _relObj = {
+              Model: relation.modelTo,
+              data: data[r],
+              type: 'hasOne'
+            };
+            relations.push(_relObj);
+          }
+        }
+      }
+
+      makerValidation(Model, operation, data, null, options, function _validateCb(err, _data) {
+        if (err) {
+          return next(err);
+        }
+
+        async.each(relations,
+        function validateEach(relation, cb) {
+          let Model = relation.Model;
+          let data = relation.data;
+          makerValidation(Model, operation, data, null, options, cb);
+        },
+        function allDone(err) {
+          if (err) {
+            return next(err);
+          }
+          next(null, _data);
+        });
+      });
+    } else if (operation === 'update') {
+      makerValidation(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+        if (err) {
+          return next(err);
+        }
+        next(null, _data);
+      });
+    } else {
+      process.nextTick(function asyncSafe() {
+        let err = new Error('Validation not enabled for any operation except create and update.');
+        return next(err);
+      });
+    }
+  };
+
   Model.createX = function createX(data, options, next) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
-    var relations = [];
-    for (let r in Model.relations) {
-      if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
-        let relation = Model.relations[r];
-        if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
-          for (let i = 0; i < data[r].length; i++) {
-            let _relObj = {
-              Model: relation.modelTo,
-              data: data[r][i],
-              type: 'hasMany'
-            };
-            relations.push(_relObj);
-          }
-        } else if (relation.type && relation.type === 'hasOne' && typeof data[r] !== 'undefined') {
-          let _relObj = {
-            Model: relation.modelTo,
-            data: data[r],
-            type: 'hasOne'
-          };
-          relations.push(_relObj);
-        }
-      }
-    }
-
-    makerCheckerValidation(Model, 'create', data, null, options, function _validateCb(err, _data) {
+    Model._makerValidate(Model, 'create', data, null, options, function _validateCb(err, _data) {
       if (err) {
         return next(err);
       }
 
-      async.each(relations,
-        function validateEach(relation, cb) {
-          let Model = relation.Model;
-          let data = relation.data;
-          makerCheckerValidation(Model, 'create', data, null, options, cb);
-        },
-        function allDone(err, datax) {
-          if (err) {
-            return next(err);
-          }
-
-          let idName = Model.definition.idName();
+      let idName = Model.definition.idName();
           // case id is not defined
-          if (typeof _data[idName] === 'undefined') {
-            _data[idName] =  uuidv4();
-          }
-          var id = _data[idName];
+      if (typeof _data[idName] === 'undefined') {
+        _data[idName] =  uuidv4();
+      }
+      var id = _data[idName];
           // reapply data over _data to regain related Model data
-          for (let key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-              _data[key] = data[key];
-            }
-          }
+      for (let key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          _data[key] = data[key];
+        }
+      }
 
-          var mData = {
-            modelName: modelName,
-            modelId: id,
-            operation: 'create',
-            data: _data,
-            _modifiers: [
-              options.ctx.username
-            ]
-          };
-          log.debug(options, 'Instance has been validated during maker checker creation');
+      var mData = {
+        modelName: modelName,
+        modelId: id,
+        operation: 'create',
+        data: _data,
+        _modifiers: [
+          options.ctx.username
+        ]
+      };
+      log.debug(options, 'Instance has been validated during maker checker creation');
 
-          var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
-          var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+      var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+      var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
 
-          WorkflowMapping.find({
-            where: {
-              'and': [
+      WorkflowMapping.find({
+        where: {
+          'and': [
             { 'modelName': modelName },
             { 'engineType': 'oe-workflow' },
             { 'version': 'v2' },
             { 'operation': 'create' }
-              ]
-            }
-          }, options, function fetchWM(err, res) {
-            if (err) {
-              log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-              next(err);
-            } else if (res && res.length === 0) {
+          ]
+        }
+      }, options, function fetchWM(err, res) {
+        if (err) {
+          log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
+          next(err);
+        } else if (res && res.length === 0) {
           // this case should never occur
-              log.debug(options, 'no create mapping found');
-              next();
-            } else if (res.length === 1) {
-              var mapping = res[0];
+          log.debug(options, 'no create mapping found');
+          next();
+        } else if (res.length === 1) {
+          var mapping = res[0];
 
-              let workflowBody = mapping.workflowBody;
-              workflowBody.processVariables = workflowBody.processVariables || {};
-              workflowBody.processVariables._operation = mData.operation;
-              workflowBody.processVariables._modelInstance = mData.data;
-              workflowBody.processVariables._modelInstance._type = modelName;
-              workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
-              workflowBody.processVariables._modelInstance._modelId = id;
+          let workflowBody = mapping.workflowBody;
+          workflowBody.processVariables = workflowBody.processVariables || {};
+          workflowBody.processVariables._operation = mData.operation;
+          workflowBody.processVariables._modelInstance = mData.data;
+          workflowBody.processVariables._modelInstance._type = modelName;
+          workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
+          workflowBody.processVariables._modelInstance._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
-              workflowBody.processVariables._maker_checker_impl = 'v2';
-              WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
-                if (err) {
-                  log.error(options, err);
-                  return next(err);
-                }
-                mData.workflowInstanceId = winst.id;
-                ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
-                  if (err) {
-                    log.error(options, err);
-                    return next(err);
-                  }
-                  log.debug(options, inst);
-              // wrapping back data properly
-                  let cinst = unwrapChangeRequest(inst);
-                  delete cinst.data;
-                  return next(null, cinst);
-                });
-              });
-            } else {
-              let err = new Error('Multiple workflows attached to same Model.');
+          workflowBody.processVariables._maker_checker_impl = 'v2';
+          WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+            if (err) {
               log.error(options, err);
               return next(err);
             }
+            mData.workflowInstanceId = winst.id;
+            ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+              if (err) {
+                log.error(options, err);
+                return next(err);
+              }
+              log.debug(options, inst);
+              // wrapping back data properly
+              let cinst = unwrapChangeRequest(inst);
+              delete cinst.data;
+              return next(null, cinst);
+            });
           });
+        } else {
+          let err = new Error('Multiple workflows attached to same Model.');
+          log.error(options, err);
+          return next(err);
         }
-      );
+      });
     });
   };
 
