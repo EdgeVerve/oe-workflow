@@ -198,7 +198,6 @@ module.exports = function Task(Task) {
         let taskObj = processDef.getFlowObjectByName(tname);
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
-          // TODO : validate the object first
           var updates = data;
           pdata = {};
           if (typeof data.pv !== 'undefined') {
@@ -251,74 +250,28 @@ module.exports = function Task(Task) {
             let modelName = process._processVariables._modelInstance._type;
             let Model = loopback.getModel(modelName, options);
 
-            var obj = new Model(data);
-            var context;
-            if (operation === 'create') {
-              context = {
-                Model: Model,
-                instance: obj,
-                isNewInstance: true,
-                hookState: {},
-                options: options
-              };
-            } else if (operation === 'update') {
-              context = {
-                Model: Model,
-                where: {},
-                // fetch currentInstance and pass that also
-                // currentInstance: currentInstance,
-                data: obj,
-                hookState: {},
-                options: options
-              };
-            } else {
-              context = {
-                Model: Model,
-                hookState: {},
-                options: options
-              };
-            }
-
-            var beforeSaveArray = Model._observers['before save'];
-            var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
-              return beforeSave.name === 'dataPersonalizationBeforeSave';
-            });
-            if (dpBeforeSave.length !== 1) {
-              let err = new Error('DataPersonalizationMixin fetch failed.');
-              log.error(options, err);
-              return next(err);
-            }
-            dpBeforeSave[0](context, function beforeSaveCb(err, ctx) {
-              if (err) return next(err);
-
-              if (operation === 'update') {
-                obj = new Model(ctx.data);
+            Model._makerValidate(Model, operation, data, null, options, function _validateCb(err, _data) {
+              if (err) {
+                log.error(options, err);
+                return next(err);
               }
-              obj.isValid(function validate(valid) {
-                if (valid) {
-                  log.debug(options, 'Instance has been validated during maker checker creation');
+              log.debug(options, 'Instance has been validated during maker checker creation');
 
-                  inst[0].updateAttributes({
-                    data: instx,
-                    _modifiers: modifiers
-                  }, options, function updateCM(err, res) {
-                    if (err) {
-                      log.error(options, err);
-                      return next(err);
-                    }
-                    // process._processVariables._modelInstance = instx;
-                    var xdata = {};
-                    xdata.pv = pdata.pv || {};
-                    xdata.pv._modelInstance = instx;
-                    xdata.msg = pdata.msg;
-                    return self.complete_(xdata, options, next);
-                  });
-                } else {
-                  let err = new Error('Validation Error');
+              inst[0].updateAttributes({
+                data: instx,
+                _modifiers: modifiers
+              }, options, function updateCM(err, res) {
+                if (err) {
                   log.error(options, err);
                   return next(err);
                 }
-              }, context, instx);
+                    // process._processVariables._modelInstance = instx;
+                var xdata = {};
+                xdata.pv = pdata.pv || {};
+                xdata.pv._modelInstance = instx;
+                xdata.msg = pdata.msg;
+                return self.complete_(xdata, options, next);
+              });
             });
           });
         } else if (taskObj.isChecker) {
