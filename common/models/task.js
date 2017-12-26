@@ -85,7 +85,7 @@ module.exports = function Task(Task) {
             // if the user was not excluded in any way
             // and if candidateUsers, candidateRoles, &
             // candidateGroups were not defined, assume it be candidate
-            if(candidateGroups.length === 0 && candidateRoles.length === 0 && candidateUsers.length === 0){
+            if (candidateGroups.length === 0 && candidateRoles.length === 0 && candidateUsers.length === 0) {
               resultData.push(instance);
             }
             continue;
