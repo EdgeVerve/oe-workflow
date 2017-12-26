@@ -297,6 +297,7 @@ function addOERemoteMethods(Model) {
           workflowBody.processVariables._operation = mData.operation;
           workflowBody.processVariables._modelInstance = mData.data;
           workflowBody.processVariables._modelInstance._type = modelName;
+          workflowBody.processVariables._modelInstance._deletedBy = options.ctx.username;
           workflowBody.processVariables._modelInstance._modelId = id;
           // this is to identify while executing Finalize Transaction to follow which implementation
           workflowBody.processVariables._maker_checker_impl = 'v2';
@@ -443,8 +444,9 @@ function addOERemoteMethods(Model) {
                 workflowBody.processVariables._operation = mData.operation;
                 workflowBody.processVariables._modelInstance = mData.data;
                 workflowBody.processVariables._modelInstance._type = modelName;
+                workflowBody.processVariables._modelInstance._modifiedBy = options.ctx.username;
                 workflowBody.processVariables._modelInstance._modelId = id;
-                    // this is to identify while executing Finalize Transaction to follow which implementation
+                // this is to identify while executing Finalize Transaction to follow which implementation
                 workflowBody.processVariables._maker_checker_impl = 'v2';
                 WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
                   if (err) {
@@ -637,6 +639,7 @@ function addOERemoteMethods(Model) {
               workflowBody.processVariables._operation = mData.operation;
               workflowBody.processVariables._modelInstance = mData.data;
               workflowBody.processVariables._modelInstance._type = modelName;
+              workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
               workflowBody.processVariables._modelInstance._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
