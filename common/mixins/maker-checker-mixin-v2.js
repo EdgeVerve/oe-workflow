@@ -493,9 +493,10 @@ function addOERemoteMethods(Model) {
   };
 
   function makerValidation(Model, operation, data, currentInstance, options, next) {
-    var obj = new Model(data);
+    var obj = null;
     var context = {};
     if (operation === 'create') {
+      obj = new Model(data);
       context = {
         Model: Model,
         instance: obj,
@@ -504,6 +505,7 @@ function addOERemoteMethods(Model) {
         options: options
       };
     } else if (operation === 'update') {
+      obj = currentInstance;
       context = {
         Model: Model,
         where: {},
@@ -512,6 +514,14 @@ function addOERemoteMethods(Model) {
         hookState: {},
         options: options
       };
+      // update instance's properties
+      try {
+        obj.setAttributes(data);
+      } catch (err) {
+        return process.nextTick(function () {
+          next(err);
+        });
+      }
     }
     var RootModel = Model;
     var beforeSaveArray = Model._observers['before save'] || [];
