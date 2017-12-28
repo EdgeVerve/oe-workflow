@@ -518,7 +518,7 @@ function addOERemoteMethods(Model) {
       try {
         obj.setAttributes(data);
       } catch (err) {
-        return process.nextTick(function () {
+        return process.nextTick(function asyncErrorCb() {
           next(err);
         });
       }

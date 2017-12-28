@@ -231,7 +231,7 @@ module.exports = function Task(Task) {
                   modelName: modelName
                 }, {
                   modelId: modelId
-                },{
+                }, {
                   status: 'pending'
                 }]
               }
