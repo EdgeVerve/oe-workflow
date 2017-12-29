@@ -401,6 +401,7 @@ function addOERemoteMethods(Model) {
             });
           }
 
+          options.isNewChangeRequest = true;
           Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
             if (err) {
               return next(err);
@@ -537,11 +538,17 @@ function addOERemoteMethods(Model) {
       }
     }
 
+    if(options.isNewChangeRequest){
+      delete options.isNewChangeRequest;
+      context.isNewChangeRequest = true;
+    }
     Model.notifyObserversOf('before workflow', context, function (err) {
       if (err) {
         log.error(options, err);
         return next(err);
       }
+
+      delete context.isNewChangeRequest;
       var RootModel = Model;
       var beforeSaveArray = Model._observers['before save'] || [];
 
@@ -740,6 +747,7 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
+    options.isNewChangeRequest = true;
     Model._makerValidate(Model, 'create', data, null, options, function _validateCb(err, _data) {
       if (err) {
         return next(err);
