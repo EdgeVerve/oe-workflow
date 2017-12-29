@@ -284,11 +284,12 @@ function addOERemoteMethods(Model) {
       }, options, function fetchWM(err, res) {
         if (err) {
           log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-          next(err);
+          return next(err);
         } else if (res && res.length === 0) {
           // this case should never occur
-          log.debug(options, 'no create mapping found');
-          next();
+          let err = new Error('no update maker checker mapping found');
+          log.debug(options, err);
+          return next(err);
         } else if (res.length === 1) {
           var mapping = res[0];
 
@@ -406,7 +407,16 @@ function addOERemoteMethods(Model) {
             }
             // retrigger handling done, moving forward
             var idName = Model.definition.idName();
+            // TODO : check if this is even required
             _data[idName] = id;
+            // reapply data over _data to regain related Model data, except the
+            // data which has been generated via Validation
+            for (let key in data) {
+              if (Object.prototype.hasOwnProperty.call(data, key) && _data._used_fields.indexOf(key) < 0) {
+                _data[key] = data[key];
+              }
+            }
+            delete _data._used_fields;
             var mData = {
               modelName: modelName,
               modelId: id,
@@ -432,11 +442,12 @@ function addOERemoteMethods(Model) {
             }, options, function fetchWM(err, res) {
               if (err) {
                 log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-                next(err);
+                return next(err);
               } else if (res && res.length === 0) {
-                    // this case should never occur
-                log.debug(options, 'no create mapping found');
-                next();
+                // this case should never occur
+                let err = new Error('no update maker checker mapping found');
+                log.debug(options, err);
+                return next(err);
               } else if (res.length === 1) {
                 var mapping = res[0];
 
@@ -455,7 +466,7 @@ function addOERemoteMethods(Model) {
                     return next(err);
                   }
                   mData.workflowInstanceId = winst.id;
-                      // TODO : make this check better
+                  // TODO : make this check better
                   if (crinsts.length > 0) {
                     delete mData.data._changeRequestId;
                     crinst.updateAttributes(mData, options, function createChangeModel(err, inst) {
@@ -464,7 +475,7 @@ function addOERemoteMethods(Model) {
                         return next(err);
                       }
                       log.debug(options, inst);
-                          // wrapping back data properly
+                      // wrapping back data properly
                       let cinst = unwrapChangeRequest(inst);
                       return next(null, cinst);
                     });
@@ -495,6 +506,8 @@ function addOERemoteMethods(Model) {
   function makerValidation(Model, operation, data, currentInstance, options, next) {
     var obj = null;
     var context = {};
+    // might need to a property like isNewChangeRequest to identify before
+    // workflow is called as part of initial maker or not, could be useful
     if (operation === 'create') {
       obj = new Model(data);
       context = {
@@ -523,81 +536,119 @@ function addOERemoteMethods(Model) {
         });
       }
     }
-    var RootModel = Model;
-    var beforeSaveArray = Model._observers['before save'] || [];
 
-    while (Model.base.modelName !== 'BaseEntity') {
-      beforeSaveArray = beforeSaveArray.concat(Model.base._observers['before save'] || []);
-      Model = Model.base;
-    }
-    Model = RootModel;
+    Model.notifyObserversOf('before workflow', context, function (err) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      var RootModel = Model;
+      var beforeSaveArray = Model._observers['before save'] || [];
 
-    var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
-      return beforeSave.name === 'dataPersonalizationBeforeSave';
-    });
-    if (dpBeforeSave.length !== 1) {
-      let err = new Error('DataPersonalizationMixin fetch failed.');
-      log.error(options, err);
-      return next(err);
-    }
-    dpBeforeSave[0](context, function beforeSaveCb(err) {
-      if (err) return next(err);
+      while (Model.base.modelName !== 'BaseEntity') {
+        beforeSaveArray = beforeSaveArray.concat(Model.base._observers['before save'] || []);
+        Model = Model.base;
+      }
+      Model = RootModel;
 
-      // validation required
-      obj.isValid(function validateCb(valid) {
-        if (valid) {
-          let data = obj.toObject(true);
-          next(null, data);
-        } else {
-          let err = validationError(obj);
-          log.error(options, err);
-          return next(err);
-        }
-      }, context, data);
+      var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
+        return beforeSave.name === 'dataPersonalizationBeforeSave';
+      });
+      if (dpBeforeSave.length !== 1) {
+        let err = new Error('DataPersonalizationMixin fetch failed.');
+        log.error(options, err);
+        return next(err);
+      }
+      dpBeforeSave[0](context, function beforeSaveCb(err) {
+        if (err) return next(err);
+
+        // validation required
+        obj.isValid(function validateCb(valid) {
+          if (valid) {
+            let data = obj.toObject(true);
+            next(null, data);
+          } else {
+            let err = validationError(obj);
+            log.error(options, err);
+            return next(err);
+          }
+        }, context, data);
+      });
     });
   }
 
   Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
-    if (operation === 'create') {
-      var relations = [];
-      for (let r in Model.relations) {
-        if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
-          let relation = Model.relations[r];
-          if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
-            for (let i = 0; i < data[r].length; i++) {
-              let _relObj = {
-                Model: relation.modelTo,
-                data: data[r][i],
-                type: 'hasMany'
-              };
-              relations.push(_relObj);
-            }
-          } else if (relation.type && relation.type === 'hasOne' && typeof data[r] !== 'undefined') {
+    // get hasOne, hasMany relation metadata
+    var relations = [];
+    var _used_fields = [];
+    for (let r in Model.relations) {
+      if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
+        let relation = Model.relations[r];
+        if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
+          for (let i = 0; i < data[r].length; i++) {
             let _relObj = {
               Model: relation.modelTo,
-              data: data[r],
-              type: 'hasOne'
+              data: data[r][i],
+              type: 'hasMany',
+              relationName: r
             };
             relations.push(_relObj);
           }
+        } else if (relation.type && relation.type === 'hasOne' && typeof data[r] !== 'undefined') {
+          let _relObj = {
+            Model: relation.modelTo,
+            data: data[r],
+            type: 'hasOne',
+            relationName: r
+          };
+          relations.push(_relObj);
         }
       }
-
+    }
+    if (operation === 'create') {
       makerValidation(Model, operation, data, null, options, function _validateCb(err, _data) {
         if (err) {
           return next(err);
         }
 
-        async.each(relations,
+        //pushing _data fields generated as part of MakerValidation to not get
+        //overidden later
+        for (var key in _data) {
+          if (Object.prototype.hasOwnProperty.call(_data, key)) {
+            _used_fields.push(key);
+          }
+        }
+        async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
           let data = relation.data;
           makerValidation(Model, operation, data, null, options, cb);
         },
-        function allDone(err) {
+        function allDone(err, dataArray) {
           if (err) {
             return next(err);
           }
+          for (let i = 0; i < relations.length; i++) {
+            let relationName = relations[i].relationName;
+            delete _data[relationName];
+          }
+          for (let i = 0; i < relations.length; i++) {
+            let relationName = relations[i].relationName;
+            if (relations[i].type === 'hasMany') {
+              if (typeof _data[relationName] === 'undefined') {
+                _used_fields.push(relationName);
+                _data[relationName] = [];
+              }
+              _data[relationName].push(dataArray[i]);
+            } else {
+              _used_fields.push(relationName);
+              _data[relationName] = dataArray[i];
+            }
+          }
+          if (err) {
+            return next(err);
+          }
+          _data._used_fields = _used_fields;
           next(null, _data);
         });
       });
@@ -606,7 +657,75 @@ function addOERemoteMethods(Model) {
         if (err) {
           return next(err);
         }
-        next(null, _data);
+
+        //pushing _data fields generated as part of MakerValidation to not get
+        //overidden later
+        for (var key in _data) {
+          if (Object.prototype.hasOwnProperty.call(_data, key)) {
+            _used_fields.push(key);
+          }
+        }
+        async.map(relations,
+        function validateEach(relation, cb) {
+          let Model = relation.Model;
+          let data = relation.data;
+
+          if (data.__row_status === 'deleted') {
+            // no need to validate
+            return process.nextTick(function safeCb() {
+              cb(null, data);
+            });
+          } else if (data.__row_status === 'added') {
+            // new related model instance data
+            return makerValidation(Model, 'create', data, null, options, cb);
+          } else if (data.__row_status === 'modified') {
+            let idName = Model.definition.idName();
+            let modelId = data[idName];
+            Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
+              if (err) {
+                log.error(options, err);
+                return cb(err);
+              }
+              return makerValidation(Model, 'update', data, currentInstance, options, cb);
+            });
+          } else {
+            // no need to validate, if row status is not given
+            return process.nextTick(function safeCb() {
+              cb(null, data);
+            });
+          }
+        },
+        function allDone(err, dataArray) {
+          if (err) {
+            return next(err);
+          }
+          for (let i = 0; i < relations.length; i++) {
+            let relationName = relations[i].relationName;
+            delete _data[relationName];
+          }
+          for (let i = 0; i < relations.length; i++) {
+            let relationName = relations[i].relationName;
+            if (relations[i].type === 'hasMany') {
+              if (typeof _data[relationName] === 'undefined') {
+                _used_fields.push(relationName);
+                _data[relationName] = [];
+              }
+              let data = dataArray[i];
+              data.__row_status = relations[i].data.__row_status;
+              _data[relationName].push(data);
+            } else {
+              _used_fields.push(relationName);
+              let data = dataArray[i];
+              data.__row_status = relations[i].data.__row_status;
+              _data[relationName] = data;
+            }
+          }
+          if (err) {
+            return next(err);
+          }
+          _data._used_fields = _used_fields;
+          next(null, _data);
+        });
       });
     } else {
       process.nextTick(function asyncSafe() {
@@ -627,18 +746,19 @@ function addOERemoteMethods(Model) {
       }
 
       let idName = Model.definition.idName();
-          // case id is not defined
+      // case id is not defined
       if (typeof _data[idName] === 'undefined') {
         _data[idName] =  uuidv4();
       }
       var id = _data[idName];
-          // reapply data over _data to regain related Model data
+      // reapply data over _data to regain related Model data, except the
+      // data which has been generated via Validation
       for (let key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
+        if (Object.prototype.hasOwnProperty.call(data, key) && _data._used_fields.indexOf(key) < 0) {
           _data[key] = data[key];
         }
       }
-
+      delete _data._used_fields;
       var mData = {
         modelName: modelName,
         modelId: id,
@@ -665,11 +785,12 @@ function addOERemoteMethods(Model) {
       }, options, function fetchWM(err, res) {
         if (err) {
           log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-          next(err);
+          return next(err);
         } else if (res && res.length === 0) {
           // this case should never occur
-          log.debug(options, 'no create mapping found');
-          next();
+          let err = new Error('no create maker checker mapping found');
+          log.debug(options, err);
+          return next(err);
         } else if (res.length === 1) {
           var mapping = res[0];
 
