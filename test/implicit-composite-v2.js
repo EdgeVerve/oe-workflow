@@ -661,10 +661,10 @@ describe('Test case for Implicit PUT scenario', function callback() {
 
   it('find instance of ' + modelName + ' via findByIdX : author - user1', function CB(done) {
     models[modelName].find({
-      where : {
-        name : 'user1'
+      where: {
+        name: 'user1'
       },
-      include : 'mobiles'
+      include: 'mobiles'
     }, User1Context, function cb(err, instances) {
       if (err) {
         log.error(err);
@@ -679,7 +679,7 @@ describe('Test case for Implicit PUT scenario', function callback() {
       done();
     });
   });
-  
+
   it('update an instance of ' + modelName + ' : author - user1', function CB(done) {
     models[modelName].updateX(testVars.instanceId, {
       'name': 'user1_mod',

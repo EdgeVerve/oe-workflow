@@ -413,11 +413,11 @@ function addOERemoteMethods(Model) {
             // reapply data over _data to regain related Model data, except the
             // data which has been generated via Validation
             for (let key in data) {
-              if (Object.prototype.hasOwnProperty.call(data, key) && _data._used_fields.indexOf(key) < 0) {
+              if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
                 _data[key] = data[key];
               }
             }
-            delete _data._used_fields;
+            delete _data._usedFields;
             var mData = {
               modelName: modelName,
               modelId: id,
@@ -538,11 +538,11 @@ function addOERemoteMethods(Model) {
       }
     }
 
-    if(options.isNewChangeRequest){
+    if (options.isNewChangeRequest) {
       delete options.isNewChangeRequest;
       context.isNewChangeRequest = true;
     }
-    Model.notifyObserversOf('before workflow', context, function (err) {
+    Model.notifyObserversOf('before workflow', context, function beforeWorkflowCb(err) {
       if (err) {
         log.error(options, err);
         return next(err);
@@ -587,7 +587,7 @@ function addOERemoteMethods(Model) {
   Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
     // get hasOne, hasMany relation metadata
     var relations = [];
-    var _used_fields = [];
+    var _usedFields = [];
     for (let r in Model.relations) {
       if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
         let relation = Model.relations[r];
@@ -618,11 +618,11 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        //pushing _data fields generated as part of MakerValidation to not get
-        //overidden later
+        // pushing _data fields generated as part of MakerValidation to not get
+        // overidden later
         for (var key in _data) {
           if (Object.prototype.hasOwnProperty.call(_data, key)) {
-            _used_fields.push(key);
+            _usedFields.push(key);
           }
         }
         async.map(relations,
@@ -643,19 +643,19 @@ function addOERemoteMethods(Model) {
             let relationName = relations[i].relationName;
             if (relations[i].type === 'hasMany') {
               if (typeof _data[relationName] === 'undefined') {
-                _used_fields.push(relationName);
+                _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               _data[relationName].push(dataArray[i]);
             } else {
-              _used_fields.push(relationName);
+              _usedFields.push(relationName);
               _data[relationName] = dataArray[i];
             }
           }
           if (err) {
             return next(err);
           }
-          _data._used_fields = _used_fields;
+          _data._usedFields = _usedFields;
           next(null, _data);
         });
       });
@@ -665,11 +665,11 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        //pushing _data fields generated as part of MakerValidation to not get
-        //overidden later
+        // pushing _data fields generated as part of MakerValidation to not get
+        // overidden later
         for (var key in _data) {
           if (Object.prototype.hasOwnProperty.call(_data, key)) {
-            _used_fields.push(key);
+            _usedFields.push(key);
           }
         }
         async.map(relations,
@@ -714,14 +714,14 @@ function addOERemoteMethods(Model) {
             let relationName = relations[i].relationName;
             if (relations[i].type === 'hasMany') {
               if (typeof _data[relationName] === 'undefined') {
-                _used_fields.push(relationName);
+                _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName].push(data);
             } else {
-              _used_fields.push(relationName);
+              _usedFields.push(relationName);
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName] = data;
@@ -730,7 +730,7 @@ function addOERemoteMethods(Model) {
           if (err) {
             return next(err);
           }
-          _data._used_fields = _used_fields;
+          _data._usedFields = _usedFields;
           next(null, _data);
         });
       });
@@ -762,11 +762,11 @@ function addOERemoteMethods(Model) {
       // reapply data over _data to regain related Model data, except the
       // data which has been generated via Validation
       for (let key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key) && _data._used_fields.indexOf(key) < 0) {
+        if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
           _data[key] = data[key];
         }
       }
-      delete _data._used_fields;
+      delete _data._usedFields;
       var mData = {
         modelName: modelName,
         modelId: id,
