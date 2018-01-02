@@ -216,67 +216,75 @@ module.exports = function Task(Task) {
           }
           var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
           var modelName = process._processVariables._modelInstance._type;
+          var Model = loopback.getModel(modelName, options);
           var modelId = process._processVariables._modelInstance._modelId;
-          ChangeWorkflowRequest.find({
-            where: {
-              and: [{
-                modelName: modelName
-              }, {
-                modelId: modelId
-              }]
-            }
-          }, options, function fetchChangeModel(err, inst) {
+          Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
             if (err) {
               log.error(options, err);
               return next(err);
             }
-            if (inst.length > 1) {
-              let err = new Error('Multiple instances found with same id in Change Workflow Request');
-              log.error(options, err);
-              return next(err);
-            } else if (inst.length === 0) {
-              // no instance found in change request model
-              return next(null, {
-                'change_request_update': 'failed - no instance found'
-              });
-            }
-
-            var operation = inst[0].operation;
-            var instx = JSON.parse(JSON.stringify(inst[0].data));
-            for (let key in updates) {
-              if (Object.prototype.hasOwnProperty.call(updates, key)) {
-                var val = updates[key];
-                instx[key] = val;
+            // if the change request was created on create operation ,
+            // currentInstance will be null which is fine
+            ChangeWorkflowRequest.find({
+              where: {
+                and: [{
+                  modelName: modelName
+                }, {
+                  modelId: modelId
+                }, {
+                  status: 'pending'
+                }]
               }
-            }
-
-            let modifiers = inst[0]._modifiers || [];
-            modifiers.push(options.ctx.username);
-
-            let modelName = process._processVariables._modelInstance._type;
-            let Model = loopback.getModel(modelName, options);
-
-            Model._makerValidate(Model, operation, data, null, options, function _validateCb(err, _data) {
+            }, options, function fetchChangeModel(err, inst) {
               if (err) {
                 log.error(options, err);
                 return next(err);
               }
-              log.debug(options, 'Instance has been validated during maker checker creation');
+              if (inst.length > 1) {
+                let err = new Error('Multiple instances found with same id in Change Workflow Request');
+                log.error(options, err);
+                return next(err);
+              } else if (inst.length === 0) {
+                // no instance found in change request model
+                let err = new Error('change_request_update failed - no instance found');
+                log.error(options, err);
+                return next(err);
+              }
 
-              inst[0].updateAttributes({
-                data: instx,
-                _modifiers: modifiers
-              }, options, function updateCM(err, res) {
+              var operation = inst[0].operation;
+              var instx = JSON.parse(JSON.stringify(inst[0].data));
+              for (let key in updates) {
+                if (Object.prototype.hasOwnProperty.call(updates, key)) {
+                  var val = updates[key];
+                  instx[key] = val;
+                }
+              }
+
+              let modifiers = inst[0]._modifiers || [];
+              modifiers.push(options.ctx.username);
+
+              Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
                   log.error(options, err);
                   return next(err);
                 }
+                log.debug(options, 'Instance has been validated during maker checker creation');
+
+                inst[0].updateAttributes({
+                  data: instx,
+                  _modifiers: modifiers
+                }, options, function updateCM(err, res) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
                     // process._processVariables._modelInstance = instx;
-                var xdata = {};
-                xdata.pv = pdata.pv || {};
-                xdata.pv._modelInstance = instx;
-                xdata.msg = pdata.msg;
-                return self.complete_(xdata, options, next);
+                  var xdata = {};
+                  xdata.pv = pdata.pv || {};
+                  xdata.pv._modelInstance = instx;
+                  xdata.msg = pdata.msg;
+                  return self.complete_(xdata, options, next);
+                });
               });
             });
           });

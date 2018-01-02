@@ -100,9 +100,17 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       },
       'mixins': {},
       'properties': {
-        'luckydraw': {
+        'prop1': {
           'type': 'string',
           'required': true
+        },
+        'prop2': {
+          'type': 'string',
+          'required': true
+        },
+        'prop3': {
+          'type': 'string',
+          'required': false
         }
       },
       'relations': {},
@@ -166,7 +174,8 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
 
   it('create an instance of ' + modelName + ' : author - user1', function CB(done) {
     models[modelName].create({
-      'luckydraw': '00000'
+      'prop1': '00000',
+      'prop2': '00000'
     }, User1Context, function cb(err, instance) {
       if (err) {
         log.error(err);
@@ -181,7 +190,8 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
 
   it('update instance of ' + modelName + ' : author - user1', function CB(done) {
     models[modelName].updateX(testVars.instanceId, {
-      'luckydraw': '11111',
+      'prop2': '11111',
+      'prop3': '11111',
       '_version': testVars.instanceVersion
     }, User1Context, function cb(err, instance) {
       if (err) {
@@ -200,7 +210,9 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
         return done(err);
       }
       log.debug(instance);
-      assert.strictEqual(instance.luckydraw, '11111');
+      assert.strictEqual(instance.prop1, '00000');
+      assert.strictEqual(instance.prop2, '11111');
+      assert.strictEqual(instance.prop3, '11111');
       done();
     });
   });
@@ -244,7 +256,8 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       log.debug(instance);
       assert.isNotNull(instance);
-      assert.strictEqual(instance.luckydraw, '00000');
+      assert.strictEqual(instance.prop1, '00000');
+      assert.strictEqual(instance.prop2, '00000');
       done();
     });
   });
@@ -267,7 +280,8 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw, '00000');
+        assert.strictEqual(instance.prop1, '00000');
+        assert.strictEqual(instance.prop2, '00000');
         done();
       }
     });
@@ -295,7 +309,9 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       log.debug(instance);
       assert.isNotNull(instance);
-      assert.strictEqual(instance.luckydraw, '11111');
+      assert.strictEqual(instance.prop1, '00000');
+      assert.strictEqual(instance.prop2, '11111');
+      assert.strictEqual(instance.prop3, '11111');
       done();
     });
   });
@@ -308,7 +324,9 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       log.debug(instance);
       assert.isNotNull(instance);
-      assert.strictEqual(instance.luckydraw, '11111');
+      assert.strictEqual(instance.prop1, '00000');
+      assert.strictEqual(instance.prop2, '11111');
+      assert.strictEqual(instance.prop3, '11111');
       done();
     });
   });
@@ -332,7 +350,9 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
         var instance = JSON.parse(response.body);
         assert.strictEqual(response.statusCode, 200);
         log.debug(instance);
-        assert.strictEqual(instance.luckydraw, '11111');
+        assert.strictEqual(instance.prop1, '00000');
+        assert.strictEqual(instance.prop2, '11111');
+        assert.strictEqual(instance.prop3, '11111');
         done();
       }
     });
