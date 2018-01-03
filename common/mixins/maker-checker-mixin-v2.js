@@ -333,8 +333,8 @@ function addOERemoteMethods(Model) {
                 let cinst = inst.toObject();
                 for (let i in cinst.data) {
                   if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
-                  cinst[i] = cinst.data[i];
-                }
+                    cinst[i] = cinst.data[i];
+                  }
                 }
                 delete cinst.data;
                 return next(null, cinst);

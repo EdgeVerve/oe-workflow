@@ -263,7 +263,6 @@ module.exports = function Task(Task) {
 
               var modifiers = inst[0]._modifiers || [];
               modifiers.push(options.ctx.username);
-              //need to update modified By field when updated via task
               instx._modifiedBy = options.ctx.username;
 
               Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {

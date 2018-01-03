@@ -254,6 +254,7 @@ function approvedUpdateInstance(app, modelName, modelInstanceId, wfupdates, opti
     var updates = {
       _delta: null,
       _status: 'public',
+      _verifiedBy: options.ctx.username,
       _transactionType: null
     };
 
@@ -334,6 +335,7 @@ function approvedCreateInstance(app, modelName, modelInstanceId, wfupdates, opti
 
     var updates = {
       '_transactionType': null,
+      '_verifiedBy': options.ctx.username,
       '_status': 'public'
     };
 
