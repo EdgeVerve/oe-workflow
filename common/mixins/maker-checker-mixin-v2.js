@@ -471,6 +471,7 @@ function addOERemoteMethods(Model) {
                 let workflowBody = mapping.workflowBody;
                 workflowBody.processVariables = workflowBody.processVariables || {};
                 workflowBody.processVariables._operation = mData.operation;
+                workflowBody.processVariables._modifiers = mData._modifiers;
                 workflowBody.processVariables._modelInstance = mData.data;
                 workflowBody.processVariables._modelInstance._type = modelName;
                 workflowBody.processVariables._modelInstance._modifiedBy = options.ctx.username;
@@ -821,6 +822,7 @@ function addOERemoteMethods(Model) {
           let workflowBody = mapping.workflowBody;
           workflowBody.processVariables = workflowBody.processVariables || {};
           workflowBody.processVariables._operation = mData.operation;
+          workflowBody.processVariables._modifiers = mData._modifiers;
           workflowBody.processVariables._modelInstance = mData.data;
           workflowBody.processVariables._modelInstance._type = modelName;
           workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;

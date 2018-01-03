@@ -260,8 +260,10 @@ module.exports = function Task(Task) {
                 }
               }
 
-              let modifiers = inst[0]._modifiers || [];
+              var modifiers = inst[0]._modifiers || [];
               modifiers.push(options.ctx.username);
+              //need to update modified By field when updated via task
+              instx._modifiedBy = options.ctx.username;
 
               Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
@@ -281,6 +283,7 @@ module.exports = function Task(Task) {
                     // process._processVariables._modelInstance = instx;
                   var xdata = {};
                   xdata.pv = pdata.pv || {};
+                  xdata.pv._modifiers = modifiers;
                   xdata.pv._modelInstance = instx;
                   xdata.msg = pdata.msg;
                   return self.complete_(xdata, options, next);
