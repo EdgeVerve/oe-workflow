@@ -251,8 +251,9 @@ module.exports = function Task(Task) {
                 return next(err);
               }
 
-              var operation = inst[0].operation;
-              var instx = JSON.parse(JSON.stringify(inst[0].data));
+              var instObj = inst[0].toObject();
+              var operation = instObj.operation;
+              var instx = JSON.parse(JSON.stringify(instObj.data));
               for (let key in updates) {
                 if (Object.prototype.hasOwnProperty.call(updates, key)) {
                   var val = updates[key];
