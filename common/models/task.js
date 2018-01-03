@@ -251,8 +251,9 @@ module.exports = function Task(Task) {
                 return next(err);
               }
 
-              var operation = inst[0].operation;
-              var instx = JSON.parse(JSON.stringify(inst[0].data));
+              var instObj = inst[0].toObject();
+              var operation = instObj.operation;
+              var instx = JSON.parse(JSON.stringify(instObj.data));
               for (let key in updates) {
                 if (Object.prototype.hasOwnProperty.call(updates, key)) {
                   var val = updates[key];
@@ -260,8 +261,9 @@ module.exports = function Task(Task) {
                 }
               }
 
-              let modifiers = inst[0]._modifiers || [];
+              var modifiers = inst[0]._modifiers || [];
               modifiers.push(options.ctx.username);
+              instx._modifiedBy = options.ctx.username;
 
               Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
@@ -281,6 +283,7 @@ module.exports = function Task(Task) {
                     // process._processVariables._modelInstance = instx;
                   var xdata = {};
                   xdata.pv = pdata.pv || {};
+                  xdata.pv._modifiers = modifiers;
                   xdata.pv._modelInstance = instx;
                   xdata.msg = pdata.msg;
                   return self.complete_(xdata, options, next);

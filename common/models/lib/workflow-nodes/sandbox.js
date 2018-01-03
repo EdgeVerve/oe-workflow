@@ -187,7 +187,7 @@ module.exports.evaluate$Expression = function eval$Expression(options, expressio
 
   for (prop in process._processVariables) {
     if (Object.prototype.hasOwnProperty.call(process._processVariables, prop)) {
-      sandbox[prop] = _.cloneDeep(process._processVariables[prop]);
+      sandbox[prop] = JSON.parse(JSON.stringify(process._processVariables[prop]));
     }
   }
 
