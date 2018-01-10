@@ -76,7 +76,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         var evalEntity = function evalEntity(entityList) {
           entityList = updateExpBackComp(entityList);
           entityList = sandbox.evaluate$Expression(options, entityList, token.message, currentProcess, token);
-          if(entityList === ''){
+          if (entityList === '') {
             return [];
           }
           return entityList.split(',');
