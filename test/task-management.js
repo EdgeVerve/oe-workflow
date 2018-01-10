@@ -461,7 +461,7 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
 
   it('delegate task to user2', function callback(done) {
     testVars.task.delegate({
-      assignee: 'user2'
+      assignee : 'user2'
     }, ctxUser1, function callback(err, task) {
       if (err) {
         return done(err);
