@@ -27,6 +27,12 @@ var Delta = module.exports = function Delta() {
   this.tokensToInterrupt = [];
 };
 
+Delta.prototype.setTokenToFail = function setTokenToFail(tokenId, failure) {
+  this.isProcessFail = true
+  this.tokenToFail = tokenId;
+  this.failure = failure;
+};
+
 Delta.prototype.addToken = function addToken(token) {
   this.tokens.push(token);
 };
@@ -263,6 +269,9 @@ Delta.prototype.apply = function apply(zInstance, options) {
   if (processEnded || this.isForceEndToken) {
     updates[status] = 'complete';
   }
+  if (this.isProcessFail) {
+    updates[status] = 'failed';
+  }
 
   return updates;
 };
@@ -275,6 +284,12 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
     }
   }
 
+  if(this.tokenToFail && tokens[this.tokenToFail]){
+    var token = tokens[this.tokenToFail];
+    token.status = 'failed';
+    token.failure = this.failure;
+    token.endTime = new Date();
+  }
     /**
      * If token to remove is Parallel Gateway token, complete other parallel gateway tokens also * * * those which are waiting
      */

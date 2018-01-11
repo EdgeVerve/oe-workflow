@@ -35,8 +35,8 @@ module.exports.evaluate = function EvaluateFO(options, flowObject, incomingMsg, 
       stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, message, process);
       _.assign(scriptVariables, stepVariables);
     }
-    var message = sandbox.evaluateScript(options, script, scriptVariables, process, delta, token);
-    return done(null, message);
+    var response = sandbox.evaluateScript(options, script, scriptVariables, process, delta, token);
+    return done(null, response);
   } else if (service) {
     var serviceVariables = incomingMsg || {};
     if (flowObject.inputOutputParameters && flowObject.inputOutputParameters.inputParameters)      {

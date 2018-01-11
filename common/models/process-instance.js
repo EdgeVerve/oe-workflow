@@ -227,79 +227,88 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
     var nextFlowObjects = TokenEmission.getNextFlowObjects(currentFlowObject, message,
                                                             processDefinitionInstance, self, options);
-    for (var i in nextFlowObjects) {
-      if (Object.prototype.hasOwnProperty.call(nextFlowObjects, i)) {
-        var obj = nextFlowObjects[i];
-        var meta;
-
-        if (obj.isParallelGateway) {
-          meta = {
-            type: 'ParallelGateway',
-            gwId: obj.bpmnId
-          };
-        } else if (obj.isAttachedToEventGateway) {
-          meta = {
-            type: 'EventGateway',
-            tokensToInterrupt: obj.attachedFlowObjects
-          };
-        }
-
-        var token = processTokens.createToken(obj.name, obj.bpmnId, message, meta);
-
-        if (obj.isParallelGateway) {
-          delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
-          delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
-        }
-
-        if (obj.isMultiInstanceLoop) {
-          try {
-            if (obj.hasCollection) {
-              var collection = sandbox.evaluateAccessExpression(options, obj.collection, message, self);
-              if (typeof collection === 'undefined') {
-                throw new Error('collection in multi instance is undefined.');
-              }
-              if (collection.constructor.name !== 'Array') {
-                throw new Error('defined collection in multi instance is not an arary');
-              }
-              token.nrOfInstances = collection.length;
-              token.collection = collection;
-              token.elementVariable = obj.elementVariable;
-            } else if (obj.hasLoopCardinality) {
-              var loopcounter = sandbox.evaluate$Expression(options, obj.loopcounter, message, self);
-              token.nrOfInstances = Number(loopcounter);
-            } else {
-              throw new Error('invalid multi instance specification error');
-            }
-          } catch (err) {
-            log.error(options, err);
-            return next(err);
-          }
-
-          if (obj.isSequential) {
-            token.nrOfActiveInstances = 1;
-            token.isSequential = true;
-          } else {
-            token.nrOfActiveInstances = token.nrOfInstances;
-            token.isParallel = true;
-          }
-
-          if (obj.hasCompletionCondition) {
-            token.hasCompletionCondition = true;
-            token.completionCondition = obj.completionCondition;
-          }
-
-          token.nrOfCompleteInstances = 0;
-        }
-
-        log.debug(options, token);
-        if (token === null) {
-          log.error(options, 'Invalid token');
-          return next(new Error('Invalid token'));
-        }
-        delta.addToken(token);
+    if (message && message.err) {
+      let failure = {};
+      var props = Object.getOwnPropertyNames(message.err);
+      for(let i=0; i<props.length; i++){
+        failure[props[i]] = message.err[props[i]];
       }
+      delta.setTokenToFail(flowObjectToken.id, failure);
+    } else {
+      for (var i in nextFlowObjects) {
+        if (Object.prototype.hasOwnProperty.call(nextFlowObjects, i)) {
+          var obj = nextFlowObjects[i];
+          var meta;
+
+          if (obj.isParallelGateway) {
+            meta = {
+              type: 'ParallelGateway',
+              gwId: obj.bpmnId
+            };
+          } else if (obj.isAttachedToEventGateway) {
+            meta = {
+              type: 'EventGateway',
+              tokensToInterrupt: obj.attachedFlowObjects
+            };
+          }
+
+          var token = processTokens.createToken(obj.name, obj.bpmnId, message, meta);
+
+          if (obj.isParallelGateway) {
+            delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
+            delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
+          }
+
+          if (obj.isMultiInstanceLoop) {
+            try {
+              if (obj.hasCollection) {
+                var collection = sandbox.evaluateAccessExpression(options, obj.collection, message, self);
+                if (typeof collection === 'undefined') {
+                  throw new Error('collection in multi instance is undefined.');
+                }
+                if (collection.constructor.name !== 'Array') {
+                  throw new Error('defined collection in multi instance is not an arary');
+                }
+                token.nrOfInstances = collection.length;
+                token.collection = collection;
+                token.elementVariable = obj.elementVariable;
+              } else if (obj.hasLoopCardinality) {
+                var loopcounter = sandbox.evaluate$Expression(options, obj.loopcounter, message, self);
+                token.nrOfInstances = Number(loopcounter);
+              } else {
+                throw new Error('invalid multi instance specification error');
+              }
+            } catch (err) {
+              log.error(options, err);
+              return next(err);
+            }
+
+            if (obj.isSequential) {
+              token.nrOfActiveInstances = 1;
+              token.isSequential = true;
+            } else {
+              token.nrOfActiveInstances = token.nrOfInstances;
+              token.isParallel = true;
+            }
+
+            if (obj.hasCompletionCondition) {
+              token.hasCompletionCondition = true;
+              token.completionCondition = obj.completionCondition;
+            }
+
+            token.nrOfCompleteInstances = 0;
+          }
+
+          log.debug(options, token);
+          if (token === null) {
+            log.error(options, 'Invalid token');
+            return next(new Error('Invalid token'));
+          }
+          delta.addToken(token);
+        }
+      }
+      delta.setTokenToRemove(flowObjectToken.id);
     }
-    delta.setTokenToRemove(flowObjectToken.id);
 
     // add boundary event tokens to interrupt for the currentFlowObject that we are completing, if any
     if (processDefinitionInstance.processDefinition.boundaryEventsByAttachmentIndex[flowObjectToken.bpmnId]) {
