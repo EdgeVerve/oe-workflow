@@ -36,7 +36,13 @@ var ProcessToken = function ProcessToken(name, bpmnId, message, meta) {
   this.bpmnId = bpmnId;
   this.id = uuidv4();
   this.status = 'pending';
-  if (typeof message !== 'undefined') {
+  if( message instanceof Error ){
+    this.message = {};
+    var props = Object.getOwnPropertyNames(message);
+    for(let i=0; i<props.length; i++){
+      this.message[props[i]] = message[props[i]];
+    }
+  } else if (typeof message !== 'undefined') {
     this.message = message;
   }
   if (typeof meta !== 'undefined') {
