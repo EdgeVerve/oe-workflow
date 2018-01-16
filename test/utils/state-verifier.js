@@ -2,6 +2,12 @@ var chai = require('chai');
 var assert = chai.assert;
 
 module.exports = {
+  isPending: function iP(instance) {
+    assert.strictEqual(instance._status, 'pending');
+  },
+  isFailed: function iF(instance) {
+    assert.strictEqual(instance._status, 'failed');
+  },
   isComplete: function iC(instance) {
     assert.strictEqual(instance._status, 'complete');
   },

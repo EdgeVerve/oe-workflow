@@ -161,6 +161,7 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   log.debug(options, pv, accessToken, msg);
 
   var urlOptions = _.cloneDeep(flowObject.formData);
+  urlOptions.baseUrl = 'http://localhost:3000/'
 
   // evaluating url
   // TODO : change eval to sandbox
@@ -178,6 +179,16 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
     eval(expr);
     urlOptions.json = _json;
   }
+  // evaluating body
+  if (urlOptions.headers) {
+    var _headers;
+    var expr = '_headers = ' + urlOptions.headers;
+
+    // TODO : change eval to sandbox
+    // eslint-disable-next-line
+    eval(expr);
+    urlOptions.headers = _headers;
+  }
 
   var qs = flowObject.queryString;
   if (qs) {
@@ -190,6 +201,7 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // default number of retries set to 0
   var retries = flowObject.retries || 0;
 
+  debugger;
   makeRESTCalls(urlOptions, retries, function callback(err, response) {
     if (err) {
       return done(err);
@@ -206,10 +218,13 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
  */
 function makeRESTCalls(urlOptions, retry, callback) {
   request(urlOptions, function makeRequest(err, response, body) {
+    debugger;
+    if(err){
+      callback(err);
+    }
     var message = {
       urlOptions: urlOptions
     };
-    message.error = err || 'undefined';
     message.body = body || 'undefined';
     if (response && response.statusCode) {
       message.statusCode = response.statusCode;

@@ -383,8 +383,8 @@ function addRestConnectorAttributes(ConnectorObject) {
     if (ConnectorObject.hasOwnProperty('camunda:data')) {
       formData.json = ConnectorObject['camunda:data'].text;
     }
-    if (ConnectorObject.hasOwnProperty('camunda:header')) {
-      formData.header = JSON.parse(ConnectorObject['camunda:header'].text);
+    if (ConnectorObject.hasOwnProperty('camunda:headers')) {
+      formData.headers = ConnectorObject['camunda:headers'].text;
     }
     if (ConnectorObject.hasOwnProperty('camunda:retries')) {
       formData.retries = ConnectorObject['camunda:retries'].text;

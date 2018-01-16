@@ -27,10 +27,10 @@ var Delta = module.exports = function Delta() {
   this.tokensToInterrupt = [];
 };
 
-Delta.prototype.setTokenToFail = function setTokenToFail(tokenId, failure) {
+Delta.prototype.setTokenToFail = function setTokenToFail(tokenId, error) {
   this.isProcessFail = true
   this.tokenToFail = tokenId;
-  this.failure = failure;
+  this.error = error;
 };
 
 Delta.prototype.addToken = function addToken(token) {
@@ -287,7 +287,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
   if(this.tokenToFail && tokens[this.tokenToFail]){
     var token = tokens[this.tokenToFail];
     token.status = 'failed';
-    token.failure = this.failure;
+    token.error = this.error;
     token.endTime = new Date();
   }
     /**

@@ -14,7 +14,7 @@ var assert = chai.assert;
 var models = bootstrap.models;
 // var log = bootstrap.log();
 
-var stateVerifier = require('./utils/stateverifier');
+var stateVerifier = require('./utils/state-verifier');
 
 describe('Test case for Script Task Simple', function CB() {
   this.timeout(100000);
@@ -65,10 +65,14 @@ describe('Test case for Script Task Simple', function CB() {
       if (err) {
         return done(err);
       }
-      assert.isNotNull(instance);
-      assert.equal(instance._status, 'complete');
-      var expectedFlow = ['Start', 'ScriptTask', 'End'];
-      stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
+      stateVerifier.isFailed(instance);
+      stateVerifier.verifyTokens(instance, [{
+        'name': 'Start',
+        'status': 'complete'
+      }, {
+        'name': 'ScriptTask',
+        'status': 'failed'
+      }]);
       setTimeout(done, 1000);
     });
   });
