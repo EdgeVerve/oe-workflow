@@ -120,7 +120,7 @@ module.exports.evaluateScript = function evaluateScript(options, script, incomin
     delta.addProcessVariable('_updates', updates);
   } catch (e) {
     log.error(options, e);
-    return { err : e };
+    return { error : e };
   }
 
   return { msg : message };

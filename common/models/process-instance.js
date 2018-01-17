@@ -227,11 +227,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
     var nextFlowObjects = TokenEmission.getNextFlowObjects(currentFlowObject, message,
                                                             processDefinitionInstance, self, options);
-    if (message && message.err) {
+    if (message && message.error) {
       let failure = {};
-      var props = Object.getOwnPropertyNames(message.err);
+      var props = Object.getOwnPropertyNames(message.error);
       for(let i=0; i<props.length; i++){
-        failure[props[i]] = message.err[props[i]];
+        failure[props[i]] = message.error[props[i]];
       }
       delta.setTokenToFail(flowObjectToken.id, failure);
     } else {
@@ -672,7 +672,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-  ProcessInstance.prototype.getTokenByFlowObject = function getFlowObjectByToken(flowobject) {
+  ProcessInstance.prototype.getTokenByFlowObject = function getTokenByFlowObject(flowobject) {
     var self = this;
     var processTokens = self._processTokens;
     for (var i in processTokens) {
