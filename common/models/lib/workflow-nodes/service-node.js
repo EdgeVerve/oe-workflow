@@ -83,7 +83,7 @@ module.exports.evaluateJSON = evaluateJSON;
  */
 function evaluateFTConnector(options, flowObject, message, process, done) {
   var variableType = flowObject.variableType;
-  var status = 'approved';
+  var status       = 'approved';
 
   if (variableType === 'ProcessVariable' || variableType === 'processvariable') {
     status = process._processVariables[flowObject.variableValue];
@@ -114,7 +114,9 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
   WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
     if (err) {
       log.error(err);
-      return done(err);
+      return done(null, {
+        error: err,
+      });
     }
     var msg;
     if (res.constructor.name === 'Object') {
@@ -208,7 +210,7 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
     if (err) {
       log.error(options, err);
       return done(null, {
-        error : err
+        error: err
       });
     }
     done(null, response);
@@ -270,9 +272,9 @@ function makeRESTCalls(urlOptions, retry, callback) {
 function evaluateOEConnector(options, flowObject, message, process, done) {
   var modelName = evaluateProp(flowObject.props.model, message, process, options);
   var operation = flowObject.props.method;
-  try{
+  try {
     var model = loopback.getModel(modelName, options);
-  } catch (err){
+  } catch (err) {
     log.error(options, err);
     return done(null, {
       error: err
@@ -328,7 +330,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       if (err) {
         log.error(options, err);
         return done(null, {
-          error : err
+          error: err
         });
       }
       return done(null, res);
