@@ -36,6 +36,9 @@ function createInputOuputParameters(inputOutputParameter) {
       }
       if (input.hasOwnProperty('camunda:list')) {
         listVals = input['camunda:list']['camunda:value'];
+        if(listVals.constructor && listVals.constructor.name !== Array){
+          listVals = [listVals];
+        }
         inputVal = [];
         for (var val of listVals) {
           inputVal.push(val.text);
@@ -67,6 +70,9 @@ function createInputOuputParameters(inputOutputParameter) {
     }
     if (input.hasOwnProperty('camunda:list')) {
       listVals = input['camunda:list']['camunda:value'];
+      if(listVals.constructor && listVals.constructor.name !== Array){
+        listVals = [listVals];
+      }
       inputVal = [];
       for (let val of listVals) {
         inputVal.push(val.text);
