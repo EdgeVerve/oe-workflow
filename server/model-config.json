@@ -73,5 +73,9 @@
   "WorkflowSignal" :{
     "dataSource": "db",
     "public": false
+  },
+  "ChangeWorkflowRequest" :{
+    "dataSource": "db",
+    "public":true 
   }
 }

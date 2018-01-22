@@ -14,9 +14,11 @@ var log = logger('WorkflowManager');
 var async = require('async');
 var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
 var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin');
+var applyMakerCheckerMixinV2 = require('./../mixins/maker-checker-mixin-v2');
 
 var loopback = require('loopback');
 var helper = require('./../mixins/lib/maker-checker-helper.js');
+var helperv2 = require('./../mixins/lib/maker-checker-helper-v2.js');
 
 var baseWorkflowCallActivity = 'BaseWorkflowTemplate';
 var relatedWorkflowCallActivity = 'RelatedWorkflowTemplate';
@@ -38,15 +40,6 @@ module.exports = function WorkflowManager(WorkflowManager) {
   WorkflowManager.disableRemoteMethod('history', true);
   WorkflowManager.disableRemoteMethod('updateById', true);
   WorkflowManager.disableRemoteMethod('deleteWithVersion', true);
-
-
-  // function WorkflowAttachmentError(message, mappings, attachmentErrors) {
-  //   this.name = 'WorkflowAttachementError';
-  //   this.message = message || '';
-  //   this.mappings = mappings;
-  //   this.attachmentErrors = attachmentErrors;
-  // }
-  // WorkflowAttachmentError.prototype = Object.create(Error.prototype);
 
   WorkflowManager.attachWorkflow = function attachWorkflow(data, options, cb) {
     var app = WorkflowManager.app;
@@ -150,7 +143,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
       }
 
       var operation = data.operation;
-      var wfDependent = data.wfDependent;
+      var wfDependent = true;
+      if (typeof data === 'object' && typeof data.wfDependent === 'boolean') {
+        wfDependent = data.wfDependent;
+      }
       var Model = loopback.getModel(modelName, options);
       var actualModelName = Model.modelName;
 
@@ -165,6 +161,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
         'privilegedUsers': privilegedUsers,
         'privilegedRoles': privilegedRoles
       };
+      // to make an entry in workflow mapping model for maker-checker v2
+      if (data.version && data.version === 'v2') {
+        instance.version = 'v2';
+      }
       if (!workflowBody || typeof workflowBody === 'undefined' || (workflowBody && !workflowBody.workflowDefinitionName)) {
         createMappingscb();
       }
@@ -204,7 +204,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
                 }
                 return createMappingscb();
               }
-              applyMakerCheckerMixin(Model);
+              if (mapping.version === 'v2') {
+                applyMakerCheckerMixinV2(Model);
+              } else {
+                applyMakerCheckerMixin(Model);
+              }
               log.debug(options, 'WorkflowMapping successfully created.');
               mappingsList.push(mapping);
               errorList.push(err);
@@ -261,35 +265,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
 
   WorkflowManager.detachWorkflowWithVersion = detachWorkflowWithVersion;
 
-  WorkflowManager.detachWorkflow = detachWorkflow;
-
   WorkflowManager.endAttachWfRequest = endAttachWfRequest;
 
   WorkflowManager.viewAttachedWorkflows = viewAttachedWorkflows;
-
-  function detachWorkflow(id, options, cb) {
-    var app = WorkflowManager.app;
-
-    if (!id) {
-      cb(new Error('id parameter is required to dettachWorkflow'));
-      return;
-    }
-
-    app.models.WorkflowMapping.findById(id, options, function fetchWM(err, instance) {
-      if (err) {
-        log.error(err);
-        return cb(err);
-      }
-      instance.destroy(options, function destoryWM(err, res) {
-        if (err) {
-          err = new Error('Unable to dettach Workflow.');
-          log.error(err);
-          return cb(err);
-        }
-        cb(null, res);
-      });
-    });
-  }
 
   function detachWorkflowWithVersion(id, version, options, cb) {
     var app = WorkflowManager.app;
@@ -341,8 +319,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
     if (data.updates) {
       updates = data.updates;
     }
-
-    helper._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    if (data.version && data.version === 'v2') {
+      helperv2._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    } else {
+      helper._endWorkflowRequest('oe-workflow', data.workflowInstanceId, data.status, updates, app, options, cb);
+    }
   }
 
   function containsError(ErrorList) {
@@ -484,27 +465,6 @@ module.exports = function WorkflowManager(WorkflowManager) {
       path: '/workflows'
     },
     returns: {
-      type: 'object',
-      root: true
-    }
-  });
-
-  WorkflowManager.remoteMethod('detachWorkflow', {
-    http: {
-      path: '/workflows/:id',
-      verb: 'delete'
-    },
-    description: 'Detach OE workflow from a Model.',
-    accepts: [{
-      arg: 'id',
-      type: 'string',
-      required: true,
-      http: {
-        source: 'path'
-      }
-    }],
-    returns: {
-      arg: 'response',
       type: 'object',
       root: true
     }

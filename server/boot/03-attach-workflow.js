@@ -10,7 +10,7 @@
  */
 var logger = require('oe-logger');
 var log = logger('attach-workflow.boot');
-var applyMakerCheckerMixin = require('../../common/mixins/maker-checker-mixin.js');
+var applyMakerCheckerMixin = require('../../common/mixins/maker-checker-mixin-v2.js');
 
 module.exports = function attachWorkFlows(app) {
   var WorkflowMapping = app.models.WorkflowMapping;

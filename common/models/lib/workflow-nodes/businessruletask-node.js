@@ -19,7 +19,7 @@ var exports = module.exports = {};
 exports.businessRuleTaskHandler = function businessRuleTaskHandler(ruleName, payload, message, process, options, done) {
   var modelName = 'DecisionTable';
   var model = loopback.getModel(modelName, options);
-  var evalPayload = evaluatePayload(options, payload, message, process);
+  var evalPayload = evaluatePayload(payload, message, process);
 
   model.exec(ruleName, evalPayload, options, function execBR(err, res) {
     var message = {
@@ -39,7 +39,7 @@ exports.businessRuleTaskHandler = function businessRuleTaskHandler(ruleName, pay
   });
 };
 
-var evaluatePayload = function evalPayload(options, inputData, message, process) {
+var evaluatePayload = function evalPayload(inputData, message, process) {
   var self = this;
   var prop;
 

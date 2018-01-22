@@ -9,6 +9,7 @@
  * @author Kangan Verma(kangan06), Mandeep Gill(mandeep6ill), Nirmal Satyendra(iambns), Prem Sai(premsai-ch), Vivek Mittal(vivekmittal07)
  */
 
+var loopback = require('loopback');
 var logger = require('oe-logger');
 var log = logger('Task');
 
@@ -61,7 +62,7 @@ module.exports = function Task(Task) {
       if (finalCall === -1) {
         continue;
       } else if (finalCall === 1) {
-                // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
+        // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
         resultData.push(instance);
         continue;
       } else {
@@ -69,7 +70,7 @@ module.exports = function Task(Task) {
         if (finalCall === -1) {
           continue;
         } else if (finalCall === 1) {
-                    // user is part of authorized roles
+          // user is part of authorized roles
           resultData.push(instance);
           continue;
         } else {
@@ -77,10 +78,16 @@ module.exports = function Task(Task) {
           if (finalCall === -1) {
             continue;
           } else if (finalCall === 1) {
-                        // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
+            // the user was found as a part of candidateUser, won't check for excluded Role [ inconsistencies have to resolved in bpmn itself ]
             resultData.push(instance);
             continue;
           } else {
+            // if the user was not excluded in any way
+            // and if candidateUsers, candidateRoles, &
+            // candidateGroups were not defined, assume it be candidate
+            if (candidateGroups.length === 0 && candidateRoles.length === 0 && candidateUsers.length === 0) {
+              resultData.push(instance);
+            }
             continue;
           }
         }
@@ -89,13 +96,13 @@ module.exports = function Task(Task) {
 
     function groupMatch(group, candidateGroups, excludedGroups) {
       if (candidateGroups.indexOf(group) !== -1 ) {
-                // group found
+        // group found
         return 1;
       } else if (excludedGroups.indexOf(group) !== -1) {
-                // no further check needed for excluded group
+        // no further check needed for excluded group
         return -1;
       }
-                // group match was unsuccessfully, look for role match
+      // group match was unsuccessfully, look for role match
       return 0;
     }
 
@@ -135,18 +142,17 @@ module.exports = function Task(Task) {
     next();
   });
 
-    /**
-     * To be DEPRECATED soon, Please use /complete instead
-     * REST endpoint for completing User-Task
-     * @param  {Object}   message           Message
-     * @param  {Object}   processVariables  Process-Variables
-     * @param  {Object}   options           Options
-     * @param  {Function} next              Callback
-     * @returns {void}
-     */
+  /**
+   * To be DEPRECATED soon, Please use /complete instead
+   * REST endpoint for completing User-Task
+   * @param  {Object}   message           Message
+   * @param  {Object}   processVariables  Process-Variables
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
   Task.prototype.completeTask = function completeTask(message, processVariables, options, next) {
     var self = this;
-
     if (self.status !== 'pending') {
       return next(new Error('Task Already Completed'));
     }
@@ -166,9 +172,9 @@ module.exports = function Task(Task) {
             return next(err);
           }
         }
-        self.status = status;
-
-        self.save(options, function saveTask(saveError, instance) {
+        // self.status = status;
+        var updates = { 'status': status, '_version': self._version };
+        self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
             return next(err || saveError);
@@ -179,14 +185,258 @@ module.exports = function Task(Task) {
     });
   };
 
-     /**
-     * REST endpoint for completing User-Task
-     * @param  {Object}   data              Process-Variables & Message data
-     * @param  {Object}   options           Options
-     * @param  {Function} next              Callback
-     * @returns {void}
-     */
   Task.prototype.complete = function complete(data, options, next) {
+    var self = this;
+    var tname = self.name;
+    self.processInstance({}, options, function fetchProcessDef(err, process) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      process.processDefinition({}, options, function fetchProcessDef(err, processDef) {
+        if (err) {
+          log.error(options, err);
+          return next(err);
+        }
+        var pdata;
+        var workflowInstanceId;
+        var WorkflowManager;
+        let taskObj = processDef.getFlowObjectByName(tname);
+        if (taskObj.isMultiMaker) {
+          // this task is a maker user task, so no need to have pv and msg and directly take obj as update
+          var updates = data;
+          pdata = {};
+          if (typeof data.pv !== 'undefined') {
+            pdata.pv = data.pv;
+            delete updates.pv;
+          }
+          if (typeof data.msg !== 'undefined') {
+            pdata.msg = data.msg;
+            delete updates.msg;
+          }
+          var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
+          var modelName = process._processVariables._modelInstance._type;
+          var Model = loopback.getModel(modelName, options);
+          var modelId = process._processVariables._modelInstance._modelId;
+          Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
+            if (err) {
+              log.error(options, err);
+              return next(err);
+            }
+            // if the change request was created on create operation ,
+            // currentInstance will be null which is fine
+            ChangeWorkflowRequest.find({
+              where: {
+                and: [{
+                  modelName: modelName
+                }, {
+                  modelId: modelId
+                }, {
+                  status: 'pending'
+                }]
+              }
+            }, options, function fetchChangeModel(err, inst) {
+              if (err) {
+                log.error(options, err);
+                return next(err);
+              }
+              if (inst.length > 1) {
+                let err = new Error('Multiple instances found with same id in Change Workflow Request');
+                log.error(options, err);
+                return next(err);
+              } else if (inst.length === 0) {
+                // no instance found in change request model
+                let err = new Error('change_request_update failed - no instance found');
+                log.error(options, err);
+                return next(err);
+              }
+
+              var instObj = inst[0].toObject();
+              var operation = instObj.operation;
+              var instx = JSON.parse(JSON.stringify(instObj.data));
+              for (let key in updates) {
+                if (Object.prototype.hasOwnProperty.call(updates, key)) {
+                  var val = updates[key];
+                  instx[key] = val;
+                }
+              }
+
+              var modifiers = inst[0]._modifiers || [];
+              modifiers.push(options.ctx.username);
+              instx._modifiedBy = options.ctx.username;
+
+              Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+                if (err) {
+                  log.error(options, err);
+                  return next(err);
+                }
+                log.debug(options, 'Instance has been validated during maker checker creation');
+
+                inst[0].updateAttributes({
+                  data: instx,
+                  _modifiers: modifiers
+                }, options, function updateCM(err, res) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                    // process._processVariables._modelInstance = instx;
+                  var xdata = {};
+                  xdata.pv = pdata.pv || {};
+                  xdata.pv._modifiers = modifiers;
+                  xdata.pv._modelInstance = instx;
+                  xdata.msg = pdata.msg;
+                  return self.complete_(xdata, options, next);
+                });
+              });
+            });
+          });
+        } else if (taskObj.isChecker) {
+          // do handling of finalize transaction first, only then complete the task
+          // user task wont complete till finalize transaction is successful
+          WorkflowManager = loopback.getModel('WorkflowManager', options);
+          workflowInstanceId = process._processVariables._workflowInstanceId;
+
+          if ( typeof data.__action__ === 'undefined' ) {
+            let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+            log.error(options, err);
+            return next(err);
+          }
+
+          let validActArr = [ 'approved', 'rejected' ];
+          if ( taskObj.stepVariables && taskObj.stepVariables.__action__ ) {
+            validActArr = validActArr.concat(taskObj.stepVariables.__action__);
+          }
+
+          let isValid = ( validActArr.indexOf(data.__action__) > -1 );
+          if (!isValid) {
+            let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+            log.error(options, err);
+            return next(err);
+          }
+
+          pdata = {
+            pv: {}
+          };
+          if (typeof data.pv !== 'undefined') {
+            pdata.pv = data.pv;
+          }
+          if (typeof data.msg !== 'undefined') {
+            pdata.msg = data.msg;
+          }
+          pdata.pv.__action__ = data.__action__;
+
+          ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
+          ChangeWorkflowRequest.find({
+            where: {
+              'workflowInstanceId': workflowInstanceId
+            }
+          }, options, function fetchRM(err, requests) {
+            if (err) {
+              log.error(options, 'unable to find request to end', err);
+              return next(err);
+            }
+            if (requests.length === 0) {
+              let errInvalidid;
+              errInvalidid = new Error('No corresponding workflow request found for verification update the Maker-Checker Process.');
+              log.error(options, errInvalidid);
+              return next(errInvalidid);
+            }
+            if (requests.length > 1) {
+              let errInvalidid;
+              errInvalidid = new Error('Multiple workflow requests found for verification update the Maker-Checker Process.');
+              log.error(options, errInvalidid);
+              return next(errInvalidid);
+            }
+            var request = requests[0];
+            let _verifiedBy = 'workflow-system';
+            if (options.ctx && options.ctx.username) {
+              _verifiedBy = options.ctx.username;
+            }
+            let updates = {
+              _verifiedBy: _verifiedBy
+            };
+            request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
+              if (err) {
+                log.error(options, 'error in updating change workflow instance verifiedBy field', err);
+                return next(err);
+              }
+              log.debug(options, 'updated verified by field in change request by checker');
+              return self.complete_(pdata, options, next);
+            });
+          });
+        } else if (taskObj.isCheckerAutoFinalize) {
+          // do handling of finalize transaction first, only then complete the task
+          // user task wont complete till finalize transaction is successful
+          WorkflowManager = loopback.getModel('WorkflowManager', options);
+          workflowInstanceId = process._processVariables._workflowInstanceId;
+
+          if ( typeof data.__action__ === 'undefined' ) {
+            let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+            log.error(options, err);
+            return next(err);
+          }
+
+          let validActArr = [ 'approved', 'rejected' ];
+          if ( self.stepVariables && self.stepVariables.__action__ ) {
+            validActArr = validActArr.concat(self.stepVariables.__action__);
+          }
+
+          let isValid = ( validActArr.indexOf(data.__action__) > -1 );
+          if (!isValid) {
+            let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+            log.error(options, err);
+            return next(err);
+          }
+
+          var postData = {
+            'workflowInstanceId': workflowInstanceId,
+            'status': data.__action__
+          };
+
+          if (process._processVariables._updates) {
+            postData.updates = process._processVariables._updates;
+          }
+
+          if (process._processVariables._maker_checker_impl === 'v2') {
+            postData.version = 'v2';
+          }
+          pdata = {
+            pv: {}
+          };
+          if (typeof data.pv !== 'undefined') {
+            pdata.pv = data.pv;
+          }
+          if (typeof data.msg !== 'undefined') {
+            pdata.msg = data.msg;
+          }
+          pdata.pv.__action__ = data.__action__;
+
+          if (['approved', 'rejected'].indexOf(data.__action__) > -1 ) {
+            WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
+              if (err) {
+                log.error(err);
+                return next(err);
+              }
+              return self.complete_(pdata, options, next);
+            });
+          } else {
+            return self.complete_(pdata, options, next);
+          }
+        } else {
+          return self.complete_(data, options, next);
+        }
+      });
+    });
+  };
+  /**
+   * REST endpoint for completing User-Task
+   * @param  {Object}   data              Process-Variables & Message data
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
+  Task.prototype.complete_ = function complete_(data, options, next) {
     var self = this;
 
     var message = {};
@@ -218,9 +468,9 @@ module.exports = function Task(Task) {
             return next(err);
           }
         }
-        self.status = status;
-
-        self.save(options, function saveTask(saveError, instance) {
+        // self.status = status;
+        var updates = {'status': status, '_version': self._version};
+        self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
             return next(err || saveError);
@@ -232,13 +482,13 @@ module.exports = function Task(Task) {
   };
 
 
-     /**
-     * REST endpoint for completing User-Task
-     * @param  {Object}   data              Process-Variables & Message data
-     * @param  {Object}   options           Options
-     * @param  {Function} next              Callback
-     * @returns {void}
-     */
+  /**
+   * REST endpoint for completing User-Task
+   * @param  {Object}   data              Process-Variables & Message data
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
   Task.prototype.delegate = function delegate(data, options, next) {
     var self = this;
 
@@ -318,7 +568,7 @@ module.exports = function Task(Task) {
     },
     description: 'Sends a request to complete a task, status will be updated later',
     http: {
-      verb: 'post'
+      verb: 'put'
     },
     isStatic: false,
     returns: {

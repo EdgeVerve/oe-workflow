@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="Process_1" isExecutable="false">
+    <bpmn2:startEvent id="StartEvent_1" name="Start">
+      <bpmn2:outgoing>SequenceFlow_0jyh5h2</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_0jyh5h2" sourceRef="StartEvent_1" targetRef="ScriptTask_1jleiec" />
+    <bpmn2:sequenceFlow id="SequenceFlow_01f3nk6" sourceRef="ScriptTask_1jleiec" targetRef="ServiceTask_1q9oqam" />
+    <bpmn2:endEvent id="EndEvent_0x93bcv" name="End">
+      <bpmn2:incoming>SequenceFlow_178nqgj</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_178nqgj" sourceRef="ServiceTask_1q9oqam" targetRef="EndEvent_0x93bcv" />
+    <bpmn2:serviceTask id="ServiceTask_1q9oqam" name="Conclude">
+      <bpmn2:extensionElements>
+        <camunda:finalizeTransactionConnector>        <camunda:FTType>approve</camunda:FTType>
+</camunda:finalizeTransactionConnector>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_01f3nk6</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_178nqgj</bpmn2:outgoing>
+    </bpmn2:serviceTask>
+    <bpmn2:scriptTask id="ScriptTask_1jleiec" name="Update Instance" scriptFormat="javscript">
+      <bpmn2:incoming>SequenceFlow_0jyh5h2</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_01f3nk6</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[
+        var obj = _instance.toObject();
+        _instance.unsetAttribute('prop1');
+        _instance.unsetAttributes({
+          'prop2' : true
+        });
+        _instance.setAttribute('prop1','11111');
+        _instance.setAttributes({
+          'prop2' : '11111'
+        });
+]]></bpmn2:script>
+    </bpmn2:scriptTask>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="156" y="311" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="129" y="347" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0jyh5h2_di" bpmnElement="SequenceFlow_0jyh5h2">
+        <di:waypoint xsi:type="dc:Point" x="192" y="329" />
+        <di:waypoint xsi:type="dc:Point" x="235" y="329" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="168.5" y="304" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_01f3nk6_di" bpmnElement="SequenceFlow_01f3nk6">
+        <di:waypoint xsi:type="dc:Point" x="335" y="329" />
+        <di:waypoint xsi:type="dc:Point" x="373" y="329" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="309" y="304" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0x93bcv_di" bpmnElement="EndEvent_0x93bcv">
+        <dc:Bounds x="517" y="311" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="490" y="347" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_178nqgj_di" bpmnElement="SequenceFlow_178nqgj">
+        <di:waypoint xsi:type="dc:Point" x="473" y="329" />
+        <di:waypoint xsi:type="dc:Point" x="517" y="329" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="450" y="304" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1q9oqam_di" bpmnElement="ServiceTask_1q9oqam">
+        <dc:Bounds x="373" y="289" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1jleiec_di" bpmnElement="ScriptTask_1jleiec">
+        <dc:Bounds x="235" y="289" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

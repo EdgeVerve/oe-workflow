@@ -53,9 +53,3 @@ ProcessToken.prototype.validate = function validate() {
   return true;
 };
 
-ProcessToken.prototype.updateMeta = function update(key, value) {
-  if (typeof this.meta === 'undefined') {
-    this.meta = {};
-  }
-  this.meta[key] = value;
-};

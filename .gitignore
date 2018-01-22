@@ -2,6 +2,8 @@
 *.dat
 *.iml
 *.log
+*.un
+*.un~
 *.out
 *.pid
 *.seed
@@ -15,6 +17,7 @@
 .project
 .strong-pm
 .vscode/
+tags
 coverage
 node_modules
 npm-debug.log

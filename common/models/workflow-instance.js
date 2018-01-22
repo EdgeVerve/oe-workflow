@@ -20,33 +20,37 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
    * Before Save hook Workflow Instance
    */
   WorkflowInstance.observe('before save', function afterSaveWI(ctx, next) {
-    var workflowDefinitionName = ctx.instance.workflowDefinitionName;
-    var WorkflowDefinition = loopback.getModel('WorkflowDefinition', ctx.options);
+    if (ctx.isNewInstance) {
+      var workflowDefinitionName = ctx.instance.workflowDefinitionName;
+      var WorkflowDefinition = loopback.getModel('WorkflowDefinition', ctx.options);
 
-    WorkflowDefinition.find({
-      'where': {'and': [
+      WorkflowDefinition.find({
+        'where': {'and': [
         {'name': workflowDefinitionName},
         {'latest': true}
-      ]
-      }
-    }, ctx.options, function fetchWD(err, wdefns) {
-      if (err) {
-        log.error(ctx.options, err);
-        return next(err);
-      } else if (wdefns.length === 0) {
-        var errx = new Error('No latest workflow definition found.');
-        log.error(ctx.options, errx);
-        return next(errx);
-      } else if (wdefns.length > 1) {
-        var errxx = new Error('Multiple latest workflow definitions found with the same name.');
-        log.error(ctx.options, errxx);
-        return next(errxx);
-      }
-      var inst = wdefns[0];
-      var id = inst.id;
-      ctx.instance.setAttribute('workflowDefinitionId', id);
+        ]
+        }
+      }, ctx.options, function fetchWD(err, wdefns) {
+        if (err) {
+          log.error(ctx.options, err);
+          return next(err);
+        } else if (wdefns.length === 0) {
+          var errx = new Error('No latest workflow definition found.');
+          log.error(ctx.options, errx);
+          return next(errx);
+        } else if (wdefns.length > 1) {
+          var errxx = new Error('Multiple latest workflow definitions found with the same name.');
+          log.error(ctx.options, errxx);
+          return next(errxx);
+        }
+        var inst = wdefns[0];
+        var id = inst.id;
+        ctx.instance.setAttribute('workflowDefinitionId', id);
+        next();
+      });
+    } else {
       next();
-    });
+    }
   });
 
   /**
@@ -309,8 +313,12 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
         log.error(options, err);
         return cb(err);
       }
-      workflowInstance.setAttribute('status', 'terminated');
-      workflowInstance.save(options, function saveWI(err, res) {
+      let updates = {
+        _version: workflowInstance._version,
+        status: 'terminated'
+      };
+      // workflowInstance.setAttribute('status', 'terminated');
+      workflowInstance.updateAttributes(updates, options, function saveWI(err, res) {
         if (err) {
           log.error(options, 'Unable to update status to terminate');
           return cb(err);

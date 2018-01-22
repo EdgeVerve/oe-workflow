@@ -25,20 +25,53 @@ var log = logger('Service-Node');
  * @param  {Object} process Process-Instance
  * @param  {Object} token Token
  * @param  {Function} done Callback
+ * @returns  {void}
  */
 module.exports.run = function run(options, flowObject, message, process, token, done) {
-  if (flowObject.isCustom) {
-    evaluateCustomImplementation(options, flowObject, message, process, done);
-  } else if (flowObject.connectorType && flowObject.connectorType === 'rest') {
+  if (flowObject.connectorType && flowObject.connectorType === 'rest') {
     evaluateRestConnector(options, flowObject, message, process, token, done);
   } else if (flowObject.connectorType && flowObject.connectorType === 'finalizeTransaction') {
     evaluateFTConnector(options, flowObject, message, process, done);
   } else if (flowObject.connectorType && flowObject.connectorType === 'oeConnector') {
     evaluateOEConnector(options, flowObject, message, process, done);
   } else {
-    evaluateCustomImplementation(options, flowObject, message, process, done);
+    let err = new Error('Invalid connector type found.');
+    log.error(options, err);
+    return done(err);
   }
 };
+
+var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
+  var sandbox = {
+    msg: incomingMsg,
+    pv: function pv(name) {
+      if (name === 'accessToken') {
+        return options.accessToken;
+      }
+      var val = process._processVariables[name];
+      if (typeof val === 'undefined' && process._parentProcessVariables) {
+        val = process._parentProcessVariables[name];
+      }
+      return val;
+    },
+    data: data,
+    _output: null
+  };
+
+  var script = '_output = ' + data;
+  // eslint-disable-next-line
+  var context = new vm.createContext(sandbox);
+  try {
+    var compiledScript = new vm.Script(script);
+    compiledScript.runInContext(context, { timeout: 1000 });
+  } catch (e) {
+    log.error(options, e);
+    return e;
+  }
+  return sandbox._output;
+};
+
+module.exports.evaluateJSON = evaluateJSON;
 
 /**
  * Evaluates Finalize Transaciton Connector
@@ -72,6 +105,10 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
 
   if (process._processVariables._updates) {
     postData.updates = process._processVariables._updates;
+  }
+
+  if (process._processVariables._maker_checker_impl === 'v2') {
+    postData.version = 'v2';
   }
 
   WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
@@ -190,37 +227,6 @@ function makeRESTCalls(urlOptions, retry, callback) {
     }
   });
 }
-/**
- * Custom Function calling EVF Models
- * @param  {Object} options Options
- * @param  {Object} flowObject FlowObject
- * @param  {Object} message Message
- * @param  {Object} process Process-Instance
- * @param  {Function} done Callback
- */
-function evaluateCustomImplementation(options, flowObject, message, process, done) {
-  var method = flowObject.formData.method;
-  var value = flowObject.formData.json;
-  var attachedModelName = process._processVariables._attachedModelName;
-  var attachedModel = loopback.getModel(attachedModelName, options);
-
-  var attachedInstanceId = process._processVariables._attachedModelInstanceId;
-
-  // TODO : separate Id and put try catch to save the server from crashing in case of invalid id
-  attachedModel.findById(JSON.parse(attachedInstanceId), options, function callback(err, instance) {
-    if (err) {
-      return done(err);
-    }
-    var data = {};
-    data[method] = value;
-    if (instance._version) {
-      data._version = instance._version;
-    }
-    instance.updateAttributes(data, options, function updateMI(err) {
-      done(err, message);
-    });
-  });
-}
 
 /**
  * OE Connector for Workflow Engine
@@ -284,35 +290,6 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   }
 }
 
-function evaluateJSON(data, incomingMsg, process, options) {
-  var sandbox = {
-    msg: incomingMsg,
-    pv: function pv(name) {
-      if (name === 'accessToken') {
-        return options.accessToken;
-      }
-      var val = process._processVariables[name];
-      if (typeof val === 'undefined' && process._parentProcessVariables) {
-        val = process._parentProcessVariables[name];
-      }
-      return val;
-    },
-    data: data,
-    _output: null
-  };
-
-  var script = '_output = ' + data;
-  // eslint-disable-next-line
-  var context = new vm.createContext(sandbox);
-  try {
-    var compiledScript = new vm.Script(script);
-    compiledScript.runInContext(context, { timeout: 1000 });
-  } catch (e) {
-    log.error(options, e);
-    return e;
-  }
-  return sandbox._output;
-}
 
 function evaluateProp(data, incomingMsg, process, options) {
   // check if prop needs to be evaluated
