@@ -964,6 +964,8 @@ function addOERemoteMethods(Model) {
           modelName: modelName
         }, {
           modelId: id
+        }, {
+          status: 'pending'
         }]
       }
     }, options, function fetchChangeModel(err, inst) {
@@ -990,7 +992,7 @@ function addOERemoteMethods(Model) {
 
       if (modifiers.indexOf(username) === -1) {
         let err = new Error('Not authorized to recall');
-        log.options(options, err);
+        log.error(options, err);
         return cb(err);
       }
 

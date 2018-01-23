@@ -1622,3 +1622,104 @@ describe('Test case for taskManagement [ Unauthorized Role ]', function callback
     });
   });
 });
+describe('Test case for taskManagement [ No Assigned User ]', function callback() {
+  this.timeout(10000);
+  var name = 'taskManagement_NoAssignee';
+  var testVars = {};
+
+  it('should login as user : user1', function callback(done) {
+    BaseUser.login({ username: 'user1', password: 'user1' }, bootstrap.defaultContext, function callback(err, token) {
+      if (bootstrap.checkDuplicateKeyError(err)) {
+        done();
+      } else if (err) {
+        return done(err);
+      } else {
+        assert.isNotNull(token);
+        testVars.accessToken = token;
+        done();
+      }
+    });
+  });
+
+  it('should read the file', function callback(done) {
+    fs.readFile(path.resolve('./test/bpmn-files', name + '.bpmn'), 'utf8', (err, data) => {
+      testVars.xmldata = data;
+      done(err);
+    });
+  });
+
+  it('deploy the WorkflowDefinition', function callback(done) {
+    var defData = { 'name': name, 'xmldata': testVars.xmldata };
+    models.WorkflowDefinition.create(defData, bootstrap.defaultContext, function callback(err) {
+      // Code for duplicate keys
+      if (bootstrap.checkDuplicateKeyError(err))        {done();}      else {
+        done(err);
+      }
+    });
+  });
+
+  it('create workflow instance ', function callback(done) {
+    var data = { 'workflowDefinitionName': name };
+    models.WorkflowInstance.create(data, bootstrap.defaultContext, function callback(err, instance) {
+      if (err) {
+        return done(err);
+      }
+      testVars.mainWorkflowInstance = instance;
+      done();
+    });
+  });
+
+  it('fetch process instance', function callback(done) {
+    testVars.mainWorkflowInstance.processes({}, bootstrap.defaultContext, function callback(err, instance) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(instance);
+      assert.lengthOf(instance, 1);
+      testVars.processes = instance;
+      setTimeout(done, 2000);
+    });
+  });
+
+
+  it('fetch task instance', function callback(done) {
+    testVars.processes[0].tasks({}, ctxUser2, function callback(err, task) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(task);
+      assert.lengthOf(task, 1);
+      testVars.task = task[0];
+      setTimeout(done, 2000);
+    });
+  });
+
+
+  it('try to complete task', function callback(done) {
+    var putURL = 'http://localhost:3000/api/Tasks/' + testVars.task.id + '/completeTask?access_token=' + testVars.accessToken.id;
+    request({ url: putURL, method: 'PUT', json: {} }, cb);
+
+    function cb(err, response) {
+      if (err) {
+        done(err);
+      }
+
+      assert.strictEqual(response.statusCode, 200);
+      setTimeout(done, 2000);
+    }
+  });
+
+
+  it('validate process', function callback(done) {
+    models.ProcessInstance.findById(testVars.processes[0].id, bootstrap.defaultContext, function callback(err, instance) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(instance);
+      assert.equal(instance._status, 'complete');
+      var expectedTokens = [{ 'name': 'Start', 'status': 'complete' }, { 'name': 'UserTask [No Assignee]', 'status': 'complete' }, { 'name': 'End', 'status': 'complete' }];
+      stateVerifier.verifyTokens(instance._processTokens, expectedTokens);
+      setTimeout(done, 2000);
+    });
+  });
+});
