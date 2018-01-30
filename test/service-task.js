@@ -11,52 +11,10 @@ var path = require('path');
 var bootstrap = require('./bootstrap');
 var chai = bootstrap.chai;
 var assert = chai.assert;
-var expect = chai.expect;
 var models = bootstrap.models;
 var log = bootstrap.log();
 
 var stateVerifier = require('./utils/stateverifier');
-
-var User1Context = {
-  ctx: {
-    'tenantId': 'default',
-    'remoteUser': 'user1',
-    'username': 'user1'
-  }
-};
-
-var User1Details = {
-  'username': 'user1',
-  'email': 'user1@oe.com',
-  'password': 'user1',
-  'id': 'user1'
-};
-
-var User1Credentials = {
-  'username': 'user1',
-  'password': 'user1'
-};
-
-describe('Initialization', function callback() {
-  this.timeout(10000);
-  var BaseUser = models.BaseUser;
-
-  it('should create user - user1', function callback(done) {
-    BaseUser.create(User1Details, bootstrap.defaultContext, function callback(err, users) {
-      if (bootstrap.checkDuplicateKeyError(err)) {
-        log.debug(users);
-        done();
-      } else if (err) {
-        log.error(err);
-        return done(err);
-      } else {
-        log.debug(users);
-        assert.isNotNull(users);
-        done();
-      }
-    });
-  });
-});
 
 describe('Test case for Service Task Fail Case', function callback() {
   this.timeout(10000);
@@ -73,7 +31,7 @@ describe('Test case for Service Task Fail Case', function callback() {
     var defData = { 'name': name, 'xmldata': testVars.xmldata };
     models.WorkflowDefinition.create(defData, bootstrap.defaultContext, function callback(err, res) {
       // Code for duplicate keys
-      if (bootstrap.checkDuplicateKeyError(err)){
+      if (bootstrap.checkDuplicateKeyError(err)) {
         done();
       } else {
         done(err);
@@ -82,10 +40,10 @@ describe('Test case for Service Task Fail Case', function callback() {
   });
 
   it('create workflow instance ', function callback(done) {
-    var data = { 
+    var data = {
       'workflowDefinitionName': name,
       'processVariables': {
-        'modelName' : 'ProcesInstances'
+        'modelName': 'ProcesInstances'
       }
     };
     models.WorkflowInstance.create(data, bootstrap.defaultContext, function callback(err, instance) {
@@ -125,9 +83,9 @@ describe('Test case for Service Task Fail Case', function callback() {
 
   it('validate process', function callback(done) {
     var tokens = testVars.instance._processTokens;
-    var token = Object.values(tokens).filter(function (t){
+    var token = Object.values(tokens).filter((t) => {
       return t.status === 'failed';
-    })
+    });
     testVars.failedTokenId = token[0].id;
     done();
   });
@@ -137,17 +95,16 @@ describe('Test case for Service Task Fail Case', function callback() {
       // tokenId: testVars.failedTokenId
       tokenId: testVars.failedTokenId,
       processVariables: {
-        'modelName' : 'ProcessInstances'
+        'modelName': 'ProcessInstances'
       }
     }, bootstrap.defaultContext, function callback(err, instance) {
       if (err) {
-        console.log(err);
         return done(err);
       }
       setTimeout(done, 5000);
     });
   });
-  
+
   it('validate process again', function callback(done) {
     models.ProcessInstance.findById(testVars.processes[0].id, bootstrap.defaultContext, function callback(err, instance) {
       if (err) {

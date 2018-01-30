@@ -115,7 +115,7 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
     if (err) {
       log.error(err);
       return done(null, {
-        error: err,
+        error: err
       });
     }
     var msg;
@@ -167,7 +167,6 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // evaluating url
   // TODO : change eval to sandbox
   // eslint-disable-next-line
-  debugger;
   var _url = eval('`' + urlOptions.url + '`');
   // urlOptions.url = _url;
   urlOptions.url = _url;
@@ -175,7 +174,7 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // evaluating body
   if (urlOptions.json) {
     var _json;
-    var expr = '_json = ' + urlOptions.json;
+    let expr = '_json = ' + urlOptions.json;
 
     // TODO : change eval to sandbox
     // eslint-disable-next-line
@@ -185,7 +184,7 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // evaluating body
   if (urlOptions.headers) {
     var _headers;
-    var expr = '_headers = ' + urlOptions.headers;
+    let expr = '_headers = ' + urlOptions.headers;
 
     // TODO : change eval to sandbox
     // eslint-disable-next-line
@@ -269,6 +268,7 @@ function makeRESTCalls(urlOptions, retry, callback) {
  * @param  {Object} message Message
  * @param  {Object} process Process-Instance
  * @param  {Function} done Callback
+ * @returns  {void}
  */
 function evaluateOEConnector(options, flowObject, message, process, done) {
   var modelName = evaluateProp(flowObject.props.model, message, process, options);

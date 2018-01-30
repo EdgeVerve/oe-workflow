@@ -15,7 +15,6 @@ var models = bootstrap.models;
 
 var stateVerifier = require('./utils/state-verifier');
 var modelName = 'ProductE';
-var prevVersion;
 
 describe('Init for OE Connector', function cb() {
   this.timeout(10000);

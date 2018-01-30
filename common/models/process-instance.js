@@ -752,7 +752,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.prototype.revertProcessToPending = function revertProcessToPending(tokenId, variables, options, next) {
     var self = this;
     var delta = new StateDelta();
-    var variables = variables || [];
+    variables = variables || [];
 
     Object.keys(variables).forEach(function addToDelta(key) {
       delta.addProcessVariable(key, variables[key]);
