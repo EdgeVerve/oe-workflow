@@ -28,7 +28,7 @@ var Delta = module.exports = function Delta() {
 };
 
 Delta.prototype.setTokenToFail = function setTokenToFail(tokenId, error) {
-  this.isProcessFail = true
+  this.isProcessFail = true;
   this.tokenToFail = tokenId;
   this.error = error;
 };
@@ -39,6 +39,16 @@ Delta.prototype.addToken = function addToken(token) {
 
 Delta.prototype.setTokenToRemove = function setTokenToRemove(tokenId) {
   this.tokenToRemove = tokenId;
+};
+
+Delta.prototype.setTokenToPending = function setTokenToPending(tokenId) {
+  this.tokensToPending = [tokenId];
+  this.revertProcessToPending = true;
+};
+
+Delta.prototype.setTokensToPending = function setTokensToPending(tokens) {
+  this.tokensToPending = tokens;
+  this.revertProcessToPending = true;
 };
 
 Delta.prototype.setTokenToTerminate = function setTokenToTerminate(tokenId) {
@@ -148,10 +158,10 @@ Delta.prototype.apply = function apply(zInstance, options) {
   }
 
     // Instance has been terminated by some event.
-  if (instance._status !== 'running') {
-    log.debug(log.defaultContext(), 'Trying to change state in an interrupted process.');
-    return null;
-  }
+  // if (instance._status !== 'running') {
+  //   log.debug(log.defaultContext(), 'Trying to change state in an interrupted process.');
+  //   return null;
+  // }
 
   var currentToken = tokens[this.tokenToRemove];
   var setTocomplete = true;
@@ -205,6 +215,14 @@ Delta.prototype.apply = function apply(zInstance, options) {
       // unable to evaluate complete condition, will be ignored
       log.error(options, new Error('Unable to evaluate completion condition.'));
     }
+  }
+
+  // reverting tokens to pending in case of retry
+  if (this.tokensToPending) {
+    this.tokensToPending.forEach( t => {
+      tokens[t].status = 'pending';
+      delete tokens[t].error;
+    });
   }
 
   if (setTocomplete) {
@@ -272,6 +290,9 @@ Delta.prototype.apply = function apply(zInstance, options) {
   if (this.isProcessFail) {
     updates[status] = 'failed';
   }
+  if (this.revertProcessToPending) {
+    updates[status] = 'pending';
+  }
 
   return updates;
 };
@@ -284,7 +305,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
     }
   }
 
-  if(this.tokenToFail && tokens[this.tokenToFail]){
+  if (this.tokenToFail && tokens[this.tokenToFail]) {
     var token = tokens[this.tokenToFail];
     token.status = 'failed';
     token.error = this.error;

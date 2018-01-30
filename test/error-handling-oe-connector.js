@@ -299,7 +299,6 @@ describe('Test case for OE Connector - Delete', function CB() {
         return done(err);
       }
       stateVerifier.isFailed(instance);
-      debugger;
       stateVerifier.verifyTokens(instance, [{
         'name': 'Start',
         'status': 'complete'

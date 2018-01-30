@@ -13,7 +13,7 @@
       <bpmn2:extensionElements>
         <camunda:connector>
           <camunda:ctype>rest</camunda:ctype>
-          <camunda:url>http://localhost:3000/api/ProcesInstances?access_token=${accessToken}</camunda:url>
+          <camunda:url>http://localhost:3000/api/${pv("modelName")}?access_token=${accessToken}</camunda:url>
           <camunda:method>GET</camunda:method>
         </camunda:connector>
       </bpmn2:extensionElements>

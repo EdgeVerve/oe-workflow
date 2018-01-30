@@ -230,7 +230,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     if (message && message.error) {
       let failure = {};
       var props = Object.getOwnPropertyNames(message.error);
-      for(let i=0; i<props.length; i++){
+      for (let i = 0; i < props.length; i++) {
         failure[props[i]] = message.error[props[i]];
       }
       delta.setTokenToFail(flowObjectToken.id, failure);
@@ -596,11 +596,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
   };
 
-    /**
-     * Finding a processToken if the name of the flow Object is given
-     * @param  {Object} flowObject FlowObject
-     * @return {Object}            Process-Token
-     */
+  /**
+   * Finding a processToken if the name of the flow Object is given
+   * @param  {Object} flowObject FlowObject
+   * @return {Object} Process-Token
+   */
   ProcessInstance.prototype.findToken = function findToken(flowObject) {
     var self = this;
     var token = null;
@@ -748,4 +748,93 @@ module.exports = function ProcessInstance(ProcessInstance) {
       }
     });
   };
+
+  ProcessInstance.prototype.revertProcessToPending = function revertProcessToPending(tokenId, variables, options, next) {
+    var self = this;
+    var delta = new StateDelta();
+    var variables = variables || [];
+
+    Object.keys(variables).forEach(function addToDelta(key) {
+      delta.addProcessVariable(key, variables[key]);
+    });
+    delta.setTokenToPending(tokenId);
+
+    self.commit(options, delta, function commit(err, instance) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      return next(null, instance);
+    });
+  };
+
+  ProcessInstance.prototype.retry = function retry(data, options, next) {
+    var self = this;
+    if (typeof data.tokenId === 'undefined') {
+      let err = new Error('Token Id is required to try failed Activity.');
+      log.error(options, err);
+      return next(err);
+    }
+    var { tokenId, processVariables } = data;
+    var tokens = self._processTokens;
+    var filteredTokens = Object.values(tokens).filter( t => {
+      return t.id === tokenId;
+    });
+    if (filteredTokens.length !== 1) {
+      let err = new Error('TokenId is incorrect.');
+      log.error(options, err);
+      return next(err);
+    }
+    var token = filteredTokens[0];
+
+    return new Promise((resolve, reject) => {
+      self.revertProcessToPending(token.id, processVariables, options, function cb(err, instance) {
+        if (err) {
+          return reject(err);
+        }
+        resolve(instance);
+      });
+    })
+    .then(process => {
+      // updated process is available with latest process variables and pending state
+      return new Promise((resolve, reject) => {
+        process.reemit(token, options, function cb(err) {
+          if (err) {
+            return reject(err);
+          }
+          return resolve({
+            'emitted': true
+          });
+        });
+      });
+    })
+    .then(function done(response) {
+      return next(null, response);
+    })
+    .catch(function errCb(err) {
+      log.error(options, err);
+      return next(err);
+    });
+  };
+
+  ProcessInstance.remoteMethod('retry', {
+    accessType: 'WRITE',
+    accepts: {
+      arg: 'data',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Process Instance'
+    },
+    description: 'Retry a failed Task in a failed Process Instance.',
+    http: {
+      verb: 'put'
+    },
+    isStatic: false,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
 };

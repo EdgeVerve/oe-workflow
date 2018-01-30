@@ -167,6 +167,7 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // evaluating url
   // TODO : change eval to sandbox
   // eslint-disable-next-line
+  debugger;
   var _url = eval('`' + urlOptions.url + '`');
   // urlOptions.url = _url;
   urlOptions.url = _url;
