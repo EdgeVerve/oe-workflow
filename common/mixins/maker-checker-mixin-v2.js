@@ -883,23 +883,23 @@ function addOERemoteMethods(Model) {
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
               WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+                if (err) {
+                  log.error(options, err);
+                  return next(err);
+                }
+                mData.workflowInstanceId = winst.id;
+                ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
                   if (err) {
                     log.error(options, err);
                     return next(err);
                   }
-                  mData.workflowInstanceId = winst.id;
-                  ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
-                    if (err) {
-                      log.error(options, err);
-                      return next(err);
-                    }
-                    log.debug(options, inst);
+                  log.debug(options, inst);
                     // wrapping back data properly
-                    let cinst = unwrapChangeRequest(inst);
-                    delete cinst.data;
-                    return next(null, cinst);
-                  });
+                  let cinst = unwrapChangeRequest(inst);
+                  delete cinst.data;
+                  return next(null, cinst);
                 });
+              });
             } else {
               let err = new Error('Multiple workflows attached to same Model.');
               log.error(options, err);
