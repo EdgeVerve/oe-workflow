@@ -11,6 +11,7 @@
 
 var TOKEN_ARRIVED_EVENT = 'TOKEN_ARRIVED_EVENT';
 var SUBPROCESS_END_EVENT = 'SUBPROCESS_END_EVENT';
+var SUBPROCESS_FAIL_EVENT = 'SUBPROCESS_FAIL_EVENT';
 var INTERMEDIATE_CATCH_EVENT = 'INTERMEDIATE_CATCH_EVENT';
 var SUBPROCESS_INTERRUPT_EVENT = 'SUBPROCESS_INTERRUPT_EVENT';
 var TERMINATE_INTERRUPT_EVENT = 'TERMINATE_INTERRUPT_EVENT';
@@ -39,6 +40,7 @@ var throwObject = require('./lib/throwobject.js');
 module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.on(TOKEN_ARRIVED_EVENT, tokenEventHandler._tokenArrivedEventHandler);
   ProcessInstance.on(SUBPROCESS_END_EVENT, subprocessEventHandler._subProcessEndEventHandler);
+  ProcessInstance.on(SUBPROCESS_FAIL_EVENT, subprocessEventHandler._subProcessFailedEventHandler);
   ProcessInstance.on(INTERMEDIATE_CATCH_EVENT, catchEventHandler._intermediateCatchEventHandler);
   ProcessInstance.on(SUBPROCESS_INTERRUPT_EVENT, subprocessEventHandler._subProcessInterruptHandler);
   ProcessInstance.on(PROCESS_TERMINATE, subprocessEventHandler._subProcessInterruptHandler);
@@ -329,7 +331,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         return next(err);
       }
 
-      if (instance._status === 'complete') {
+      if (instance._status === 'failed' || instance._status === 'complete') {
         instance.parentProcess({}, options, function fetchParentProcess(err, parentProcess) {
           if (err) {
             log.error(options, err.message);
@@ -338,7 +340,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
           // This is to allow a subprocess to not go to the parent process unless all the subflows have ended
           if (parentProcess) {
-            ProcessInstance.emit(SUBPROCESS_END_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
+            if(instance._status === 'failed'){
+              ProcessInstance.emit(SUBPROCESS_FAIL_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
+            }else if(instance._status === 'complete'){
+              ProcessInstance.emit(SUBPROCESS_END_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
+            }
           }
         });
       }

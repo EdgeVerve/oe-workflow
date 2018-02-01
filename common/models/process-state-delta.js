@@ -157,11 +157,15 @@ Delta.prototype.apply = function apply(zInstance, options) {
     return null;
   }
 
-    // Instance has been terminated by some event.
-  // if (instance._status !== 'running') {
-  //   log.debug(log.defaultContext(), 'Trying to change state in an interrupted process.');
-  //   return null;
-  // }
+  // Instance has been terminated by some event.
+  if (instance._status === 'failed') {
+    log.debug(log.defaultContext(), 'Trying to change state in an failed process.');
+    return null;
+  }
+  if (instance._status === 'interrupted') {
+    log.debug(log.defaultContext(), 'Trying to change state in an interrupted process.');
+    return null;
+  }
 
   var currentToken = tokens[this.tokenToRemove];
   var setTocomplete = true;
