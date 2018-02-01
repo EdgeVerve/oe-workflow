@@ -68,25 +68,6 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
   });
 };
 
-exports._subProcessFailedEventHandler = function _subProcessFailedEventHandler(options, currentProcess, token, processVariables) {
-  var mappedVariables = {};
-  var delta = new StateDelta();
-  currentProcess.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
-    if (err) {
-      log.error(options, err);
-      return;
-    }
-
-    setImmediate(function setImmediateCb(options) {
-      currentProcess._endFlowObject(options, token, processDefinitionInstance, delta, {
-        error: {
-          message: 'SubProcess or Call-Activity Failed. Check subprocesses for this ProcessInstance to investigate.',
-          retriable: true
-        }
-      });
-    }, options);
-  });
-};
 exports._terminateInterruptHandler = function _terminateInterruptHandler(options, ProcessInstance, currentProcess, done) {
   currentProcess.subProcesses({}, options, function fetchSubProcesses(err, subProcesses) {
     if (err) {
