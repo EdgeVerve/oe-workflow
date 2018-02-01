@@ -771,7 +771,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.prototype.failureTokens = function failureTokens(options, next) {
     var inst = this;
     // backward compatibility in ci
-    Object.values = function values(obj){
+    Object.values = function values(obj) {
       return Object.keys(obj).map( key => {
         return obj[key];
       });
@@ -790,7 +790,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         return next(err);
       }
       // backward compatibility in ci
-      Object.values = function values(obj){
+      Object.values = function values(obj) {
         return Object.keys(obj).map( key => {
           return obj[key];
         });
@@ -808,7 +808,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var { processVariables } = data;
     var tokens = self._processTokens;
     // backward compatibility in ci
-    Object.values = function values(obj){
+    Object.values = function values(obj) {
       return Object.keys(obj).map( key => {
         return obj[key];
       });
