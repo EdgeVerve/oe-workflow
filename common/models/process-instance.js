@@ -770,6 +770,12 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
   ProcessInstance.prototype.failureTokens = function failureTokens(options, next) {
     var inst = this;
+    // backward compatibility in ci
+    Object.values = function values(obj){
+      return Object.keys(obj).map( key => {
+        return obj[key];
+      });
+    };
     var tokens = Object.values(inst._processTokens).filter( token => {
       return token.status === 'failed';
     });
@@ -783,6 +789,12 @@ module.exports = function ProcessInstance(ProcessInstance) {
         log.error(options, err);
         return next(err);
       }
+      // backward compatibility in ci
+      Object.values = function values(obj){
+        return Object.keys(obj).map( key => {
+          return obj[key];
+        });
+      };
       return next(null, insts.filter( inst => {
         return Object.values(inst._processTokens).filter( token => {
           return token.status === 'failed';
@@ -795,6 +807,12 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var self = this;
     var { processVariables } = data;
     var tokens = self._processTokens;
+    // backward compatibility in ci
+    Object.values = function values(obj){
+      return Object.keys(obj).map( key => {
+        return obj[key];
+      });
+    };
     var filteredTokens = Object.values(tokens).filter( t => {
       return t.id === tokenId;
     });

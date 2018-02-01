@@ -97,15 +97,6 @@ describe('Test case for Service Task Fail Case', function callback() {
     });
   });
 
-  it('validate process', function callback(done) {
-    var tokens = testVars.instance._processTokens;
-    var token = Object.values(tokens).filter( t => {
-      return t.status === 'failed';
-    });
-    testVars.failedTokenId = token[0].id;
-    done();
-  });
-
   it('retry task', function callback(done) {
     testVars.instance.retry(testVars.failedTokenId, {
       processVariables: {
