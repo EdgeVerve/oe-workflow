@@ -70,8 +70,8 @@ describe('Test case for callActivity', function CB() {
 
   it('fetch failed process instance', function CB(done) {
     models.ProcessInstance.failures({
-      where : {
-        'workflowInstanceId' : testVars.mainWorkflowInstance.id
+      where: {
+        'workflowInstanceId': testVars.mainWorkflowInstance.id
       }
     }, bootstrap.defaultContext, function CB(err, insts) {
       if (err) {

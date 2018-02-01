@@ -338,7 +338,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
           // This is to allow a subprocess to not go to the parent process unless all the subflows have ended
           if (parentProcess) {
-              ProcessInstance.emit(SUBPROCESS_END_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
+            ProcessInstance.emit(SUBPROCESS_END_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
           }
         });
       }
@@ -567,7 +567,6 @@ module.exports = function ProcessInstance(ProcessInstance) {
      */
   ProcessInstance.prototype.commit = function commit(options, delta, next) {
     var self = this;
-    debugger;
     var changes = delta.apply(self, options);
 
     if (changes ===  null) {
@@ -772,24 +771,24 @@ module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.prototype.failureTokens = function failureTokens(options, next) {
     var inst = this;
     var tokens = Object.values(inst._processTokens).filter( token => {
-      return token.status === 'failed'
+      return token.status === 'failed';
     });
     return next(null, tokens);
   };
 
   ProcessInstance.failures = function failures(filter, options, next) {
     filter = filter || {};
-    ProcessInstance.find(filter, options, function fetchPDs(err, insts){
-      if(err){
+    ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
+      if (err) {
         log.error(options, err);
         return next(err);
       }
       return next(null, insts.filter( inst => {
         return Object.values(inst._processTokens).filter( token => {
-          return token.status === 'failed'
+          return token.status === 'failed';
         }).length > 0;
       }));
-    })
+    });
   };
 
   ProcessInstance.prototype.retry = function retry(tokenId, data, options, next) {
@@ -880,7 +879,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         source: 'path'
       },
       description: 'Failed token id'
-    },{
+    }, {
       arg: 'data',
       type: 'object',
       http: {

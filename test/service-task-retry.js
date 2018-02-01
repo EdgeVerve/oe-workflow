@@ -12,7 +12,6 @@ var bootstrap = require('./bootstrap');
 var chai = bootstrap.chai;
 var assert = chai.assert;
 var models = bootstrap.models;
-var log = bootstrap.log();
 
 var stateVerifier = require('./utils/stateverifier');
 
@@ -57,8 +56,8 @@ describe('Test case for Service Task Fail Case', function callback() {
 
   it('fetch failed process instance', function CB(done) {
     models.ProcessInstance.failures({
-      where : {
-        'workflowInstanceId' : testVars.mainWorkflowInstance.id
+      where: {
+        'workflowInstanceId': testVars.mainWorkflowInstance.id
       }
     }, bootstrap.defaultContext, function CB(err, insts) {
       if (err) {
@@ -108,7 +107,7 @@ describe('Test case for Service Task Fail Case', function callback() {
   });
 
   it('retry task', function callback(done) {
-    testVars.instance.retry(testVars.failedTokenId,{
+    testVars.instance.retry(testVars.failedTokenId, {
       processVariables: {
         'modelName': 'ProcessInstances'
       }
@@ -134,4 +133,3 @@ describe('Test case for Service Task Fail Case', function callback() {
     });
   });
 });
-
