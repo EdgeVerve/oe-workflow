@@ -567,6 +567,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
      */
   ProcessInstance.prototype.commit = function commit(options, delta, next) {
     var self = this;
+    debugger;
     var changes = delta.apply(self, options);
 
     if (changes ===  null) {
@@ -768,14 +769,32 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-  ProcessInstance.prototype.retry = function retry(data, options, next) {
+  ProcessInstance.prototype.failureTokens = function failureTokens(options, next) {
+    var inst = this;
+    var tokens = Object.values(inst._processTokens).filter( token => {
+      return token.status === 'failed'
+    });
+    return next(null, tokens);
+  };
+
+  ProcessInstance.failures = function failures(filter, options, next) {
+    filter = filter || {};
+    ProcessInstance.find(filter, options, function fetchPDs(err, insts){
+      if(err){
+        log.error(options, err);
+        return next(err);
+      }
+      return next(null, insts.filter( inst => {
+        return Object.values(inst._processTokens).filter( token => {
+          return token.status === 'failed'
+        }).length > 0;
+      }));
+    })
+  };
+
+  ProcessInstance.prototype.retry = function retry(tokenId, data, options, next) {
     var self = this;
-    if (typeof data.tokenId === 'undefined') {
-      let err = new Error('Token Id is required to try failed Activity.');
-      log.error(options, err);
-      return next(err);
-    }
-    var { tokenId, processVariables } = data;
+    var { processVariables } = data;
     var tokens = self._processTokens;
     var filteredTokens = Object.values(tokens).filter( t => {
       return t.id === tokenId;
@@ -817,19 +836,62 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
+  ProcessInstance.remoteMethod('failures', {
+    accessType: 'READ',
+    accepts: {
+      arg: 'filter',
+      type: 'object',
+      http: {
+        source: 'query'
+      },
+      description: 'Filter defining fields, where, include, order, offset'
+    },
+    description: 'Find all failed process instances.',
+    http: {
+      verb: 'get'
+    },
+    isStatic: true,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
+  ProcessInstance.remoteMethod('failureTokens', {
+    accessType: 'READ',
+    description: 'Find failed tokens for a particular process instances',
+    http: {
+      verb: 'get',
+      path: '/failureTokens'
+    },
+    isStatic: false,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
   ProcessInstance.remoteMethod('retry', {
     accessType: 'WRITE',
-    accepts: {
+    accepts: [{
+      arg: 'tokenId',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Failed token id'
+    },{
       arg: 'data',
       type: 'object',
       http: {
         source: 'body'
       },
-      description: 'Process Instance'
-    },
+      description: 'Update Process Variables'
+    }],
     description: 'Retry a failed Task in a failed Process Instance.',
     http: {
-      verb: 'put'
+      verb: 'put',
+      path: '/retry/:tokenId'
     },
     isStatic: false,
     returns: {

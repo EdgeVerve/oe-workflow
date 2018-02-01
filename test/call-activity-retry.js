@@ -64,197 +64,103 @@ describe('Test case for callActivity', function CB() {
         return done(err);
       }
       testVars.mainWorkflowInstance = instance;
-      setTimeout(done, 2000);
+      setTimeout(done, 6000);
     });
   });
 
-  it('fetch process instance', function CB(done) {
-    testVars.mainWorkflowInstance.processes({}, bootstrap.defaultContext, function CB(err, instance) {
+  it('fetch failed process instance', function CB(done) {
+    models.ProcessInstance.failures({
+      where : {
+        'workflowInstanceId' : testVars.mainWorkflowInstance.id
+      }
+    }, bootstrap.defaultContext, function CB(err, insts) {
+      if (err) {
+        done(err);
+      }
+      assert.strictEqual(insts.length, 1);
+      testVars.retryInstance = insts[0];
+      testVars.retryInstanceId = insts[0].id;
+      done();
+    });
+  });
+
+  it('fetch failed process instance token', function CB(done) {
+    testVars.retryInstance.failureTokens(bootstrap.defaultContext, function CB(err, tokens) {
+      if (err) {
+        done(err);
+      }
+      assert.strictEqual(tokens.length, 1);
+      assert.strictEqual(tokens[0].status, 'failed');
+      assert.strictEqual(tokens[0].name, 'TestService');
+      testVars.tokenId = tokens[0].id;
+      done();
+    });
+  });
+
+  it('validate child process before retry', function callback(done) {
+    models.ProcessInstance.findById(testVars.retryInstanceId, bootstrap.defaultContext, function callback(err, instance) {
       if (err) {
         return done(err);
       }
       assert.isNotNull(instance);
-      // assert.lengthOf(instance, 1);
-      testVars.mainProcess = instance[0];
-      setTimeout(done, 2000);
+      assert.equal(instance._status, 'running');
+      var expectedFlow = ['Start', 'TestService'];
+      stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
+      testVars.instance = instance;
+      done();
     });
   });
 
+  it('validate parent process before retry', function callback(done) {
+    testVars.instance.parentProcess(bootstrap.defaultContext, function callback(err, instance) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(instance);
+      assert.equal(instance._status, 'running');
+      done();
+    });
+  });
+  it('retry failed process instance', function CB(done) {
+    models.ProcessInstance.findById(testVars.retryInstanceId, bootstrap.defaultContext, function CB(err, inst) {
+      if (err) {
+        done(err);
+      }
+      inst.retry(testVars.tokenId, {
+        processVariables: {
+          modelName: 'ProcessInstances'
+        }
+      }, bootstrap.defaultContext, function cb(err, inst) {
+        if (err) {
+          done(err);
+        }
+        setTimeout(done, 2000);
+      });
+    });
+  });
 
-  // it('validate main instance', function CB(done) {
-  //   models.ProcessInstance.findById(testVars.mainProcess.id, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     testVars.mainProcess = instance;
-  //     done();
-  //   });
-  // });
+  it('validate child process after retry', function callback(done) {
+    models.ProcessInstance.findById(testVars.retryInstanceId, bootstrap.defaultContext, function callback(err, instance) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(instance);
+      assert.equal(instance._status, 'complete');
+      var expectedFlow = ['Start', 'TestService', 'End'];
+      stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
+      testVars.instance = instance;
+      done();
+    });
+  });
 
-  // it('validate main instance has no parent', function CB(done) {
-  //   testVars.mainProcess.parentProcess({}, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isUndefined(instance);
-  //     done();
-  //   });
-  // });
-
-  // it('validate main instance has one subprocess', function CB(done) {
-  //   testVars.mainProcess.subProcesses({}, bootstrap.defaultContext, function CB(err, subProcesses) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(subProcesses);
-  //     assert.isArray(subProcesses);
-  //     assert.lengthOf(subProcesses, 1);
-  //     testVars.subProcess = subProcesses[0];
-  //     done();
-  //   });
-  // });
-
-  // it('validate parent of subProcesses', function CB(done) {
-  //   testVars.subProcess.parentProcess({}, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     assert.deepEqual(testVars.mainProcess.id, instance.id);
-  //     done();
-  //   });
-  // });
-
-
-  // it('validate subprocess has one more subprocess', function CB(done) {
-  //   testVars.subProcess.subProcesses({}, bootstrap.defaultContext, function CB(err, subProcesses) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(subProcesses);
-  //     assert.isArray(subProcesses);
-  //     assert.lengthOf(subProcesses, 1);
-  //     testVars.subProcess2 = subProcesses[0];
-  //     done();
-  //   });
-  // });
-
-  // it('validate parent of 2nd subProcess instance', function CB(done) {
-  //   testVars.subProcess2.parentProcess({}, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     assert.deepEqual(testVars.subProcess.id, instance.id);
-  //     done();
-  //   });
-  // });
-
-
-  // it('validate tasks of 2nd subProcesses', function CB(done) {
-  //   testVars.subProcess2.tasks({}, bootstrap.defaultContext, function CB(err, tasks) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(tasks);
-  //     var expectedTasks = [
-  //       { 'name': 'TaskA', 'status': 'pending' },
-  //       { 'name': 'TaskB', 'status': 'pending' }
-  //     ];
-
-  //     stateVerifier.verifyTasks(tasks, expectedTasks);
-  //     testVars.tasks = tasks;
-  //     done();
-  //   });
-  // });
-
-  // it('complete task 1', function CB(done) {
-  //   testVars.tasks[0].completeTask({}, { 'taskA': 1 }, bootstrap.defaultContext, function CB(err) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     setTimeout(done, 2000);
-  //   });
-  // });
-
-  // it('main process should have no change', function CB(done) {
-  //   models.ProcessInstance.findById(testVars.mainProcess.id, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     assert.deepEqual(instance._processTokens, testVars.mainProcess._processTokens);
-  //     assert.deepEqual(instance._processVariables, testVars.mainProcess._processVariables);
-  //     assert.deepEqual(instance._status, testVars.mainProcess._status);
-  //     done();
-  //   });
-  // });
-
-  // it('complete task 2', function CB(done) {
-  //   testVars.tasks[1].completeTask({}, { 'taskB': 2, 'mainProcessV': 'value from sub' }, bootstrap.defaultContext, function CB(err) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     setTimeout(done, 2000);
-  //   });
-  // });
-
-  // it('validate 2nd subProcesses', function CB(done) {
-  //   models.ProcessInstance.findById(testVars.subProcess2.id, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     assert.equal(instance._status, 'complete');
-  //     var expectedVariables = {
-  //       'taskA': 1,
-  //       'taskB': 2,
-  //       'mainProcessV': 'value from sub'
-  //     };
-  //     stateVerifier.verifyProcessVariables(instance._processVariables, expectedVariables);
-  //     var expectedFlow = ['Start', 'Validate', 'TaskA', 'TaskB', 'End1', 'End2'];
-  //     stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
-  //     done();
-  //   });
-  // });
-
-  // it('validate subProcess process', function CB(done) {
-  //   models.ProcessInstance.findById(testVars.subProcess.id, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     assert.equal(instance._status, 'complete');
-  //     var expectedVariables = {
-  //       'taskA': 1,
-  //       'taskB': 2,
-  //       'mainProcessV': 'value from sub'
-  //     };
-  //     stateVerifier.verifyProcessVariables(instance._processVariables, expectedVariables);
-  //     var expectedFlow = ['Start', 'TaskA', 'Sub', 'End'];
-  //     stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
-  //     done();
-  //   });
-  // });
-
-  // it('validate main process', function CB(done) {
-  //   models.ProcessInstance.findById(testVars.mainProcess.id, bootstrap.defaultContext, function CB(err, instance) {
-  //     if (err) {
-  //       return done(err);
-  //     }
-  //     assert.isNotNull(instance);
-  //     assert.equal(instance._status, 'complete');
-  //     var expectedVariables = {
-  //       'taskA': 1,
-  //       'taskB': 2,
-  //       'mainProcessV': 'value from sub',
-  //       'mainProcessV2': 2
-  //     };
-  //     stateVerifier.verifyProcessVariables(instance._processVariables, expectedVariables);
-  //     var expectedFlow = ['Start', 'TaskA', 'test', 'End'];
-  //     stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
-  //     done();
-  //   });
-  // });
+  it('validate parent process after retry', function callback(done) {
+    testVars.instance.parentProcess(bootstrap.defaultContext, function callback(err, instance) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(instance);
+      assert.equal(instance._status, 'complete');
+      done();
+    });
+  });
 });

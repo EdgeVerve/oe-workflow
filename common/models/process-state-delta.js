@@ -28,7 +28,6 @@ var Delta = module.exports = function Delta() {
 };
 
 Delta.prototype.setTokenToFail = function setTokenToFail(tokenId, error) {
-  this.isProcessFail = true;
   this.tokenToFail = tokenId;
   this.error = error;
 };
@@ -43,12 +42,6 @@ Delta.prototype.setTokenToRemove = function setTokenToRemove(tokenId) {
 
 Delta.prototype.setTokenToPending = function setTokenToPending(tokenId) {
   this.tokensToPending = [tokenId];
-  this.revertProcessToPending = true;
-};
-
-Delta.prototype.setTokensToPending = function setTokensToPending(tokens) {
-  this.tokensToPending = tokens;
-  this.revertProcessToPending = true;
 };
 
 Delta.prototype.setTokenToTerminate = function setTokenToTerminate(tokenId) {
@@ -157,11 +150,6 @@ Delta.prototype.apply = function apply(zInstance, options) {
     return null;
   }
 
-  // Instance has been terminated by some event.
-  if (instance._status === 'failed') {
-    log.debug(log.defaultContext(), 'Trying to change state in an failed process.');
-    return null;
-  }
   if (instance._status === 'interrupted') {
     log.debug(log.defaultContext(), 'Trying to change state in an interrupted process.');
     return null;
@@ -290,9 +278,6 @@ Delta.prototype.apply = function apply(zInstance, options) {
 
   if (processEnded || this.isForceEndToken) {
     updates[status] = 'complete';
-  }
-  if (this.isProcessFail) {
-    updates[status] = 'failed';
   }
   if (this.revertProcessToPending) {
     updates[status] = 'pending';
