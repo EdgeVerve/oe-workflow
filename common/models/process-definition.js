@@ -49,6 +49,9 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
                 'parentProcessDefinitionId': processDef.id,
                 'workflowDefinitionId': processDef.workflowDefinitionId
               };
+              if(processDef.bpmndataId){
+                subProcessDef.bpmndataId = processDef.bpmndataId;
+              }
               delete (flowObject.processDefinition);
 
               ProcessDefinition.create(subProcessDef, ctx.options, createSubProcess);

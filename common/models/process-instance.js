@@ -784,11 +784,24 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
   ProcessInstance.failures = function failures(filter, options, next) {
     filter = filter || {};
+    if (filter.bpmnData === true) {
+      filter.include = { 'processDefinition': 'bpmndata' };
+    }
     ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
       if (err) {
         log.error(options, err);
         return next(err);
       }
+
+      if (filter.bpmnData === true) {
+        insts = insts.map(inst => {
+          inst.bpmndata = inst.toObject().processDefinition.bpmndata;
+          delete inst.processDefinition;
+          return inst;
+        });
+      }
+      delete filter.bpmndata;
+
       // backward compatibility in ci
       Object.values = function values(obj) {
         return Object.keys(obj).map( key => {

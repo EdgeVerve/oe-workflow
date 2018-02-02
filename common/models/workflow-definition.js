@@ -79,6 +79,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     if (ctx.instance && ctx.instance.setAttribute) {
       ctx.instance.setAttribute('id', workflowDefId);
     }
+    workflowDef.id = workflowDefId;
 
     // TODO need to check if all the instances for the process definition are ended
     if (workflowDef && workflowDef.name && workflowDef.xmldata) {
@@ -105,7 +106,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
           workflowDef.unsetAttribute('xmldata');
         }
         if (!collaborationDef) {
-          return createProcessDefinition(workflowDefId, ctx.options, workflowDef.name, processDefinitions[0], {}, next);
+          return createProcessDefinition(workflowDef, ctx.options, workflowDef.name, processDefinitions[0], {}, next);
         }
 
         async.each(workflowDef.participants,
@@ -176,7 +177,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
         }
       }
     }
-    createProcessDefinition(workflowDefId, options, name, processDefinition, messageFlowsBySrcProcess, callback);
+    createProcessDefinition(workflowDef, options, name, processDefinition, messageFlowsBySrcProcess, callback);
   }
 
     /**
@@ -188,7 +189,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
      * @param  {[Object]} messageFlowsBySrcProcess  MessageFlows
      * @param  {Function} callback                  Callback
      */
-  function createProcessDefinition(workflowDefId, options, name, processDefinition, messageFlowsBySrcProcess, callback) {
+  function createProcessDefinition(workflowDef, options, name, processDefinition, messageFlowsBySrcProcess, callback) {
     // var processDef = {
     //   'name': name,
     //   'parsedDef': processDefinition,
@@ -212,8 +213,11 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     var processDef = {
       'name': name,
       'parsedDef': processDefinition,
-      'workflowDefinitionId': workflowDefId
+      'workflowDefinitionId': workflowDef.id
     };
+    if(workflowDef.bpmndataId){
+      processDef.bpmndataId = workflowDef.bpmndataId;
+    }
     processDef.messageFlowsBySrcProcess = messageFlowsBySrcProcess;
     var ProcessDefinition = WorkflowDefinition.app.models.ProcessDefinition;
     ProcessDefinition.create(processDef, options, function createPD(err, def) {
