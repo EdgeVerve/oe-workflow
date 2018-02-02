@@ -78,7 +78,7 @@ describe('Test case for Service Task Fail Case', function callback() {
       assert.strictEqual(tokens.length, 1);
       assert.strictEqual(tokens[0].status, 'failed');
       assert.strictEqual(tokens[0].name, 'TestService');
-      testVars.tokenId = tokens[0].id;
+      testVars.failedTokenId = tokens[0].id;
       done();
     });
   });
