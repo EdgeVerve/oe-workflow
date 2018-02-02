@@ -65,7 +65,7 @@ describe('Test case for Script Task Simple', function CB() {
       if (err) {
         return done(err);
       }
-      stateVerifier.isFailed(instance);
+      stateVerifier.isRunning(instance);
       stateVerifier.verifyTokens(instance, [{
         'name': 'Start',
         'status': 'complete'

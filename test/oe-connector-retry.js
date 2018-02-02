@@ -102,7 +102,6 @@ describe('Test case for OE Connector - Create', function CB() {
       if (err) {
         return done(err);
       }
-      stateVerifier.isFailed(instance);
       stateVerifier.verifyTokens(instance, [{
         'name': 'Start',
         'status': 'complete'
@@ -164,7 +163,6 @@ describe('Test case for OE Connector - Find', function CB() {
       if (err) {
         return done(err);
       }
-      stateVerifier.isFailed(instance);
       stateVerifier.verifyTokens(instance, [{
         'name': 'Start',
         'status': 'complete'
@@ -231,7 +229,6 @@ describe('Test case for OE Connector - Update', function CB() {
       if (err) {
         return done(err);
       }
-      stateVerifier.isFailed(instance);
       stateVerifier.verifyTokens(instance, [{
         'name': 'Start',
         'status': 'complete'
@@ -297,7 +294,6 @@ describe('Test case for OE Connector - Delete', function CB() {
       if (err) {
         return done(err);
       }
-      stateVerifier.isFailed(instance);
       stateVerifier.verifyTokens(instance, [{
         'name': 'Start',
         'status': 'complete'
