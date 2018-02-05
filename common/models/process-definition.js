@@ -49,7 +49,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
                 'parentProcessDefinitionId': processDef.id,
                 'workflowDefinitionId': processDef.workflowDefinitionId
               };
-              if(processDef.bpmndataId){
+              if (processDef.bpmndataId) {
                 subProcessDef.bpmndataId = processDef.bpmndataId;
               }
               delete (flowObject.processDefinition);

@@ -182,7 +182,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
 
     /**
      * Create Process definition
-     * @param  {Object}   workflowDefId             WorkflowDefId
+     * @param  {Object}   workflowDef               WorkflowDef
      * @param  {Object}   options                   Options
      * @param  {String}   name                      Workflow-Definition Name
      * @param  {Object}   processDefinition         Process-Definition
@@ -190,32 +190,12 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
      * @param  {Function} callback                  Callback
      */
   function createProcessDefinition(workflowDef, options, name, processDefinition, messageFlowsBySrcProcess, callback) {
-    // var processDef = {
-    //   'name': name,
-    //   'parsedDef': processDefinition,
-    //   'workflowDefinitionId': workflowDefId
-    // };
-    // var ProcessDefinition = WorkflowDefinition.app.models.ProcessDefinition;
-    // var query = [{'name': name}, {'workflowDefinitionId': workflowDefId}];
-    // ProcessDefinition.find({'where': {'and': query}}, options, function cb(fetchErr, res) {
-    //   if (!fetchErr) {
-    //     var processDefVersion = res[0]._version;
-    //     processDef._version = processDefVersion;
-    //     processDef.messageFlowsBySrcProcess = messageFlowsBySrcProcess;
-    //     ProcessDefinition.upsert(processDef, options, function createPD(err, def) {
-    //       if (err && err.message === 'Duplicate entry for ' + ProcessDefinition.name) {
-    //         return callback(null, def);
-    //       }
-    //       return callback(err);
-    //     });
-    //   }
-    // });
     var processDef = {
       'name': name,
       'parsedDef': processDefinition,
       'workflowDefinitionId': workflowDef.id
     };
-    if(workflowDef.bpmndataId){
+    if (workflowDef.bpmndataId) {
       processDef.bpmndataId = workflowDef.bpmndataId;
     }
     processDef.messageFlowsBySrcProcess = messageFlowsBySrcProcess;

@@ -237,6 +237,9 @@ function makeRESTCalls(urlOptions, retry, callback) {
     } else {
       message.statusCode = 'undefined';
     }
+    if (response && response.statusMessage) {
+      message.statusMessage = response.statusMessage;
+    }
 
     if (response && response.statusCode >= 500 && retry > 0 ) {
       log.debug(log.defaultContext(), 'making a retry attempt to url : ' + urlOptions.url);

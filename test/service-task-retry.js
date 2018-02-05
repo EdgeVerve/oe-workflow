@@ -27,7 +27,7 @@ describe('Test case for Service Task Fail Case', function callback() {
   });
 
   it('post to bpmndata', function callback(done) {
-    var defData = { 'bpmnname': name, 'xmldata': testVars.xmldata, "versionmessage" : "1.0.0"};
+    var defData = { 'bpmnname': name, 'xmldata': testVars.xmldata, 'versionmessage': '1.0.0'};
     models.bpmndata.create(defData, bootstrap.defaultContext, function callback(err, res) {
       // Code for duplicate keys
       if (err) {
@@ -40,7 +40,7 @@ describe('Test case for Service Task Fail Case', function callback() {
   });
 
   it('deploy the WorkflowDefinition', function callback(done) {
-    var defData = { 'name': name, 'xmldata': testVars.xmldata, "bpmndataId" : testVars.bpmndataId };
+    var defData = { 'name': name, 'xmldata': testVars.xmldata, 'bpmndataId': testVars.bpmndataId };
     models.WorkflowDefinition.create(defData, bootstrap.defaultContext, function callback(err, res) {
       // Code for duplicate keys
       if (bootstrap.checkDuplicateKeyError(err)) {
@@ -72,7 +72,7 @@ describe('Test case for Service Task Fail Case', function callback() {
       where: {
         'workflowInstanceId': testVars.mainWorkflowInstance.id
       },
-      "bpmnData" : true
+      'bpmnData': true
     }, bootstrap.defaultContext, function CB(err, insts) {
       if (err) {
         done(err);
