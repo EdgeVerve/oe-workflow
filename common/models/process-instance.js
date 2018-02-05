@@ -835,6 +835,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
       return next(err);
     }
     var token = filteredTokens[0];
+    if (token.status !== 'failed') {
+      let err = new Error('Token is not in failed status.');
+      log.error(options, err);
+      return next(err);
+    }
 
     return new Promise((resolve, reject) => {
       self.revertProcessToPending(token.id, processVariables, options, function cb(err, instance) {
