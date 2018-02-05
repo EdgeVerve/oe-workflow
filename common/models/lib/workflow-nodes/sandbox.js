@@ -85,8 +85,10 @@ module.exports.evaluateScript = function evaluateScript(options, script, incomin
       },
       unsetAttributes: function unsetAttributes(obj) {
         for (var key in obj) {
-          if (obj[key] === true) {
-            sandbox._instance.unsetAttribute(key);
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            if (obj[key] === true) {
+              sandbox._instance.unsetAttribute(key);
+            }
           }
         }
       },
@@ -101,7 +103,7 @@ module.exports.evaluateScript = function evaluateScript(options, script, incomin
           }
         }
         for (key in updates.unset) {
-          if (obj[key]) {
+          if (Object.prototype.hasOwnProperty.call(updates.unset, key) && obj[key]) {
             delete obj[key];
           }
         }

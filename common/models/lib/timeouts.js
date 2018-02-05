@@ -68,7 +68,7 @@ exports.removeAllTimeouts = function removeAllTimeouts(ProcessInstance, timerToK
   ProcessInstance._processTimerEvents.timeoutIds = {};
 
   for (i in ProcessInstance._processTimerEvents.timerIds) {
-    if (i === timerToKeep) {
+    if (Object.prototype.hasOwnProperty.call(ProcessInstance._processTimerEvents.timerIds, i) && i === timerToKeep) {
       // TODO : why startTimer is used but not referenced
       var startTimer = ProcessInstance._processTimerEvents.timerIds[i];
       log.debug(log.defaultContext(), startTimer);

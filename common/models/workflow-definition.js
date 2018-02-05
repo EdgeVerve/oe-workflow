@@ -135,8 +135,8 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
      * @returns {void}
      */
   function validateExternalDefinition(options, processDefinitions, participant, callback) {
-    for (var i in processDefinitions) {
-      if (participant.processRef === processDefinitions[i].bpmnId) {
+    for (let i in processDefinitions) {
+      if (Object.prototype.hasOwnProperty.call(processDefinitions, i) && participant.processRef === processDefinitions[i].bpmnId) {
         return callback();
       }
     }

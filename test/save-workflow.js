@@ -931,9 +931,11 @@ describe('Test case for Trigger on Save[Create and Update] OE Workflow [ workflo
 
       if (requests.length >= 1) {
         for (var index in requests) {
-          if (requests[index].operation === 'save-update') {
-            testVars._workflowRef = requests[index].processId;
-            break;
+          if (Object.prototype.hasOwnProperty.call(requests, index)) {
+            if (requests[index].operation === 'save-update') {
+              testVars._workflowRef = requests[index].processId;
+              break;
+            }
           }
         }
       }
@@ -1765,9 +1767,11 @@ describe('Test case for Trigger on Save[Create and Update] OE Workflow [ workflo
 
       if (requests.length >= 1) {
         for (var index in requests) {
-          if (requests[index].operation === 'save-update') {
-            testVars._workflowRef = requests[index].processId;
-            break;
+          if (Object.prototype.hasOwnProperty.call(requests, index)) {
+            if (requests[index].operation === 'save-update') {
+              testVars._workflowRef = requests[index].processId;
+              break;
+            }
           }
         }
       }

@@ -301,7 +301,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           if (currentFlowObject.inOutMappings && currentFlowObject.inOutMappings.inputMappings) {
             var inputMappings = currentFlowObject.inOutMappings.inputMappings;
             for (var source in inputMappings) {
-              if (source === 'variables' && inputMappings[source] === 'all') {
+              if (Object.prototype.hasOwnProperty.call(inputMappings, source) && source === 'variables' && inputMappings[source] === 'all') {
                 Object.assign(subProcessesIns.processVariables, currentProcess._processVariables);
               } else if (source in currentProcess._processVariables) {
                 source = sandbox.evaluate$Expression(options, source, message, currentProcess);
@@ -384,8 +384,10 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           payload = throwObject.throwObject('signal', evaluatedSignalName);
         } else if (currentFlowObject.isEscalationEvent) {
           for (key in processDefinition.eventObjectMap) {
-            if (processDefinition.eventObjectMap[key] === currentFlowObject.escalationId) {
-              code = key;
+            if (Object.prototype.hasOwnProperty.call(processDefinition.eventObjectMap, key)) {
+              if (processDefinition.eventObjectMap[key] === currentFlowObject.escalationId) {
+                code = key;
+              }
             }
           }
           payload = throwObject.throwObject('escalation', currentFlowObject.escalationId, code);

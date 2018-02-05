@@ -151,7 +151,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       var tokens = self._processTokens;
       var token = null;
       for (var i in tokens) {
-        if (tokens[i].name === taskObj.name) {
+        if (Object.prototype.hasOwnProperty.call(tokens, i) && tokens[i].name === taskObj.name) {
           token = tokens[i];
         }
       }
@@ -606,7 +606,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var token = null;
     var name = 'name';
     for (var key in self._processTokens) {
-      if (self._processTokens[key][name] === flowObject[name]) {
+      if (Object.prototype.hasOwnProperty.call(self._processTokens, key) && self._processTokens[key][name] === flowObject[name]) {
         token = self._processTokens[key];
       }
     }
@@ -676,7 +676,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var self = this;
     var processTokens = self._processTokens;
     for (var i in processTokens) {
-      if (processTokens[i].bpmnId === flowobject.bpmnId) {
+      if (Object.prototype.hasOwnProperty.call(processTokens, i) && processTokens[i].bpmnId === flowobject.bpmnId) {
         return processTokens[i];
       }
     }

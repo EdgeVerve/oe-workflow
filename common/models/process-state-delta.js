@@ -348,7 +348,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
 
 function interruptAllTokens(tokens) {
   for (var i in tokens) {
-    if (tokens[i].status === 'pending') {
+    if (Object.prototype.hasOwnProperty.call(tokens, i) && tokens[i].status === 'pending') {
       tokens[i].status = 'interrupted';
       tokens[i].endTime = new Date();
     }
@@ -357,7 +357,7 @@ function interruptAllTokens(tokens) {
 
 function interruptMultipleTokens(tokenNames, tokens) {
   for (var i in tokens) {
-    if (tokenNames.indexOf(tokens[i].name) > -1) {
+    if (Object.prototype.hasOwnProperty.call(tokens, i) && tokenNames.indexOf(tokens[i].name) > -1) {
       var tokenId = tokens[i].id;
       if (tokens[tokenId] && tokens[tokenId].status !== 'pending') {
         return null;

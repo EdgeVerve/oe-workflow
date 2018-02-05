@@ -97,7 +97,7 @@ var getExternalMessageFlows = function getExternalMessageFlows(flowObject, proce
   var externalMessageFlows = processDefinition._getFlows('messageFlowBySourceIndex', flowObject);
   var externalMessageFlowsFilter = [];
   for (var i in externalMessageFlows) {
-    if (externalMessageFlows[i].isExternal) {
+    if (Object.prototype.hasOwnProperty.call(externalMessageFlows, i) && externalMessageFlows[i].isExternal) {
       externalMessageFlowsFilter.push(externalMessageFlows[i]);
     }
   }
