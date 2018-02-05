@@ -32,20 +32,20 @@ module.exports.evaluate = function EvaluateFO(options, flowObject, incomingMsg, 
   } else if (script) {
     var scriptVariables = incomingMsg || {};
     if (flowObject.inputOutputParameters && flowObject.inputOutputParameters.inputParameters)      {
-      stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, message, process);
+      stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, incomingMsg, process);
       _.assign(scriptVariables, stepVariables);
     }
-    var message = sandbox.evaluateScript(options, script, scriptVariables, process, delta, token);
-    return done(null, message);
+    var response = sandbox.evaluateScript(options, script, scriptVariables, process, delta, token);
+    return done(null, response);
   } else if (service) {
     var serviceVariables = incomingMsg || {};
     if (flowObject.inputOutputParameters && flowObject.inputOutputParameters.inputParameters)      {
-      stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, message, process);
+      stepVariables = evaluatePayload(flowObject.inputOutputParameters.inputParameters, incomingMsg, process);
       _.assign(serviceVariables, stepVariables);
     }
     serviceNode.run(options, flowObject, serviceVariables, process, token, done);
   } else if (flowObject.businessRuleTask) {
-    businessRuleTaskHandler(flowObject.ruleName, flowObject.inputOutputParameters.inputParameters, message, process, options, done);
+    businessRuleTaskHandler(flowObject.ruleName, flowObject.inputOutputParameters.inputParameters, incomingMsg, process, options, done);
   } else if (flowObject.type === 'sendTask') {
     process.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
       if (err) {
@@ -97,7 +97,7 @@ var getExternalMessageFlows = function getExternalMessageFlows(flowObject, proce
   var externalMessageFlows = processDefinition._getFlows('messageFlowBySourceIndex', flowObject);
   var externalMessageFlowsFilter = [];
   for (var i in externalMessageFlows) {
-    if (externalMessageFlows[i].isExternal) {
+    if (Object.prototype.hasOwnProperty.call(externalMessageFlows, i) && externalMessageFlows[i].isExternal) {
       externalMessageFlowsFilter.push(externalMessageFlows[i]);
     }
   }

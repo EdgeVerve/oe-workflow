@@ -43,25 +43,27 @@ exports.parse = function parse(bpmnXML, mainProcessName, parsercb) {
       // Iterate the object of bpmn2:process if it is an array and call createBPMNProcessDefinition on each element
       //
     for (var key in rawParsedDefinition) {
-      if (key.indexOf('attributes_') >= 0) {
-        continue;
-      } else {
-        var bpmnprocessDef = rawParsedDefinition[key];
-        var processdef;
-        if (rawParsedDefinition[key].constructor.name === 'Array') {
-          if (key.indexOf('process') >= 0) {
-            for (processdef of bpmnprocessDef) {
-              BPMNProcessDefinitions.push(BPMNProcessDefinition.createBPMNProcessDefinition(processdef));
+      if (Object.prototype.hasOwnProperty.call(rawParsedDefinition, key)) {
+        if (key.indexOf('attributes_') >= 0) {
+          continue;
+        } else {
+          var bpmnprocessDef = rawParsedDefinition[key];
+          var processdef;
+          if (rawParsedDefinition[key].constructor.name === 'Array') {
+            if (key.indexOf('process') >= 0) {
+              for (processdef of bpmnprocessDef) {
+                BPMNProcessDefinitions.push(BPMNProcessDefinition.createBPMNProcessDefinition(processdef));
+              }
+            } else if (key.indexOf('collaboration') >= 0 ) {
+              for (processdef of bpmnprocessDef) {
+                BPMNProcessDefinitions.push(collaborationDefinition.createBPMNCollaborationDefinition(processdef));
+              }
             }
-          } else if (key.indexOf('collaboration') >= 0 ) {
-            for (processdef of bpmnprocessDef) {
-              BPMNProcessDefinitions.push(collaborationDefinition.createBPMNCollaborationDefinition(processdef));
-            }
+          } else if (key.indexOf('process') >= 0) {
+            BPMNProcessDefinitions.push(BPMNProcessDefinition.createBPMNProcessDefinition(bpmnprocessDef));
+          } else if (key.indexOf('collaboration') >= 0) {
+            BPMNProcessDefinitions.push(collaborationDefinition.createBPMNCollaborationDefinition(bpmnprocessDef));
           }
-        } else if (key.indexOf('process') >= 0) {
-          BPMNProcessDefinitions.push(BPMNProcessDefinition.createBPMNProcessDefinition(bpmnprocessDef));
-        } else if (key.indexOf('collaboration') >= 0) {
-          BPMNProcessDefinitions.push(collaborationDefinition.createBPMNCollaborationDefinition(bpmnprocessDef));
         }
       }
     }

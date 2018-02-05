@@ -79,6 +79,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     if (ctx.instance && ctx.instance.setAttribute) {
       ctx.instance.setAttribute('id', workflowDefId);
     }
+    workflowDef.id = workflowDefId;
 
     // TODO need to check if all the instances for the process definition are ended
     if (workflowDef && workflowDef.name && workflowDef.xmldata) {
@@ -105,7 +106,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
           workflowDef.unsetAttribute('xmldata');
         }
         if (!collaborationDef) {
-          return createProcessDefinition(workflowDefId, ctx.options, workflowDef.name, processDefinitions[0], {}, next);
+          return createProcessDefinition(workflowDef, ctx.options, workflowDef.name, processDefinitions[0], {}, next);
         }
 
         async.each(workflowDef.participants,
@@ -134,8 +135,8 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
      * @returns {void}
      */
   function validateExternalDefinition(options, processDefinitions, participant, callback) {
-    for (var i in processDefinitions) {
-      if (participant.processRef === processDefinitions[i].bpmnId) {
+    for (let i in processDefinitions) {
+      if (Object.prototype.hasOwnProperty.call(processDefinitions, i) && participant.processRef === processDefinitions[i].bpmnId) {
         return callback();
       }
     }
@@ -176,44 +177,27 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
         }
       }
     }
-    createProcessDefinition(workflowDefId, options, name, processDefinition, messageFlowsBySrcProcess, callback);
+    createProcessDefinition(workflowDef, options, name, processDefinition, messageFlowsBySrcProcess, callback);
   }
 
     /**
      * Create Process definition
-     * @param  {Object}   workflowDefId             WorkflowDefId
+     * @param  {Object}   workflowDef               WorkflowDef
      * @param  {Object}   options                   Options
      * @param  {String}   name                      Workflow-Definition Name
      * @param  {Object}   processDefinition         Process-Definition
      * @param  {[Object]} messageFlowsBySrcProcess  MessageFlows
      * @param  {Function} callback                  Callback
      */
-  function createProcessDefinition(workflowDefId, options, name, processDefinition, messageFlowsBySrcProcess, callback) {
-    // var processDef = {
-    //   'name': name,
-    //   'parsedDef': processDefinition,
-    //   'workflowDefinitionId': workflowDefId
-    // };
-    // var ProcessDefinition = WorkflowDefinition.app.models.ProcessDefinition;
-    // var query = [{'name': name}, {'workflowDefinitionId': workflowDefId}];
-    // ProcessDefinition.find({'where': {'and': query}}, options, function cb(fetchErr, res) {
-    //   if (!fetchErr) {
-    //     var processDefVersion = res[0]._version;
-    //     processDef._version = processDefVersion;
-    //     processDef.messageFlowsBySrcProcess = messageFlowsBySrcProcess;
-    //     ProcessDefinition.upsert(processDef, options, function createPD(err, def) {
-    //       if (err && err.message === 'Duplicate entry for ' + ProcessDefinition.name) {
-    //         return callback(null, def);
-    //       }
-    //       return callback(err);
-    //     });
-    //   }
-    // });
+  function createProcessDefinition(workflowDef, options, name, processDefinition, messageFlowsBySrcProcess, callback) {
     var processDef = {
       'name': name,
       'parsedDef': processDefinition,
-      'workflowDefinitionId': workflowDefId
+      'workflowDefinitionId': workflowDef.id
     };
+    if (workflowDef.bpmndataId) {
+      processDef.bpmndataId = workflowDef.bpmndataId;
+    }
     processDef.messageFlowsBySrcProcess = messageFlowsBySrcProcess;
     var ProcessDefinition = WorkflowDefinition.app.models.ProcessDefinition;
     ProcessDefinition.create(processDef, options, function createPD(err, def) {

@@ -36,7 +36,7 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
       if (currentFlowObject.inOutMappings && currentFlowObject.inOutMappings.outputMappings) {
         var outputMappings = currentFlowObject.inOutMappings.outputMappings;
         for (var source in outputMappings) {
-          if (source === 'variables' && outputMappings[source] === 'all') {
+          if (Object.prototype.hasOwnProperty.call(outputMappings, source) && source === 'variables' && outputMappings[source] === 'all') {
             Object.assign(mappedVariables, processVariables);
           } else if (source in processVariables) {
             source = sandbox.evaluate$Expression(options, source, token.message, currentProcess);

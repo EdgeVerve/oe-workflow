@@ -83,7 +83,7 @@ module.exports.evaluateJSON = evaluateJSON;
  */
 function evaluateFTConnector(options, flowObject, message, process, done) {
   var variableType = flowObject.variableType;
-  var status = 'approved';
+  var status       = 'approved';
 
   if (variableType === 'ProcessVariable' || variableType === 'processvariable') {
     status = process._processVariables[flowObject.variableValue];
@@ -114,7 +114,9 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
   WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
     if (err) {
       log.error(err);
-      return done(err);
+      return done(null, {
+        error: err
+      });
     }
     var msg;
     if (res.constructor.name === 'Object') {
@@ -166,17 +168,28 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // TODO : change eval to sandbox
   // eslint-disable-next-line
   var _url = eval('`' + urlOptions.url + '`');
+  // urlOptions.url = _url;
   urlOptions.url = _url;
 
   // evaluating body
   if (urlOptions.json) {
     var _json;
-    var expr = '_json = ' + urlOptions.json;
+    let expr = '_json = ' + urlOptions.json;
 
     // TODO : change eval to sandbox
     // eslint-disable-next-line
     eval(expr);
     urlOptions.json = _json;
+  }
+  // evaluating body
+  if (urlOptions.headers) {
+    var _headers;
+    let expr = '_headers = ' + urlOptions.headers;
+
+    // TODO : change eval to sandbox
+    // eslint-disable-next-line
+    eval(expr);
+    urlOptions.headers = _headers;
   }
 
   var qs = flowObject.queryString;
@@ -190,9 +203,15 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
   // default number of retries set to 0
   var retries = flowObject.retries || 0;
 
+  if (urlOptions.url && urlOptions.url.indexOf('http') !== 0) {
+    urlOptions.baseUrl = 'http://localhost:3000/';
+  }
   makeRESTCalls(urlOptions, retries, function callback(err, response) {
     if (err) {
-      return done(err);
+      log.error(options, err);
+      return done(null, {
+        error: err
+      });
     }
     done(null, response);
   });
@@ -206,23 +225,40 @@ function evaluateRestConnector(options, flowObject, message, process, token, don
  */
 function makeRESTCalls(urlOptions, retry, callback) {
   request(urlOptions, function makeRequest(err, response, body) {
+    if (err) {
+      callback(err);
+    }
     var message = {
       urlOptions: urlOptions
     };
-    message.error = err || 'undefined';
     message.body = body || 'undefined';
     if (response && response.statusCode) {
       message.statusCode = response.statusCode;
     } else {
       message.statusCode = 'undefined';
     }
+    if (response && response.statusMessage) {
+      message.statusMessage = response.statusMessage;
+    }
 
-    if (response && response.statusCode >= 500 && retry > 0) {
+    if (response && response.statusCode >= 500 && retry > 0 ) {
       log.debug(log.defaultContext(), 'making a retry attempt to url : ' + urlOptions.url);
       makeRESTCalls(urlOptions, retry - 1, callback);
     } else {
       // earlier body was available as message
       // now it will be message.body
+      if (message.statusCode >= 400) {
+        let err;
+        try {
+          err = JSON.parse(message.body);
+          if (err.error) {
+            err = err.error;
+          }
+        } catch (ex) {
+          err = message;
+        }
+        return callback(err);
+      }
       callback(null, message);
     }
   });
@@ -235,11 +271,19 @@ function makeRESTCalls(urlOptions, retry, callback) {
  * @param  {Object} message Message
  * @param  {Object} process Process-Instance
  * @param  {Function} done Callback
+ * @returns  {void}
  */
 function evaluateOEConnector(options, flowObject, message, process, done) {
   var modelName = evaluateProp(flowObject.props.model, message, process, options);
   var operation = flowObject.props.method;
-  var model = loopback.getModel(modelName, options);
+  try {
+    var model = loopback.getModel(modelName, options);
+  } catch (err) {
+    log.error(options, err);
+    return done(null, {
+      error: err
+    });
+  }
   var id;
   var data;
 
@@ -248,7 +292,9 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     model.create(data, options, function createMI(err, res) {
       if (err) {
         log.error(options, err);
-        return done(null, err);
+        return done(null, {
+          error: err
+        });
       }
       return done(null, res.toObject());
     });
@@ -258,7 +304,9 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     model.find(filter, options, function fetchMI(err, res) {
       if (err) {
         log.error(options, err);
-        return done(null, err);
+        return done(null, {
+          error: err
+        });
       }
       var _res = [];
       for (var i = 0; i < res.length; i++) {
@@ -273,7 +321,9 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     model.upsert(data, options, function updateMI(err, res) {
       if (err) {
         log.error(options, err);
-        return done(null, err);
+        return done(null, {
+          error: err
+        });
       }
       return done(null, res.toObject());
     });
@@ -283,7 +333,9 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     model.deleteWithVersion(id, version, options, function deleteMI(err, res) {
       if (err) {
         log.error(options, err);
-        return done(null, err);
+        return done(null, {
+          error: err
+        });
       }
       return done(null, res);
     });

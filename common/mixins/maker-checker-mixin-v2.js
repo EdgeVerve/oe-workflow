@@ -605,9 +605,13 @@ function addOERemoteMethods(Model) {
     // get hasOne, hasMany relation metadata
     var relations = [];
     var _usedFields = [];
+    var childData = {};
+    var parentData = JSON.parse(JSON.stringify(data));
     for (let r in Model.relations) {
       if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
         let relation = Model.relations[r];
+        childData = data[r];
+        delete parentData[r];
         if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
           for (let i = 0; i < data[r].length; i++) {
             let _relObj = {
@@ -629,6 +633,8 @@ function addOERemoteMethods(Model) {
         }
       }
     }
+    options.childData = childData;
+    options.parentData = parentData;
     if (operation === 'create') {
       makerValidation(Model, operation, data, null, options, function _validateCb(err, _data) {
         if (err) {
@@ -673,6 +679,8 @@ function addOERemoteMethods(Model) {
             return next(err);
           }
           _data._usedFields = _usedFields;
+          delete options.childData;
+          delete options.parentData;
           next(null, _data);
         });
       });
@@ -748,6 +756,8 @@ function addOERemoteMethods(Model) {
             return next(err);
           }
           _data._usedFields = _usedFields;
+          delete options.childData;
+          delete options.parentData;
           next(null, _data);
         });
       });
@@ -764,96 +774,140 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
-    options.isNewChangeRequest = true;
-    Model._makerValidate(Model, 'create', data, null, options, function _validateCb(err, _data) {
-      if (err) {
-        return next(err);
-      }
-
-      let idName = Model.definition.idName();
-      // case id is not defined
-      if (typeof _data[idName] === 'undefined') {
-        _data[idName] =  uuidv4();
-      }
-      var id = _data[idName];
-      // reapply data over _data to regain related Model data, except the
-      // data which has been generated via Validation
-      for (let key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
-          _data[key] = data[key];
+    var idName = Model.definition.idName();
+    var id = data[idName] || 'this_id_wont_exist';
+    ChangeWorkflowRequest.find({
+      where: {
+        and: [{
+          modelName: modelName
+        }, {
+          status: 'pending'
+        }, {
+          modelId: id
+        }]
+      }}, options, function checkExisitingRequest(err, crinsts) {
+        if (err) {
+          log.error(options, err);
+          return next(err);
         }
-      }
-      delete _data._usedFields;
-      var mData = {
-        modelName: modelName,
-        modelId: id,
-        operation: 'create',
-        data: _data,
-        _modifiers: [
-          options.ctx.username
-        ]
-      };
-      log.debug(options, 'Instance has been validated during maker checker creation');
+        if (crinsts.length > 1) {
+          let err = new Error('Multiple change requests found, pertaining to same model Instance');
+          log.error(options, err);
+          return next(err);
+        }
+        if (crinsts.length === 1) {
+            // existing change request found, need to delete existing request and interrupt
+            // but only if user has provided the existing change request id
+            // so that we can verify he is aware he had previously made a update which is not
+            // yet complete, this logic might change later
+          var crinst = crinsts[0];
+          if (typeof data._changeRequestId === 'undefined' || crinst.id.toString() !== data._changeRequestId.toString()) {
+            let err = new Error('change request id is not provided or mismatch');
+            log.error(options, err);
+            return next(err);
+          }
+            // now its safe to remove previous change request and interrupt previous workflow
+            // we are async ly terminating not holding the main request , might change
+          terminateWorkflow(crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
+            if (err) {
+              let err = new Error('Unable to interrupt workflow in update retrigger case');
+              log.error(options, err);
+              return;
+            }
+            return;
+          });
+        }
+        options.isNewChangeRequest = true;
+        Model._makerValidate(Model, 'create', data, null, options, function _validateCb(err, _data) {
+          if (err) {
+            return next(err);
+          }
 
-      var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
-      var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+          let idName = Model.definition.idName();
+          // case id is not defined
+          if (typeof _data[idName] === 'undefined') {
+            _data[idName] =  uuidv4();
+          }
+          var id = _data[idName];
+          // reapply data over _data to regain related Model data, except the
+          // data which has been generated via Validation
+          for (let key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
+              _data[key] = data[key];
+            }
+          }
+          delete _data._usedFields;
+          var mData = {
+            modelName: modelName,
+            modelId: id,
+            operation: 'create',
+            data: _data,
+            _modifiers: [
+              options.ctx.username
+            ]
+          };
+          log.debug(options, 'Instance has been validated during maker checker creation');
 
-      WorkflowMapping.find({
-        where: {
-          'and': [
+          var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+          var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+
+          WorkflowMapping.find({
+            where: {
+              'and': [
             { 'modelName': modelName },
             { 'engineType': 'oe-workflow' },
             { 'version': 'v2' },
             { 'operation': 'create' }
-          ]
-        }
-      }, options, function fetchWM(err, res) {
-        if (err) {
-          log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
-          return next(err);
-        } else if (res && res.length === 0) {
-          // this case should never occur
-          let err = new Error('no create maker checker mapping found');
-          log.debug(options, err);
-          return next(err);
-        } else if (res.length === 1) {
-          var mapping = res[0];
-
-          let workflowBody = mapping.workflowBody;
-          workflowBody.processVariables = workflowBody.processVariables || {};
-          workflowBody.processVariables._operation = mData.operation;
-          workflowBody.processVariables._modifiers = mData._modifiers;
-          workflowBody.processVariables._modelInstance = mData.data;
-          workflowBody.processVariables._modelInstance._type = modelName;
-          workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
-          workflowBody.processVariables._modelInstance._modelId = id;
-              // this is to identify while executing Finalize Transaction to follow which implementation
-          workflowBody.processVariables._maker_checker_impl = 'v2';
-          WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+              ]
+            }
+          }, options, function fetchWM(err, res) {
             if (err) {
+              log.error(options, 'unable to find workflow mapping - before save attach create [OE Workflow]', err);
+              return next(err);
+            } else if (res && res.length === 0) {
+              // this case should never occur
+              let err = new Error('no create maker checker mapping found');
+              log.debug(options, err);
+              return next(err);
+            } else if (res.length === 1) {
+              var mapping = res[0];
+
+              let workflowBody = mapping.workflowBody;
+              workflowBody.processVariables = workflowBody.processVariables || {};
+              workflowBody.processVariables._operation = mData.operation;
+              workflowBody.processVariables._modifiers = mData._modifiers;
+              workflowBody.processVariables._modelInstance = mData.data;
+              workflowBody.processVariables._modelInstance._type = modelName;
+              workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
+              workflowBody.processVariables._modelInstance._modelId = id;
+              // this is to identify while executing Finalize Transaction to follow which implementation
+              workflowBody.processVariables._maker_checker_impl = 'v2';
+              WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
+                if (err) {
+                  log.error(options, err);
+                  return next(err);
+                }
+                mData.workflowInstanceId = winst.id;
+                ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                  log.debug(options, inst);
+                    // wrapping back data properly
+                  let cinst = unwrapChangeRequest(inst);
+                  delete cinst.data;
+                  return next(null, cinst);
+                });
+              });
+            } else {
+              let err = new Error('Multiple workflows attached to same Model.');
               log.error(options, err);
               return next(err);
             }
-            mData.workflowInstanceId = winst.id;
-            ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
-              if (err) {
-                log.error(options, err);
-                return next(err);
-              }
-              log.debug(options, inst);
-              // wrapping back data properly
-              let cinst = unwrapChangeRequest(inst);
-              delete cinst.data;
-              return next(null, cinst);
-            });
           });
-        } else {
-          let err = new Error('Multiple workflows attached to same Model.');
-          log.error(options, err);
-          return next(err);
-        }
+        });
       });
-    });
   };
 
   Model.findX = function findX(ctx, cb) {

@@ -22,5 +22,14 @@
   "validations": [],
   "relations": {},
   "acls": [],
-  "methods": {}
+  "methods": {
+    "processDefinitions" : {
+      "type": "hasMany",
+      "model": "ProcessDefinition"
+    },
+    "workflowDefinition" : {
+      "type": "hasOne",
+      "model": "WorkflowDefinition"
+    }
+  }
 }

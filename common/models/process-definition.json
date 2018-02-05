@@ -36,6 +36,11 @@
       "model": "ProcessDefinition",
       "foreignKey" : "parentProcessDefinitionId"
     },
+    "bpmndata": {
+      "type": "belongsTo",
+      "model": "bpmndata",
+      "foreignKey" : "bpmndataId"
+    },
     "workflowDefinition": {
       "type": "belongsTo",
       "model": "WorkflowDefinition",
