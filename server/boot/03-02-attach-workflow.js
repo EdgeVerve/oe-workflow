@@ -22,10 +22,10 @@ module.exports = function attachWorkFlows(app) {
 
   WorkflowMapping.find({
     where: {
-      and : [{
-        'engineType' : 'oe-workflow'
-      },{
-        'version' : 'v2'
+      and: [{
+        'engineType': 'oe-workflow'
+      }, {
+        'version': 'v2'
       }]
     }
   }, options, function fetchWM(err, result) {
