@@ -837,6 +837,8 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var token = filteredTokens[0];
     if (token.status !== 'failed') {
       let err = new Error('Token is not in failed status.');
+      // status code 428 for Precondition Required
+      err.statusCode = 428;
       log.error(options, err);
       return next(err);
     }
