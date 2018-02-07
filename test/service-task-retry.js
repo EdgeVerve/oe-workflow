@@ -199,7 +199,11 @@ describe('Test case for Service Task Fail Case', function callback() {
   });
 
   it('should fetch 10 failed process instances', function CB(done) {
-    models.ProcessInstance.failures({}, bootstrap.defaultContext, function CB(err, insts) {
+    models.ProcessInstance.failures({
+      where: {
+        'processDefinitionName': name
+      }
+    }, bootstrap.defaultContext, function CB(err, insts) {
       if (err) {
         done(err);
       }
@@ -222,7 +226,11 @@ describe('Test case for Service Task Fail Case', function callback() {
   });
 
   it('fetch failed process instance', function CB(done) {
-    models.ProcessInstance.failures({}, bootstrap.defaultContext, function CB(err, insts) {
+    models.ProcessInstance.failures({
+      where: {
+        'processDefinitionName': name
+      }
+    }, bootstrap.defaultContext, function CB(err, insts) {
       if (err) {
         done(err);
       }
