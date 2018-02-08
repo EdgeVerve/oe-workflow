@@ -262,7 +262,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (obj.isMultiInstanceLoop) {
             try {
               if (obj.hasCollection) {
-                var collection = sandbox.evaluateAccessExpression(options, obj.collection, message, self);
+                var collection = sandbox.evaluateExpression(options, obj.collection, message, self);
                 if (typeof collection === 'undefined') {
                   throw new Error('collection in multi instance is undefined.');
                 }
@@ -782,6 +782,36 @@ module.exports = function ProcessInstance(ProcessInstance) {
     return next(null, tokens);
   };
 
+  ProcessInstance.retryAll = function retryAll(filter, data, options, next) {
+    filter = filter || {};
+    data = data || {};
+    ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+
+      // backward compatibility in ci
+      Object.values = function values(obj) {
+        return Object.keys(obj).map( key => {
+          return obj[key];
+        });
+      };
+      var dummyCb = function dummyCb() {};
+      insts.forEach(inst => {
+        Object.values(inst._processTokens).filter(token => {
+          return token.status === 'failed';
+        }).forEach(token => {
+          inst.retry(token.id, data, options, dummyCb);
+        });
+      });
+
+      return next(null, {
+        emitted: true
+      });
+    });
+  };
+
   ProcessInstance.failures = function failures(filter, options, next) {
     filter = filter || {};
     if (filter.bpmnData === true) {
@@ -835,6 +865,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
       return next(err);
     }
     var token = filteredTokens[0];
+    if (token.status !== 'failed') {
+      let err = new Error('Token is not in failed status.');
+      // status code 428 for Precondition Required
+      err.statusCode = 428;
+      log.error(options, err);
+      return next(err);
+    }
 
     return new Promise((resolve, reject) => {
       self.revertProcessToPending(token.id, processVariables, options, function cb(err, instance) {
@@ -879,6 +916,35 @@ module.exports = function ProcessInstance(ProcessInstance) {
     description: 'Find all failed process instances.',
     http: {
       verb: 'get'
+    },
+    isStatic: true,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
+  ProcessInstance.remoteMethod('retryAll', {
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'filter',
+      type: 'object',
+      http: {
+        source: 'query'
+      },
+      description: 'Filter defining fields, where, include, order, offset'
+    }, {
+      arg: 'data',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Update Process Variables'
+    }],
+    description: 'Retry all failed tokens in fetched Process Instances.',
+    http: {
+      verb: 'put',
+      path: '/retryAll'
     },
     isStatic: true,
     returns: {

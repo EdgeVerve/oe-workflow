@@ -132,7 +132,20 @@ module.exports.evaluateExpression = function evalExpression(options, expression,
   var sandbox = {
     _output: {},
     options: options,
+    pv: function pv(name) {
+      if (inVariables && inVariables[name]) {
+        return inVariables[name];
+      }
+      return process._processVariables[name];
+    },
+    accessToken: options.accessToken,
+    access_token: options.accessToken,
+    msg: msg,
     _getPV: function _getPV(name) {
+      // To be DEPRECATED soon, Please use pv and msg instead of _getPV and _msg in expressions
+      let depMessage = '[TO BE DEPRECATED SOON]: Please update _getPV and _msg with pv and msg in Expressions.';
+      // eslint-disable-next-line
+      console.log(depMessage);
       if (inVariables && inVariables[name]) {
         return inVariables[name];
       }
@@ -150,20 +163,24 @@ module.exports.evaluateExpression = function evalExpression(options, expression,
     compiledScript.runInContext(context, { timeout: 500 });
   } catch (e) {
     log.error(options, e);
-    return e;
+    throw e;
+    // return e;
   }
   return sandbox._output;
 };
 
-module.exports.evaluateAccessExpression = function evalExpression(options, expression, msg, process) {
-  var sandbox = {
-    _output: {},
-    options: options,
-    pv: function _getPV(name) {
-      return process._processVariables[name];
-    },
-    msg: msg
-  };
+module.exports.evaluateDirect = function evaluateDirect(options, expression, message, process, inVariables) {
+  var sandbox = {};
+
+  // Process Variables will have priority over message
+  message = message || {};
+  Object.keys(message).forEach(prop => {
+    sandbox[prop] = message[prop];
+  });
+  process._processVariables = process._processVariables || {};
+  Object.keys(process._processVariables).forEach(prop => {
+    sandbox[prop] = process._processVariables[prop];
+  });
 
   var evalExpression = '_output = ' + expression;
 
@@ -174,11 +191,11 @@ module.exports.evaluateAccessExpression = function evalExpression(options, expre
     compiledScript.runInContext(context, { timeout: 500 });
   } catch (e) {
     log.error(options, e);
-    return e;
+    throw e;
+    // return e;
   }
   return sandbox._output;
 };
-
 
 module.exports.evaluate$Expression = function eval$Expression(options, expression, msg, process, token) {
   var prop;
