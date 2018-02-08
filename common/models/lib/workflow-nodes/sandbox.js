@@ -173,9 +173,11 @@ module.exports.evaluateDirect = function evaluateDirect(options, expression, mes
   var sandbox = {};
 
   // Process Variables will have priority over message
+  message = message || {};
   Object.keys(message).forEach(prop => {
     sandbox[prop] = message[prop];
   });
+  process._processVariables = process._processVariables || {};
   Object.keys(process._processVariables).forEach(prop => {
     sandbox[prop] = process._processVariables[prop];
   });
