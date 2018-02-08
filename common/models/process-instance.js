@@ -262,7 +262,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (obj.isMultiInstanceLoop) {
             try {
               if (obj.hasCollection) {
-                var collection = sandbox.evaluateAccessExpression(options, obj.collection, message, self);
+                var collection = sandbox.evaluateExpression(options, obj.collection, message, self);
                 if (typeof collection === 'undefined') {
                   throw new Error('collection in multi instance is undefined.');
                 }

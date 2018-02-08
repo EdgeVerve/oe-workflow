@@ -13,6 +13,7 @@ var request = require('request');
 var loopback = require('loopback');
 var _ = require('lodash');
 var vm = require('vm');
+var sandbox = require('./sandbox.js');
 
 var logger = require('oe-logger');
 var log = logger('Service-Node');
@@ -138,63 +139,26 @@ function evaluateFTConnector(options, flowObject, message, process, done) {
  * @param  {Object} process Process-Instance
  * @param  {Object} token Token
  * @param  {Function} done Callback
+ * @returns  {void}
  */
 function evaluateRestConnector(options, flowObject, message, process, token, done) {
-  var pv = function pv(name) {
-    var val = process._processVariables[name];
-    if (typeof val === 'undefined' && token && token.inVariables) {
-      var inVariables = token.inVariables;
-      val = inVariables[name];
-    }
-    if (typeof val === 'undefined' && process._parentProcessVariables) {
-      val = process._parentProcessVariables[name];
-    }
-    return val;
-  };
-
-  var accessToken = options.accessToken;
-  // eslint-disable-next-line
-  var access_token = options.accessToken;
-
-  var msg = function msg(name) {
-    return message[name];
-  };
-
-  log.debug(options, pv, accessToken, msg);
-
   var urlOptions = _.cloneDeep(flowObject.formData);
 
-  // evaluating url
-  // TODO : change eval to sandbox
-  // eslint-disable-next-line
-  var _url = eval('`' + urlOptions.url + '`');
-  // urlOptions.url = _url;
-  urlOptions.url = _url;
-
-  // evaluating body
-  if (urlOptions.json) {
-    var _json;
-    let expr = '_json = ' + urlOptions.json;
-
-    // TODO : change eval to sandbox
-    // eslint-disable-next-line
-    eval(expr);
-    urlOptions.json = _json;
-  }
-  // evaluating body
-  if (urlOptions.headers) {
-    var _headers;
-    let expr = '_headers = ' + urlOptions.headers;
-
-    // TODO : change eval to sandbox
-    // eslint-disable-next-line
-    eval(expr);
-    urlOptions.headers = _headers;
-  }
-
-  var qs = flowObject.queryString;
-  if (qs) {
-    urlOptions.qs = qs;
+  // evaluating url, headers & json
+  try {
+    if (urlOptions.url) {
+      urlOptions.url = sandbox.evaluateExpression(options, '`' + urlOptions.url + '`', message, process);
+    }
+    if (urlOptions.headers) {
+      urlOptions.headers = sandbox.evaluateExpression(options, urlOptions.headers, message, process);
+    }
+    if (urlOptions.json) {
+      urlOptions.json = sandbox.evaluateExpression(options, urlOptions.json, message, process);
+    }
+  } catch (err) {
+    return done(null, {
+      error: err
+    });
   }
 
   // default timeout is now set to 20000 ms
