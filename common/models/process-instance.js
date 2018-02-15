@@ -449,14 +449,14 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-  ProcessInstance.prototype.recover = function recover() {
+  ProcessInstance.prototype.recover = function recover(iter,iterx) {
     var self = this;
     var tokens = self._processTokens;
     var options = self._workflowCtx;
     Object.keys(tokens).filter(function filterPendingTokens(tokenId) {
       return tokens[tokenId].status === 'pending';
     }).forEach(function continueWorkflow(tokenId) {
-      self.reemit(tokens[tokenId], options);
+      self.reemit(tokens[tokenId], options,null, iter, iterx);
     });
   };
 
@@ -482,7 +482,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-  ProcessInstance.prototype.reemit = function reemit(token, options, next) {
+  ProcessInstance.prototype.reemit = function reemit(token, options, next, iter, iterx) {
     var instance = this;
     next = next || function dummy() {};
 
@@ -546,6 +546,8 @@ module.exports = function ProcessInstance(ProcessInstance) {
             // in case of recovery if user task was not created but token exists then we need to emit token
             ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
           }
+          console.log('user task check complete batch : ',iter, " & count : ",iterx);
+          // console.log('user task check complete : ',iter, tasks[0].id, tasks[0].name);
         });
       } else {
         ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
