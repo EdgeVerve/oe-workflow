@@ -17,7 +17,6 @@ var log = bootstrap.log();
 var MongoClient = require('mongodb').MongoClient;
 var mongoHost = process.env.MONGO_HOST || 'localhost';
 var dbName = process.env.DB_NAME || 'commondb';
-var ObjectID = require('mongodb').ObjectID;
 
 describe('Test case for Workflow Recovery', function CB() {
   this.timeout(100000);

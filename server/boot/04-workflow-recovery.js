@@ -11,8 +11,6 @@
 var logger = require('oe-logger');
 var log = logger('workflow-recovery.boot');
 var recoveryConfig = require('../wf-recovery-config.json');
-var EventEmitter = require('events');
-var emitter = new EventEmitter();
 
 module.exports = function attachWorkFlows(app) {
   var ProcessInstance = app.models.ProcessInstance;
@@ -31,11 +29,11 @@ module.exports = function attachWorkFlows(app) {
   // recovery process of all the process instances.
   // If error in creating the entry because it is already existing , we will
   // just return and will not continue to the boot recovery process.
-  workflowMonitor.create({"id": "node"}, options, function acquireLock(err, inst){
+  workflowMonitor.create({'id': 'node'}, options, function acquireLock(err, inst) {
     if (err) {
       log.error(options, err);
       return;
-      // Check the error  
+      // Check the error
     }
     ProcessInstance.find({
       where: {
@@ -84,12 +82,12 @@ module.exports = function attachWorkFlows(app) {
             log.error(options, err);
             return;
           }
-          for (var i=0; i<processes.length; i++) {
+          for (var i = 0; i < processes.length; i++) {
             var process = processes[i];
             var processVersion = process._version;
-            setTimeout(function (process, ProcessInstance, options, processVersion){
-              return function () {
-                ProcessInstance.find({"where": {"id": process.id}}, options, function (err, pInstance){
+            setTimeout((function setTimeoutCb(process, ProcessInstance, options, processVersion) {
+              return function wrappedFn() {
+                ProcessInstance.find({'where': {'id': process.id}}, options, function fetchPI(err, pInstance) {
                   if (err) {
                     log.error(options, err);
                     return;
@@ -100,24 +98,22 @@ module.exports = function attachWorkFlows(app) {
                     // Do nothing some other node is handling the process Instance.
                   }
                 });
-
-              }
-            } (process, ProcessInstance, options, processVersion), updateInterval)
+              };
+            }(process, ProcessInstance, options, processVersion)), updateInterval);
           }
         });
         iter += 1;
       }, BATCH_TIME);
     });
-    setTimeout(function (inst, workflowMonitor, options) {
-      return function() {
-        workflowMonitor.destroyById(inst.id, options, function(err, inst) {
+    setTimeout((function setTimeoutCb(inst, workflowMonitor, options) {
+      return function wrappedFn() {
+        workflowMonitor.destroyById(inst.id, options, function destroyWMI(err, inst) {
           if (err) {
             log.error(err);
             return;
           }
         });
-      }
-    }(inst, workflowMonitor, options), 2*updateInterval);
+      };
+    }(inst, workflowMonitor, options)), 2 * updateInterval);
   });
 };
-

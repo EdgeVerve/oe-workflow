@@ -16,7 +16,6 @@ describe('Test case for Workflow Recovery', function CB() {
   this.timeout(1000000);
   // var name = 'loop-workaround';
   var name = 'workflow-recovery';
-  var testVars = {};
 
   it('should start recovery', function cb(done) {
     // now wait for some time to recover
