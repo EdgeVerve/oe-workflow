@@ -276,8 +276,19 @@ Delta.prototype.apply = function apply(zInstance, options) {
     interruptAllTokens(updates._processTokens);
   }
 
+  updates['passive-wait'] = true;
+  Object.values(updates._processTokens).forEach(token => {
+    if (token.bpmnId.indexOf('UserTask') !== 0) {
+      if (token.status === 'pending') {
+        updates['passive-wait'] = false;
+      }
+    }
+  });
+
   if (processEnded || this.isForceEndToken) {
     updates[status] = 'complete';
+    // passive wait can't be true if process is already complete
+    updates['passive-wait'] = false;
   }
   if (this.revertProcessToPending) {
     updates[status] = 'pending';
