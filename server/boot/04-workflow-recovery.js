@@ -23,7 +23,11 @@ module.exports = function attachWorkFlows(app) {
 
   ProcessInstance.find({
     where: {
-      '_status': 'running'
+      'and': [{
+        '_status': 'running'
+      }, {
+        'passive-wait': false
+      }]
     },
     fields: {
       'id': true
@@ -50,9 +54,7 @@ module.exports = function attachWorkFlows(app) {
 
     var NUM_PROCESSES = processes.length;
     var iter = 0;
-    var riter = 0;
-    console.log('Total batches : ',NUM_PROCESSES/BATCH_SIZE);
-    var interval = setInterval(function () {
+    var interval = setInterval(function cb() {
       let start = iter * BATCH_SIZE;
       let end = (iter + 1) * BATCH_SIZE;
       if (end >= NUM_PROCESSES) {
@@ -61,22 +63,16 @@ module.exports = function attachWorkFlows(app) {
       }
 
       let filter = buildFilter(start, end);
-      console.log('Batch started : ',iter);
       ProcessInstance.find(filter, options, function fetchPendingPI(err, processes) {
         if (err) {
           log.error(options, err);
           return;
         }
-        console.log('Recovery started : ',riter);
-        riter++;
-        let iterx=0;
         processes.forEach(process => {
-          process.recover(riter,iterx);
-          iterx++;
-        })
+          process.recover();
+        });
       });
       iter += 1;
     }, BATCH_TIME);
-
   });
 };
