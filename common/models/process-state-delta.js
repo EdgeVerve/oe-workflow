@@ -346,7 +346,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
       var tokenId = this.tokensToInterrupt[x];
       if (tokens[tokenId].status !== 'pending') {
         // while updating boundary event, we might not be able to interrupt due to some other process, should never come though
-        log.error(log.defaultContext(), 'unable to interrupt token > ' + tokens[this.tokenToTerminate].name);
+        log.error(log.defaultContext(), 'unable to interrupt token > ' + tokens[tokenId].name);
         continue;
       }
       tokens[tokenId].status = 'interrupted';
