@@ -66,7 +66,7 @@ describe('Test case1 for boundary interrupting', function callback() {
     models.ProcessInstance.findById(testVars.mainProcess.id, bootstrap.defaultContext, function callback(err, instance) {
       assert.isNotNull(instance);
       testVars.mainProcess = instance;
-      console.log(JSON.stringify(instance,null,'\t'));
+      console.log(JSON.stringify(instance, null, '\t'));
       done(err);
     });
   });
