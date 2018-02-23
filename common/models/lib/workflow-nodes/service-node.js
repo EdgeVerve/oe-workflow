@@ -238,7 +238,8 @@ function makeRESTCalls(urlOptions, retry, callback) {
  * @returns  {void}
  */
 function evaluateOEConnector(options, flowObject, message, process, done) {
-  var modelName = evaluateProp(flowObject.props.model, message, process, options);
+  // var modelName = evaluateProp(flowObject.props.model, message, process, options);
+  var modelName = flowObject.props.model;
   var operation = flowObject.props.method;
   try {
     var model = loopback.getModel(modelName, options);
@@ -249,61 +250,32 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     });
   }
   var id;
-  var data;
+  var data = [];
 
-  if (operation === 'create') {
-    data = evaluateJSON(flowObject.props.data, message, process, options);
-    model.create(data, options, function createMI(err, res) {
+  if (operation && model){
+    if(typeof flowObject.props.data !== 'undefined') {
+      data = JSON.parse(flowObject.props.data);
+    }
+    model[operation](...data, options, function evalCB(err, res){
       if (err) {
         log.error(options, err);
         return done(null, {
           error: err
         });
       }
-      return done(null, res.toObject());
-    });
-  } else if (operation === 'read') {
-    // id = evaluateProp(flowObject.props.modelId, message, process, options);
-    var filter = evaluateJSON(flowObject.props.filter, message, process, options);
-    model.find(filter, options, function fetchMI(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
+      var result = res;
+      if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
+        return done(null, result.toObject());
+      } else {
+        var _res = [];
+        for (var i = 0; i < res.length; i++) {
+          _res.push(res[i].toObject());
+        }
+        return done(null, _res);
       }
-      var _res = [];
-      for (var i = 0; i < res.length; i++) {
-        _res.push(res[i].toObject());
-      }
-      return done(null, _res);
-    });
-  } else if (operation === 'update') {
-    id = evaluateProp(flowObject.props.modelId, message, process, options);
-    data = evaluateJSON(flowObject.props.data, message, process, options);
-    data.id = id;
-    model.upsert(data, options, function updateMI(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
-      }
-      return done(null, res.toObject());
-    });
-  } else if (operation === 'delete') {
-    id = evaluateProp(flowObject.props.modelId, message, process, options);
-    var version = evaluateProp(flowObject.props.modelVersion, message, process, options);
-    model.deleteWithVersion(id, version, options, function deleteMI(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
-      }
-      return done(null, res);
     });
   }
+  return;
 }
 
 
