@@ -42,6 +42,8 @@ describe('Test case1 for boundary interrupting', function callback() {
   it('create workflow instance ', function callback(done) {
     var data = { 'workflowDefinitionName': name };
     models.WorkflowInstance.create(data, bootstrap.defaultContext, function callback(err, instance) {
+      console.log('err: ', JSON.stringify(err, null, '\t'));
+      console.log('instance: ', JSON.stringify(instance, null, '\t'));
       if (err) {
         return done(err);
       }
