@@ -277,6 +277,12 @@ Delta.prototype.apply = function apply(zInstance, options) {
   }
 
   updates['passive-wait'] = true;
+  // backward compatibility in ci
+  Object.values = function values(obj) {
+    return Object.keys(obj).map( key => {
+      return obj[key];
+    });
+  };
   Object.values(updates._processTokens).forEach(token => {
     if (token.bpmnId.indexOf('UserTask') !== 0) {
       if (token.status === 'pending') {
