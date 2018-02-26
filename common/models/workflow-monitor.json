@@ -1,0 +1,26 @@
+
+{
+  "name": "WorkflowMonitor",
+  "base": "BaseEntity",
+  "description": "To monitor the execution of boot script execution",
+  "plural" : "WorkflowMonitors",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins" :{
+    "SoftDeleteMixin": false
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "id": true
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "methods": {},
+  "acls" : []
+}

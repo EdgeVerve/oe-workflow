@@ -276,8 +276,25 @@ Delta.prototype.apply = function apply(zInstance, options) {
     interruptAllTokens(updates._processTokens);
   }
 
+  updates['passive-wait'] = true;
+  // backward compatibility in ci
+  Object.values = function values(obj) {
+    return Object.keys(obj).map( key => {
+      return obj[key];
+    });
+  };
+  Object.values(updates._processTokens).forEach(token => {
+    if (token.bpmnId.indexOf('UserTask') !== 0) {
+      if (token.status === 'pending') {
+        updates['passive-wait'] = false;
+      }
+    }
+  });
+
   if (processEnded || this.isForceEndToken) {
     updates[status] = 'complete';
+    // passive wait can't be true if process is already complete
+    updates['passive-wait'] = false;
   }
   if (this.revertProcessToPending) {
     updates[status] = 'pending';
@@ -335,7 +352,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
       var tokenId = this.tokensToInterrupt[x];
       if (tokens[tokenId].status !== 'pending') {
         // while updating boundary event, we might not be able to interrupt due to some other process, should never come though
-        log.error(log.defaultContext(), 'unable to interrupt token > ' + tokens[this.tokenToTerminate].name);
+        log.error(log.defaultContext(), 'unable to interrupt token > ' + tokens[tokenId].name);
         continue;
       }
       tokens[tokenId].status = 'interrupted';

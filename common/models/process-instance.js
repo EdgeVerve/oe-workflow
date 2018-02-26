@@ -316,7 +316,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       for (i = 0; i < boundaryEvents.length; i++) {
         var boundaryEvent = boundaryEvents[i];
         var boundaryEventToken = self.getTokenByFlowObject(boundaryEvent);
-        if (boundaryEventToken && self.isPending(boundaryEventToken)) {
+        if (boundaryEventToken && boundaryEventToken.status === 'pending') {
           delta.setTokenToInterrupt(boundaryEventToken.id);
         }
       }
@@ -456,7 +456,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     Object.keys(tokens).filter(function filterPendingTokens(tokenId) {
       return tokens[tokenId].status === 'pending';
     }).forEach(function continueWorkflow(tokenId) {
-      self.reemit(tokens[tokenId], options);
+      self.reemit(tokens[tokenId], options, null);
     });
   };
 
@@ -676,7 +676,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var self = this;
     var processTokens = self._processTokens;
     for (var i in processTokens) {
-      if (Object.prototype.hasOwnProperty.call(processTokens, i) && processTokens[i].bpmnId === flowobject.bpmnId) {
+      if (Object.prototype.hasOwnProperty.call(processTokens, i) && processTokens[i].bpmnId === flowobject.bpmnId && processTokens[i].status === 'pending') {
         return processTokens[i];
       }
     }
