@@ -13,8 +13,8 @@
       <bpmn2:extensionElements>
         <camunda:oeConnector>
           <camunda:model>Product</camunda:model>
-          <camunda:method>read</camunda:method>
-          <camunda:modelId>p002</camunda:modelId>
+          <camunda:method>findById</camunda:method>
+          <camunda:args>![CDATA[["pid002"]]]</camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

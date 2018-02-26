@@ -59,6 +59,9 @@ var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
     _output: null
   };
 
+  if (typeof data !== 'string') {
+    data = JSON.stringify(data);
+  }
   var script = '_output = ' + data;
   // eslint-disable-next-line
   var context = new vm.createContext(sandbox);
@@ -238,8 +241,8 @@ function makeRESTCalls(urlOptions, retry, callback) {
  * @returns  {void}
  */
 function evaluateOEConnector(options, flowObject, message, process, done) {
-  // var modelName = evaluateProp(flowObject.props.model, message, process, options);
-  var modelName = flowObject.props.model;
+  var modelName = evaluateProp(flowObject.props.model, message, process, options);
+  // var modelName = flowObject.props.model;
   var operation = flowObject.props.method;
   try {
     var model = loopback.getModel(modelName, options);
@@ -250,13 +253,10 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     });
   }
   var id;
-  var data = [];
-
+  var data = flowObject.props.data;
   if (operation && model){
-    if(typeof flowObject.props.data !== 'undefined') {
-      data = JSON.parse(flowObject.props.data);
-    }
-    model[operation](...data, options, function evalCB(err, res){
+    data = evaluateJSON(data, message, process, options);
+    model[operation](data[0], options, function evalCB(err, res){
       if (err) {
         log.error(options, err);
         return done(null, {
@@ -265,7 +265,11 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       }
       var result = res;
       if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
-        return done(null, result.toObject());
+        if (typeof result.toObject !== 'undefined') {
+          return done(null, result.toObject());
+        } else {
+          return done(null, result);
+        }
       } else {
         var _res = [];
         for (var i = 0; i < res.length; i++) {

@@ -13,9 +13,8 @@
       <bpmn2:extensionElements>
         <camunda:oeConnector>
           <camunda:model>ProductE</camunda:model>
-          <camunda:method>update</camunda:method>
-          <camunda:modelId>p009</camunda:modelId>
-          <camunda:modelData><![CDATA[{ "name" : "pepsodent", "_version" : pv("prevVersion") }]]></camunda:modelData>
+          <camunda:method>upsert</camunda:method>
+          <camunda:args><![CDATA[[{"id": "p009", "name" : "pepsodent", "_version" : pv("prevVersion") }]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>
