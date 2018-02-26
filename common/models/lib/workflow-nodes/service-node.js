@@ -252,11 +252,10 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       error: err
     });
   }
-  var id;
   var data = flowObject.props.data;
-  if (operation && model){
+  if (operation && model) {
     data = evaluateJSON(data, message, process, options);
-    model[operation](data[0], options, function evalCB(err, res){
+    model[operation](data[0], options, function evalCB(err, res) {
       if (err) {
         log.error(options, err);
         return done(null, {
@@ -267,16 +266,14 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
         if (typeof result.toObject !== 'undefined') {
           return done(null, result.toObject());
-        } else {
-          return done(null, result);
         }
-      } else {
-        var _res = [];
-        for (var i = 0; i < res.length; i++) {
-          _res.push(res[i].toObject());
-        }
-        return done(null, _res);
+        return done(null, result);
       }
+      var _res = [];
+      for (var i = 0; i < res.length; i++) {
+        _res.push(res[i].toObject());
+      }
+      return done(null, _res);
     });
   }
   return;
