@@ -319,7 +319,6 @@ function extractFormField(formFieldObject) {
  */
 function addOeConnectorAttributes(ConnectorObject) {
   var props = {};
-
   if (typeof ConnectorObject !== 'undefined') {
     if (ConnectorObject.hasOwnProperty('camunda:model')) {
       props.model = ConnectorObject['camunda:model'].text;
@@ -327,17 +326,10 @@ function addOeConnectorAttributes(ConnectorObject) {
     if (ConnectorObject.hasOwnProperty('camunda:method')) {
       props.method = ConnectorObject['camunda:method'].text;
     }
-    if (ConnectorObject.hasOwnProperty('camunda:modelData')) {
-      props.data = ConnectorObject['camunda:modelData'].text;
-    }
-    if (ConnectorObject.hasOwnProperty('camunda:modelId')) {
-      props.modelId = ConnectorObject['camunda:modelId'].text;
-    }
-    if (ConnectorObject.hasOwnProperty('camunda:modelVersion')) {
-      props.modelVersion = ConnectorObject['camunda:modelVersion'].text;
+    if (ConnectorObject.hasOwnProperty('camunda:args')) {
+      props.data = ConnectorObject['camunda:args'].text;
     }
   }
-
   return props;
 }
 

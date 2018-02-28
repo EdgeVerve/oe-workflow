@@ -59,6 +59,9 @@ var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
     _output: null
   };
 
+  if (typeof data !== 'string') {
+    data = JSON.stringify(data);
+  }
   var script = '_output = ' + data;
   // eslint-disable-next-line
   var context = new vm.createContext(sandbox);
@@ -239,6 +242,7 @@ function makeRESTCalls(urlOptions, retry, callback) {
  */
 function evaluateOEConnector(options, flowObject, message, process, done) {
   var modelName = evaluateProp(flowObject.props.model, message, process, options);
+  // var modelName = flowObject.props.model;
   var operation = flowObject.props.method;
   try {
     var model = loopback.getModel(modelName, options);
@@ -248,29 +252,22 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       error: err
     });
   }
-  var id;
-  var data;
-
-  if (operation === 'create') {
-    data = evaluateJSON(flowObject.props.data, message, process, options);
-    model.create(data, options, function createMI(err, res) {
+  var data = flowObject.props.data;
+  if (operation && model) {
+    data = evaluateJSON(data, message, process, options);
+    model[operation](data[0], options, function evalCB(err, res) {
       if (err) {
         log.error(options, err);
         return done(null, {
           error: err
         });
       }
-      return done(null, res.toObject());
-    });
-  } else if (operation === 'read') {
-    // id = evaluateProp(flowObject.props.modelId, message, process, options);
-    var filter = evaluateJSON(flowObject.props.filter, message, process, options);
-    model.find(filter, options, function fetchMI(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
+      var result = res;
+      if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
+        if (typeof result.toObject !== 'undefined') {
+          return done(null, result.toObject());
+        }
+        return done(null, result);
       }
       var _res = [];
       for (var i = 0; i < res.length; i++) {
@@ -278,32 +275,8 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       }
       return done(null, _res);
     });
-  } else if (operation === 'update') {
-    id = evaluateProp(flowObject.props.modelId, message, process, options);
-    data = evaluateJSON(flowObject.props.data, message, process, options);
-    data.id = id;
-    model.upsert(data, options, function updateMI(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
-      }
-      return done(null, res.toObject());
-    });
-  } else if (operation === 'delete') {
-    id = evaluateProp(flowObject.props.modelId, message, process, options);
-    var version = evaluateProp(flowObject.props.modelVersion, message, process, options);
-    model.deleteWithVersion(id, version, options, function deleteMI(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
-      }
-      return done(null, res);
-    });
   }
+  return;
 }
 
 

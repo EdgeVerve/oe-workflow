@@ -12,9 +12,9 @@
     <bpmn2:serviceTask id="ServiceTask_17i2ysj" name="Create Model Instance">
       <bpmn2:extensionElements>
         <camunda:oeConnector>
-          <camunda:model>ProductE</camunda:model>
+          <camunda:model>ProductE1</camunda:model>
           <camunda:method>create</camunda:method>
-          <camunda:modelData><![CDATA[{ "id" : "p001", "name" : "himalaya", "price" : 123 }]]></camunda:modelData>
+          <camunda:args><![CDATA[[{ "id" : "p001", "name" : "himalaya", "price" : 123 }]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>
