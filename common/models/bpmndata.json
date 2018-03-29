@@ -1,7 +1,7 @@
 {
   "name": "bpmndata",
   "base": "BaseEntity",
-  "description" : "Contains XML data of BPMN workflows",
+  "description": "Contains XML data of BPMN workflows",
   "idInjection": true,
   "options": {
     "validateUpsert": true
@@ -16,18 +16,21 @@
     },
     "xmldata": {
       "type": "string",
-      "required": true
+      "required": true,
+      "oracle": {
+        "dataType": "CLOB"
+      }
     }
   },
   "validations": [],
   "relations": {},
   "acls": [],
   "methods": {
-    "processDefinitions" : {
+    "processDefinitions": {
       "type": "hasMany",
       "model": "ProcessDefinition"
     },
-    "workflowDefinition" : {
+    "workflowDefinition": {
       "type": "hasOne",
       "model": "WorkflowDefinition"
     }
