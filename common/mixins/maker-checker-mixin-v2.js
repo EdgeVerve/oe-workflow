@@ -612,21 +612,21 @@ function addOERemoteMethods(Model) {
         let relation = Model.relations[r];
         childData = data[r];
         delete parentData[r];
-        if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
+        if (relation.type && (relation.type === 'hasMany' || relation.type === 'embedsMany') && typeof data[r] !== 'undefined') {
           for (let i = 0; i < data[r].length; i++) {
             let _relObj = {
               Model: relation.modelTo,
               data: data[r][i],
-              type: 'hasMany',
+              type: relation.type,
               relationName: r
             };
             relations.push(_relObj);
           }
-        } else if (relation.type && relation.type === 'hasOne' && typeof data[r] !== 'undefined') {
+        } else if (relation.type && (relation.type === 'hasOne' || relation.type === 'embedsOne') && typeof data[r] !== 'undefined') {
           let _relObj = {
             Model: relation.modelTo,
             data: data[r],
-            type: 'hasOne',
+            type: relation.type,
             relationName: r
           };
           relations.push(_relObj);
@@ -664,7 +664,7 @@ function addOERemoteMethods(Model) {
           }
           for (let i = 0; i < relations.length; i++) {
             let relationName = relations[i].relationName;
-            if (relations[i].type === 'hasMany') {
+            if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
                 _usedFields.push(relationName);
                 _data[relationName] = [];
@@ -737,7 +737,7 @@ function addOERemoteMethods(Model) {
           }
           for (let i = 0; i < relations.length; i++) {
             let relationName = relations[i].relationName;
-            if (relations[i].type === 'hasMany') {
+            if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
                 _usedFields.push(relationName);
                 _data[relationName] = [];
