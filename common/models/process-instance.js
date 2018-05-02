@@ -151,7 +151,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       var tokens = self._processTokens;
       var token = null;
       for (var i in tokens) {
-        if (tokens[i].name === taskObj.name) {
+        if (Object.prototype.hasOwnProperty.call(tokens, i) && tokens[i].name === taskObj.name) {
           token = tokens[i];
         }
       }
@@ -227,79 +227,88 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
     var nextFlowObjects = TokenEmission.getNextFlowObjects(currentFlowObject, message,
                                                             processDefinitionInstance, self, options);
-    for (var i in nextFlowObjects) {
-      if (Object.prototype.hasOwnProperty.call(nextFlowObjects, i)) {
-        var obj = nextFlowObjects[i];
-        var meta;
-
-        if (obj.isParallelGateway) {
-          meta = {
-            type: 'ParallelGateway',
-            gwId: obj.bpmnId
-          };
-        } else if (obj.isAttachedToEventGateway) {
-          meta = {
-            type: 'EventGateway',
-            tokensToInterrupt: obj.attachedFlowObjects
-          };
-        }
-
-        var token = processTokens.createToken(obj.name, obj.bpmnId, message, meta);
-
-        if (obj.isParallelGateway) {
-          delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
-          delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
-        }
-
-        if (obj.isMultiInstanceLoop) {
-          try {
-            if (obj.hasCollection) {
-              var collection = sandbox.evaluateAccessExpression(options, obj.collection, message, self);
-              if (typeof collection === 'undefined') {
-                throw new Error('collection in multi instance is undefined.');
-              }
-              if (collection.constructor.name !== 'Array') {
-                throw new Error('defined collection in multi instance is not an arary');
-              }
-              token.nrOfInstances = collection.length;
-              token.collection = collection;
-              token.elementVariable = obj.elementVariable;
-            } else if (obj.hasLoopCardinality) {
-              var loopcounter = sandbox.evaluate$Expression(options, obj.loopcounter, message, self);
-              token.nrOfInstances = Number(loopcounter);
-            } else {
-              throw new Error('invalid multi instance specification error');
-            }
-          } catch (err) {
-            log.error(options, err);
-            return next(err);
-          }
-
-          if (obj.isSequential) {
-            token.nrOfActiveInstances = 1;
-            token.isSequential = true;
-          } else {
-            token.nrOfActiveInstances = token.nrOfInstances;
-            token.isParallel = true;
-          }
-
-          if (obj.hasCompletionCondition) {
-            token.hasCompletionCondition = true;
-            token.completionCondition = obj.completionCondition;
-          }
-
-          token.nrOfCompleteInstances = 0;
-        }
-
-        log.debug(options, token);
-        if (token === null) {
-          log.error(options, 'Invalid token');
-          return next(new Error('Invalid token'));
-        }
-        delta.addToken(token);
+    if (message && message.error) {
+      let failure = {};
+      var props = Object.getOwnPropertyNames(message.error);
+      for (let i = 0; i < props.length; i++) {
+        failure[props[i]] = message.error[props[i]];
       }
+      delta.setTokenToFail(flowObjectToken.id, failure);
+    } else {
+      for (var i in nextFlowObjects) {
+        if (Object.prototype.hasOwnProperty.call(nextFlowObjects, i)) {
+          var obj = nextFlowObjects[i];
+          var meta;
+
+          if (obj.isParallelGateway) {
+            meta = {
+              type: 'ParallelGateway',
+              gwId: obj.bpmnId
+            };
+          } else if (obj.isAttachedToEventGateway) {
+            meta = {
+              type: 'EventGateway',
+              tokensToInterrupt: obj.attachedFlowObjects
+            };
+          }
+
+          var token = processTokens.createToken(obj.name, obj.bpmnId, message, meta);
+
+          if (obj.isParallelGateway) {
+            delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
+            delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
+          }
+
+          if (obj.isMultiInstanceLoop) {
+            try {
+              if (obj.hasCollection) {
+                var collection = sandbox.evaluateExpression(options, obj.collection, message, self);
+                if (typeof collection === 'undefined') {
+                  throw new Error('collection in multi instance is undefined.');
+                }
+                if (collection.constructor.name !== 'Array') {
+                  throw new Error('defined collection in multi instance is not an arary');
+                }
+                token.nrOfInstances = collection.length;
+                token.collection = collection;
+                token.elementVariable = obj.elementVariable;
+              } else if (obj.hasLoopCardinality) {
+                var loopcounter = sandbox.evaluate$Expression(options, obj.loopcounter, message, self);
+                token.nrOfInstances = Number(loopcounter);
+              } else {
+                throw new Error('invalid multi instance specification error');
+              }
+            } catch (err) {
+              log.error(options, err);
+              return next(err);
+            }
+
+            if (obj.isSequential) {
+              token.nrOfActiveInstances = 1;
+              token.isSequential = true;
+            } else {
+              token.nrOfActiveInstances = token.nrOfInstances;
+              token.isParallel = true;
+            }
+
+            if (obj.hasCompletionCondition) {
+              token.hasCompletionCondition = true;
+              token.completionCondition = obj.completionCondition;
+            }
+
+            token.nrOfCompleteInstances = 0;
+          }
+
+          log.debug(options, token);
+          if (token === null) {
+            log.error(options, 'Invalid token');
+            return next(new Error('Invalid token'));
+          }
+          delta.addToken(token);
+        }
+      }
+      delta.setTokenToRemove(flowObjectToken.id);
     }
-    delta.setTokenToRemove(flowObjectToken.id);
 
     // add boundary event tokens to interrupt for the currentFlowObject that we are completing, if any
     if (processDefinitionInstance.processDefinition.boundaryEventsByAttachmentIndex[flowObjectToken.bpmnId]) {
@@ -307,7 +316,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       for (i = 0; i < boundaryEvents.length; i++) {
         var boundaryEvent = boundaryEvents[i];
         var boundaryEventToken = self.getTokenByFlowObject(boundaryEvent);
-        if (boundaryEventToken && self.isPending(boundaryEventToken)) {
+        if (boundaryEventToken && boundaryEventToken.status === 'pending') {
           delta.setTokenToInterrupt(boundaryEventToken.id);
         }
       }
@@ -447,7 +456,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     Object.keys(tokens).filter(function filterPendingTokens(tokenId) {
       return tokens[tokenId].status === 'pending';
     }).forEach(function continueWorkflow(tokenId) {
-      self.reemit(tokens[tokenId], options);
+      self.reemit(tokens[tokenId], options, null);
     });
   };
 
@@ -587,17 +596,17 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
   };
 
-    /**
-     * Finding a processToken if the name of the flow Object is given
-     * @param  {Object} flowObject FlowObject
-     * @return {Object}            Process-Token
-     */
+  /**
+   * Finding a processToken if the name of the flow Object is given
+   * @param  {Object} flowObject FlowObject
+   * @return {Object} Process-Token
+   */
   ProcessInstance.prototype.findToken = function findToken(flowObject) {
     var self = this;
     var token = null;
     var name = 'name';
     for (var key in self._processTokens) {
-      if (self._processTokens[key][name] === flowObject[name]) {
+      if (Object.prototype.hasOwnProperty.call(self._processTokens, key) && self._processTokens[key][name] === flowObject[name]) {
         token = self._processTokens[key];
       }
     }
@@ -663,11 +672,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-  ProcessInstance.prototype.getTokenByFlowObject = function getFlowObjectByToken(flowobject) {
+  ProcessInstance.prototype.getTokenByFlowObject = function getTokenByFlowObject(flowobject) {
     var self = this;
     var processTokens = self._processTokens;
     for (var i in processTokens) {
-      if (processTokens[i].bpmnId === flowobject.bpmnId) {
+      if (Object.prototype.hasOwnProperty.call(processTokens, i) && processTokens[i].bpmnId === flowobject.bpmnId && processTokens[i].status === 'pending') {
         return processTokens[i];
       }
     }
@@ -739,4 +748,251 @@ module.exports = function ProcessInstance(ProcessInstance) {
       }
     });
   };
+
+  ProcessInstance.prototype.revertProcessToPending = function revertProcessToPending(tokenId, variables, options, next) {
+    var self = this;
+    var delta = new StateDelta();
+    variables = variables || [];
+
+    Object.keys(variables).forEach(function addToDelta(key) {
+      delta.addProcessVariable(key, variables[key]);
+    });
+    delta.setTokenToPending(tokenId);
+
+    self.commit(options, delta, function commit(err, instance) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+      return next(null, instance);
+    });
+  };
+
+  ProcessInstance.prototype.failureTokens = function failureTokens(options, next) {
+    var inst = this;
+    // backward compatibility in ci
+    Object.values = function values(obj) {
+      return Object.keys(obj).map( key => {
+        return obj[key];
+      });
+    };
+    var tokens = Object.values(inst._processTokens).filter( token => {
+      return token.status === 'failed';
+    });
+    return next(null, tokens);
+  };
+
+  ProcessInstance.retryAll = function retryAll(filter, data, options, next) {
+    filter = filter || {};
+    data = data || {};
+    ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+
+      // backward compatibility in ci
+      Object.values = function values(obj) {
+        return Object.keys(obj).map( key => {
+          return obj[key];
+        });
+      };
+      var dummyCb = function dummyCb() {};
+      insts.forEach(inst => {
+        Object.values(inst._processTokens).filter(token => {
+          return token.status === 'failed';
+        }).forEach(token => {
+          inst.retry(token.id, data, options, dummyCb);
+        });
+      });
+
+      return next(null, {
+        emitted: true
+      });
+    });
+  };
+
+  ProcessInstance.failures = function failures(filter, options, next) {
+    filter = filter || {};
+    if (filter.bpmnData === true) {
+      filter.include = { 'processDefinition': 'bpmndata' };
+    }
+    ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
+      if (err) {
+        log.error(options, err);
+        return next(err);
+      }
+
+      if (filter.bpmnData === true) {
+        insts = insts.map(inst => {
+          inst.bpmndata = inst.toObject().processDefinition.bpmndata;
+          delete inst.processDefinition;
+          return inst;
+        });
+      }
+      delete filter.bpmndata;
+
+      // backward compatibility in ci
+      Object.values = function values(obj) {
+        return Object.keys(obj).map( key => {
+          return obj[key];
+        });
+      };
+      return next(null, insts.filter( inst => {
+        return Object.values(inst._processTokens).filter( token => {
+          return token.status === 'failed';
+        }).length > 0;
+      }));
+    });
+  };
+
+  ProcessInstance.prototype.retry = function retry(tokenId, data, options, next) {
+    var self = this;
+    var { processVariables } = data;
+    var tokens = self._processTokens;
+    // backward compatibility in ci
+    Object.values = function values(obj) {
+      return Object.keys(obj).map( key => {
+        return obj[key];
+      });
+    };
+    var filteredTokens = Object.values(tokens).filter( t => {
+      return t.id === tokenId;
+    });
+    if (filteredTokens.length !== 1) {
+      let err = new Error('TokenId is incorrect.');
+      log.error(options, err);
+      return next(err);
+    }
+    var token = filteredTokens[0];
+    if (token.status !== 'failed') {
+      let err = new Error('Token is not in failed status.');
+      // status code 428 for Precondition Required
+      err.statusCode = 428;
+      log.error(options, err);
+      return next(err);
+    }
+
+    return new Promise((resolve, reject) => {
+      self.revertProcessToPending(token.id, processVariables, options, function cb(err, instance) {
+        if (err) {
+          return reject(err);
+        }
+        resolve(instance);
+      });
+    })
+    .then(process => {
+      // updated process is available with latest process variables and pending state
+      return new Promise((resolve, reject) => {
+        process.reemit(token, options, function cb(err) {
+          if (err) {
+            return reject(err);
+          }
+          return resolve({
+            'emitted': true
+          });
+        });
+      });
+    })
+    .then(function done(response) {
+      return next(null, response);
+    })
+    .catch(function errCb(err) {
+      log.error(options, err);
+      return next(err);
+    });
+  };
+
+  ProcessInstance.remoteMethod('failures', {
+    accessType: 'READ',
+    accepts: {
+      arg: 'filter',
+      type: 'object',
+      http: {
+        source: 'query'
+      },
+      description: 'Filter defining fields, where, include, order, offset'
+    },
+    description: 'Find all failed process instances.',
+    http: {
+      verb: 'get'
+    },
+    isStatic: true,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
+  ProcessInstance.remoteMethod('retryAll', {
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'filter',
+      type: 'object',
+      http: {
+        source: 'query'
+      },
+      description: 'Filter defining fields, where, include, order, offset'
+    }, {
+      arg: 'data',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Update Process Variables'
+    }],
+    description: 'Retry all failed tokens in fetched Process Instances.',
+    http: {
+      verb: 'put',
+      path: '/retryAll'
+    },
+    isStatic: true,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
+  ProcessInstance.remoteMethod('failureTokens', {
+    accessType: 'READ',
+    description: 'Find failed tokens for a particular process instances',
+    http: {
+      verb: 'get',
+      path: '/failureTokens'
+    },
+    isStatic: false,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
+  ProcessInstance.remoteMethod('retry', {
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'tokenId',
+      type: 'string',
+      http: {
+        source: 'path'
+      },
+      description: 'Failed token id'
+    }, {
+      arg: 'data',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Update Process Variables'
+    }],
+    description: 'Retry a failed Task in a failed Process Instance.',
+    http: {
+      verb: 'put',
+      path: '/retry/:tokenId'
+    },
+    isStatic: false,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
 };

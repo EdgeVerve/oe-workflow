@@ -12,9 +12,9 @@
     <bpmn2:serviceTask id="ServiceTask_17i2ysj" name="Fetch Model Instance">
       <bpmn2:extensionElements>
         <camunda:oeConnector>
-          <camunda:model>Product</camunda:model>
+          <camunda:model>ProdctE</camunda:model>
           <camunda:method>findById</camunda:method>
-          <camunda:args>![CDATA[["pid002"]]]</camunda:args>
+          <camunda:args>![CDATA[[p002]]]</camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

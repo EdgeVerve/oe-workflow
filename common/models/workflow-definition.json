@@ -37,6 +37,11 @@
     "processDefinitions" : {
       "type": "hasMany",
       "model": "ProcessDefinition"
+    },
+    "bpmnData": {
+      "type": "belongsTo",
+      "model": "bpmndata",
+      "foreignKey" : "bpmndataId"
     }
   },
   "acls": [],

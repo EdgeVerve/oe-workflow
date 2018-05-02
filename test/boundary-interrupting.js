@@ -46,7 +46,7 @@ describe('Test case1 for boundary interrupting', function callback() {
         return done(err);
       }
       testVars.mainWorkflowInstance = instance;
-      done();
+      setTimeout(done, 2000);
     });
   });
 
@@ -120,7 +120,7 @@ describe('Test case2 for boundary interrupting', function callback() {
         return done(err);
       }
       testVars.mainWorkflowInstance = instance;
-      done();
+      setTimeout(done, 2000);
     });
   });
 

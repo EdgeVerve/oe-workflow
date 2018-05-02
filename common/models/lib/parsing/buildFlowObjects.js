@@ -85,19 +85,21 @@ exports.createFlowObjects = function createFlowObjects(defObject) {
   };
   var flowObject;
   for (var flowObjectKey in defObject) {
-    if (flowObjectKey.indexOf('attributes') >= 0) {
-      continue;
-    }
-    if (defObject[flowObjectKey].constructor.name === 'Array') {
-      for (var element of defObject[flowObjectKey]) {
-        flowObject = element;
-        createFlowObject(flowObject, processElements);
+    if (Object.prototype.hasOwnProperty.call(defObject, flowObjectKey)) {
+      if (flowObjectKey.indexOf('attributes') >= 0) {
+        continue;
       }
-    } else if (defObject[flowObjectKey].constructor.name === 'Object') {
-      flowObject = defObject[flowObjectKey];
-      createFlowObject(flowObject, processElements);
-    } else {
-      log.error(log.defaultContext(), 'Flow object is neither array nor object');
+      if (defObject[flowObjectKey].constructor.name === 'Array') {
+        for (var element of defObject[flowObjectKey]) {
+          flowObject = element;
+          createFlowObject(flowObject, processElements);
+        }
+      } else if (defObject[flowObjectKey].constructor.name === 'Object') {
+        flowObject = defObject[flowObjectKey];
+        createFlowObject(flowObject, processElements);
+      } else {
+        log.error(log.defaultContext(), 'Flow object is neither array nor object');
+      }
     }
   }
   return processElements;

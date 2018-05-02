@@ -13,9 +13,8 @@
       <bpmn2:extensionElements>
         <camunda:oeConnector>
           <camunda:model>Product</camunda:model>
-          <camunda:method>delete</camunda:method>
-          <camunda:modelId>p002</camunda:modelId>
-          <camunda:modelVersion><![CDATA[pv("prevVersion")]]></camunda:modelVersion>
+          <camunda:method>deleteWithVersion</camunda:method>
+          <camunda:args><![CDATA[["p002", pv("prevVersion")]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

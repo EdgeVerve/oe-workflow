@@ -27,12 +27,21 @@ var Delta = module.exports = function Delta() {
   this.tokensToInterrupt = [];
 };
 
+Delta.prototype.setTokenToFail = function setTokenToFail(tokenId, error) {
+  this.tokenToFail = tokenId;
+  this.error = error;
+};
+
 Delta.prototype.addToken = function addToken(token) {
   this.tokens.push(token);
 };
 
 Delta.prototype.setTokenToRemove = function setTokenToRemove(tokenId) {
   this.tokenToRemove = tokenId;
+};
+
+Delta.prototype.setTokenToPending = function setTokenToPending(tokenId) {
+  this.tokensToPending = [tokenId];
 };
 
 Delta.prototype.setTokenToTerminate = function setTokenToTerminate(tokenId) {
@@ -141,8 +150,7 @@ Delta.prototype.apply = function apply(zInstance, options) {
     return null;
   }
 
-    // Instance has been terminated by some event.
-  if (instance._status !== 'running') {
+  if (instance._status === 'interrupted') {
     log.debug(log.defaultContext(), 'Trying to change state in an interrupted process.');
     return null;
   }
@@ -199,6 +207,14 @@ Delta.prototype.apply = function apply(zInstance, options) {
       // unable to evaluate complete condition, will be ignored
       log.error(options, new Error('Unable to evaluate completion condition.'));
     }
+  }
+
+  // reverting tokens to pending in case of retry
+  if (this.tokensToPending) {
+    this.tokensToPending.forEach( t => {
+      tokens[t].status = 'pending';
+      delete tokens[t].error;
+    });
   }
 
   if (setTocomplete) {
@@ -260,8 +276,28 @@ Delta.prototype.apply = function apply(zInstance, options) {
     interruptAllTokens(updates._processTokens);
   }
 
+  updates['passive-wait'] = true;
+  // backward compatibility in ci
+  Object.values = function values(obj) {
+    return Object.keys(obj).map( key => {
+      return obj[key];
+    });
+  };
+  Object.values(updates._processTokens).forEach(token => {
+    if (token.bpmnId.indexOf('UserTask') !== 0) {
+      if (token.status === 'pending') {
+        updates['passive-wait'] = false;
+      }
+    }
+  });
+
   if (processEnded || this.isForceEndToken) {
     updates[status] = 'complete';
+    // passive wait can't be true if process is already complete
+    updates['passive-wait'] = false;
+  }
+  if (this.revertProcessToPending) {
+    updates[status] = 'pending';
   }
 
   return updates;
@@ -275,6 +311,12 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
     }
   }
 
+  if (this.tokenToFail && tokens[this.tokenToFail]) {
+    var token = tokens[this.tokenToFail];
+    token.status = 'failed';
+    token.error = this.error;
+    token.endTime = new Date();
+  }
     /**
      * If token to remove is Parallel Gateway token, complete other parallel gateway tokens also * * * those which are waiting
      */
@@ -310,7 +352,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
       var tokenId = this.tokensToInterrupt[x];
       if (tokens[tokenId].status !== 'pending') {
         // while updating boundary event, we might not be able to interrupt due to some other process, should never come though
-        log.error(log.defaultContext(), 'unable to interrupt token > ' + tokens[this.tokenToTerminate].name);
+        log.error(log.defaultContext(), 'unable to interrupt token > ' + tokens[tokenId].name);
         continue;
       }
       tokens[tokenId].status = 'interrupted';
@@ -323,7 +365,7 @@ Delta.prototype.applyTokens = function applyTokens(tokens, synchronizeFlow) {
 
 function interruptAllTokens(tokens) {
   for (var i in tokens) {
-    if (tokens[i].status === 'pending') {
+    if (Object.prototype.hasOwnProperty.call(tokens, i) && tokens[i].status === 'pending') {
       tokens[i].status = 'interrupted';
       tokens[i].endTime = new Date();
     }
@@ -332,7 +374,7 @@ function interruptAllTokens(tokens) {
 
 function interruptMultipleTokens(tokenNames, tokens) {
   for (var i in tokens) {
-    if (tokenNames.indexOf(tokens[i].name) > -1) {
+    if (Object.prototype.hasOwnProperty.call(tokens, i) && tokenNames.indexOf(tokens[i].name) > -1) {
       var tokenId = tokens[i].id;
       if (tokens[tokenId] && tokens[tokenId].status !== 'pending') {
         return null;

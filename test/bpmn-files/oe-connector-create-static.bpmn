@@ -14,7 +14,7 @@
         <camunda:oeConnector>
           <camunda:model>Product</camunda:model>
           <camunda:method>create</camunda:method>
-          <camunda:modelData><![CDATA[{ "id" : "p001", "name" : "himalaya", "price" : 123 }]]></camunda:modelData>
+          <camunda:args><![CDATA[[{ "id" : "p001", "name" : "himalaya", "price" : 123 }]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

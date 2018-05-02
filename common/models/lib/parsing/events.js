@@ -136,7 +136,7 @@ exports.createBPMNEvent = function createBPMNEvent(defObject) {
 // Depending on the type of eventDefinitionType, the finalEvent will be assigned respective attributes
 
   for (var eventDefinition in defObject) {
-    if (eventDefinition.indexOf('Definition') >= 0) {
+    if (Object.prototype.hasOwnProperty.call(defObject, eventDefinition) && eventDefinition.indexOf('Definition') >= 0) {
       var eventDefinitionType = defObject[eventDefinition].attributes_ns.local;
       if (isSignalEventName(eventDefinitionType)) {
         finalEvent.isSignalEvent = true;
