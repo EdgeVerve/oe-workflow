@@ -946,7 +946,7 @@ function addOERemoteMethods(Model) {
       filter = {};
     }
 
-    var userQuery = JSON.parse(JSON.stringify(filter));
+    var userQuery = filter?JSON.parse(JSON.stringify(filter)):{};
     var baseQuery = {
       where: {
         and: [{
