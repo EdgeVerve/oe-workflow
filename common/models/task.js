@@ -29,7 +29,7 @@ module.exports = function Task(Task) {
 
   Task.on(TASK_INTERRUPT_EVENT, taskEventHandler._taskInterruptHandler);
 
-  Task.observe('access', function addCandidateFields(ctx, next){
+  Task.observe('access', function addCandidateFields(ctx, next) {
     if (ctx && ctx.options && ctx.options._skip_tf === true) {
       // instance to be read internally by workflow
       return next();
@@ -37,16 +37,16 @@ module.exports = function Task(Task) {
 
     /* If fields filter is specified, add additional fields required for candidate-filtering in 'after access' */
     /* Also set _fieldToRemove in ctx.option so that only the requested fields are returned */
-    if(ctx.query && ctx.query.fields) {
+    if (ctx.query && ctx.query.fields) {
       var mandatoryFields = ['candidateUsers', 'excludedUsers', 'candidateRoles', 'excludedRoles', 'candidateGroups', 'excludedGroups'];
       var fieldsToRemove = [];
-      mandatoryFields.forEach(function(val){
-        if(ctx.query.fields.indexOf(val) < 0){
+      mandatoryFields.forEach(function addMandatoryField(val) {
+        if (ctx.query.fields.indexOf(val) < 0) {
           ctx.query.fields.push(val);
           fieldsToRemove.push(val);
         }
       });
-      ctx.options['_fieldsToRemove']=fieldsToRemove;
+      ctx.options._fieldsToRemove = fieldsToRemove;
     }
     next();
   });
@@ -80,12 +80,11 @@ module.exports = function Task(Task) {
       var candidateGroups = self.candidateGroups  || [];
       var excludedGroups  = self.excludedGroups   || [];
 
-      if(ctx.options._fieldsToRemove){
+      if (ctx.options._fieldsToRemove) {
         /* Remove the fields that were added purely for candidate filtering*/
-        ctx.options._fieldsToRemove.forEach(function(val){
-          self[val]=undefined;
-          delete self[val];
-        });
+        for (var j = 0; j < ctx.options._fieldsToRemove.length; j++) {
+          delete self[ctx.options._fieldsToRemove[j]];
+        }
       }
       var finalCall = userMatch(currUser, candidateUsers, excludedUsers);
       if (finalCall === -1) {
