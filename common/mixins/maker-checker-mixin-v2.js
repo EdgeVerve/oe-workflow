@@ -361,7 +361,7 @@ function addOERemoteMethods(Model) {
         log.error(options, err);
         return next(err);
       }
-      if (!err & !cinst) {
+      if (!cinst) {
         let err = new Error('Model id is not valid.');
         log.error(options, err);
         return next(err);
@@ -406,7 +406,7 @@ function addOERemoteMethods(Model) {
               return next(err);
             }
             // now its safe to remove previous change request and interrupt previous workflow
-            // we are async ly terminating not holding the main request , might change
+            // we are asynchronously terminating not holding the main request , might change
             terminateWorkflow(crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
               if (err) {
                 let err = new Error('Unable to interrupt workflow in update retrigger case');
@@ -522,21 +522,21 @@ function addOERemoteMethods(Model) {
   };
 
   function makerValidation(Model, operation, data, currentInstance, options, next) {
-    var obj = null;
+    var newInstance = null;
     var context = {};
     // might need to a property like isNewChangeRequest to identify before
     // workflow is called as part of initial maker or not, could be useful
     if (operation === 'create') {
-      obj = new Model(data);
+      newInstance = new Model(data);
       context = {
         Model: Model,
-        instance: obj,
+        instance: newInstance,
         isNewInstance: true,
         hookState: {},
         options: options
       };
     } else if (operation === 'update') {
-      obj = currentInstance;
+      newInstance = new Model(currentInstance.toObject());
       context = {
         Model: Model,
         where: {},
@@ -545,14 +545,6 @@ function addOERemoteMethods(Model) {
         hookState: {},
         options: options
       };
-      // update instance's properties
-      try {
-        obj.setAttributes(data);
-      } catch (err) {
-        return process.nextTick(function asyncErrorCb() {
-          next(err);
-        });
-      }
     }
 
     if (options.isNewChangeRequest) {
@@ -585,14 +577,23 @@ function addOERemoteMethods(Model) {
       }
       dpBeforeSave[0](context, function beforeSaveCb(err) {
         if (err) return next(err);
+        
+        // update instance's properties after 'before workflow' hooks are invoked.
+        try {
+          newInstance.setAttributes(data);
+        } catch (err) {
+          return process.nextTick(function asyncErrorCb() {
+            next(err);
+          });
+        }
 
         // validation required
-        obj.isValid(function validateCb(valid) {
+        newInstance.isValid(function validateCb(valid) {
           if (valid) {
-            let data = obj.toObject(true);
+            let data = newInstance.toObject(true);
             next(null, data);
           } else {
-            let err = validationError(obj);
+            let err = validationError(newInstance);
             log.error(options, err);
             return next(err);
           }
