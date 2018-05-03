@@ -282,6 +282,8 @@ module.exports = function Task(Task) {
               var instObj = inst[0].toObject();
               var operation = instObj.operation;
               var instx = JSON.parse(JSON.stringify(instObj.data));
+              /* For second-maker currentInstance should have partially changed data from change-request */
+              currentInstance = new Model(instx);
               for (let key in updates) {
                 if (Object.prototype.hasOwnProperty.call(updates, key)) {
                   var val = updates[key];
