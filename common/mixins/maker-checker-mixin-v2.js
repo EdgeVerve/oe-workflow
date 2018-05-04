@@ -577,7 +577,7 @@ function addOERemoteMethods(Model) {
       }
       dpBeforeSave[0](context, function beforeSaveCb(err) {
         if (err) return next(err);
-        
+
         // update instance's properties after 'before workflow' hooks are invoked.
         try {
           newInstance.setAttributes(data);
