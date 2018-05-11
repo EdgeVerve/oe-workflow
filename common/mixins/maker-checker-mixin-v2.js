@@ -536,7 +536,7 @@ function addOERemoteMethods(Model) {
         options: options
       };
     } else if (operation === 'update') {
-      newInstance = new Model(currentInstance.toObject());
+      newInstance = new Model(currentInstance.toObject(), {persisted: true});
       context = {
         Model: Model,
         where: {},
