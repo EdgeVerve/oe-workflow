@@ -233,7 +233,7 @@ module.exports = function Task(Task) {
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           var updates = data;
-          pdata = {};
+          pdata = {__comments__: data.__comments__};
           if (typeof data.pv !== 'undefined') {
             pdata.pv = data.pv;
             delete updates.pv;
@@ -354,6 +354,7 @@ module.exports = function Task(Task) {
           if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
           }
+          pdata.__comments__ = data.__comments__;
           pdata.pv.__action__ = data.__action__;
 
           ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
@@ -440,6 +441,7 @@ module.exports = function Task(Task) {
           if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
           }
+          pdata.__comments__ = data.__comments__;
           pdata.pv.__action__ = data.__action__;
 
           if (['approved', 'rejected'].indexOf(data.__action__) > -1 ) {
@@ -499,7 +501,7 @@ module.exports = function Task(Task) {
           }
         }
         // self.status = status;
-        var updates = {'status': status, '_version': self._version};
+        var updates = {'status': status, comments: data.__comments__, '_version': self._version};
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);

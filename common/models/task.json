@@ -74,7 +74,15 @@
     "stepVariables" : {
       "type" : "object",
       "required" : false
-    }   
+    },
+    "message" : {
+      "type" : "object",
+      "required" : false
+    },
+    "comments" : {
+      "type" : "string",
+      "required" : false
+    }
   },
   "validations": [],
   "relations": {

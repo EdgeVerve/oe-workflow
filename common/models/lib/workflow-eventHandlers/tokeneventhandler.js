@@ -57,7 +57,8 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         var poolInfo = processDefinitionInstance.findPoolInfo(currentFlowObject);
         var taskObj = {
           'name': currentFlowObject.name,
-          'processTokenId': token.id
+          'processTokenId': token.id,
+          'message': message
         };
 
         var inputParameters;
