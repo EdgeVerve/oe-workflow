@@ -316,6 +316,7 @@ module.exports = function Task(Task) {
                   xdata.pv._modifiers = modifiers;
                   xdata.pv._modelInstance = instx;
                   xdata.msg = pdata.msg;
+                  xdata.__comments__ = pdata.__comments__;
                   return self.complete_(xdata, options, next);
                 });
               });
