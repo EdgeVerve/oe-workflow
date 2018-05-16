@@ -27,8 +27,6 @@ var exports = module.exports = {};
 exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, ProcessInstance, currentProcess, token, pDelta, recoveryPayload) {
   var delta;
   var payload;
-  var code;
-  var prop;
 
   if (pDelta) {
     delta = pDelta;
@@ -76,6 +74,9 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         var evalEntity = function evalEntity(entityList) {
           entityList = updateExpBackComp(entityList);
           entityList = sandbox.evaluate$Expression(options, entityList, token.message, currentProcess, token);
+          if (entityList === '') {
+            return [];
+          }
           return entityList.split(',');
         };
 
@@ -174,35 +175,13 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         }
 
         var evaluatePayload = function evaluatePayload(options, inputData, message, process) {
-          var self = this;
-
-          for (prop in process._processVariables) {
-            if (Object.prototype.hasOwnProperty.call(process._processVariables, prop)) {
-              self[prop] = process._processVariables[prop];
-            }
+          // evaluating payload
+          try {
+            var payload = sandbox.evaluateDirect(options, '`' + inputData + '`', message, process);
+          } catch (err) {
+            log.error(options, err);
+            return;
           }
-
-          for (prop in message) {
-            if (Object.prototype.hasOwnProperty.call(message, prop)) {
-              self[prop] = message[prop];
-            }
-          }
-
-          var payload = '';
-          var propVal;
-
-          var propExp = 'propVal = `' + inputData + '`';
-          // TODO : replace eval with sandbox
-          // eslint-disable-next-line
-          eval(propExp);
-          payload = propVal;
-
-          for (prop in process._processVariables) {
-            if (Object.prototype.hasOwnProperty.call(process._processVariables, prop)) {
-              delete self[prop];
-            }
-          }
-
           return payload;
         };
 
@@ -298,7 +277,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           if (currentFlowObject.inOutMappings && currentFlowObject.inOutMappings.inputMappings) {
             var inputMappings = currentFlowObject.inOutMappings.inputMappings;
             for (var source in inputMappings) {
-              if (source === 'variables' && inputMappings[source] === 'all') {
+              if (Object.prototype.hasOwnProperty.call(inputMappings, source) && source === 'variables' && inputMappings[source] === 'all') {
                 Object.assign(subProcessesIns.processVariables, currentProcess._processVariables);
               } else if (source in currentProcess._processVariables) {
                 source = sandbox.evaluate$Expression(options, source, message, currentProcess);
@@ -369,6 +348,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
             });
           });
       } else if (currentFlowObject.isEndEvent || currentFlowObject.isIntermediateThrowEvent) {
+        let code;
         payload = null;
         if (currentFlowObject.isMessageEvent) {
           payload = throwObject.throwObject('message', currentFlowObject.messageName, message);
@@ -381,8 +361,10 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           payload = throwObject.throwObject('signal', evaluatedSignalName);
         } else if (currentFlowObject.isEscalationEvent) {
           for (key in processDefinition.eventObjectMap) {
-            if (processDefinition.eventObjectMap[key] === currentFlowObject.escalationId) {
-              code = key;
+            if (Object.prototype.hasOwnProperty.call(processDefinition.eventObjectMap, key)) {
+              if (processDefinition.eventObjectMap[key] === currentFlowObject.escalationId) {
+                code = key;
+              }
             }
           }
           payload = throwObject.throwObject('escalation', currentFlowObject.escalationId, code);

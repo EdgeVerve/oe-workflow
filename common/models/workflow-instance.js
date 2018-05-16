@@ -258,7 +258,7 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
 
       var passFlag = false;
       for (var i in processes) {
-        if (processes[i].processDefinitionBpmnId === processDefId) {
+        if (Object.prototype.hasOwnProperty.call(processes, i) && processes[i].processDefinitionBpmnId === processDefId) {
           processes[i]._recieveMessage(options, flowObjectId, message);
           passFlag = true;
           break;

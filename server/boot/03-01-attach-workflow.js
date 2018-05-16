@@ -5,12 +5,12 @@
  *
  */
 /**
- * Boot Script for attaching workflow on boot
+ * Boot Script for attaching workflow on boot for version 1
  * @author Mandeep Gill(mandeep6ill), Prem Sai(premsai-ch)
  */
 var logger = require('oe-logger');
 var log = logger('attach-workflow.boot');
-var applyMakerCheckerMixin = require('../../common/mixins/maker-checker-mixin-v2.js');
+var applyMakerCheckerMixin = require('../../common/mixins/maker-checker-mixin.js');
 
 module.exports = function attachWorkFlows(app) {
   var WorkflowMapping = app.models.WorkflowMapping;
@@ -21,7 +21,13 @@ module.exports = function attachWorkFlows(app) {
   };
 
   WorkflowMapping.find({
-    where: {   'engineType': 'oe-workflow' }
+    where: {
+      and: [{
+        'engineType': 'oe-workflow'
+      }, {
+        'version': 'v1'
+      }]
+    }
   }, options, function fetchWM(err, result) {
     if (err) {
       log.error(options, err);

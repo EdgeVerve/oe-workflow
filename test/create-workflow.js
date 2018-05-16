@@ -1406,37 +1406,37 @@ describe('Test case for Trigger on Create OE Workflow [ workflow dependent ] - r
     });
   });
 
-  it('remove model instances [clean-up]', function CB(done) {
-    models[modelName].destroyAll({}, User1Context, function cb(err, res) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(res);
-      done();
-    });
-  });
+  // it('remove model instances [clean-up]', function CB(done) {
+  //   models[modelName].destroyAll({}, User1Context, function cb(err, res) {
+  //     if (err) {
+  //       log.error(err);
+  //       return done(err);
+  //     }
+  //     log.debug(res);
+  //     done();
+  //   });
+  // });
 
-  it('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
-    var id = testVars.modelDetails.id;
-    var version = testVars.modelDetails._version;
-    models.ModelDefinition.deleteWithVersion(id, version, User1Context, function CB(err) {
-      if (err) {
-        done(err);
-      } else {
-        done();
-      }
-    });
-  });
+  // it('remove model Definition ' + modelName + ' [clean-up]', function CB(done) {
+  //   var id = testVars.modelDetails.id;
+  //   var version = testVars.modelDetails._version;
+  //   models.ModelDefinition.deleteWithVersion(id, version, User1Context, function CB(err) {
+  //     if (err) {
+  //       done(err);
+  //     } else {
+  //       done();
+  //     }
+  //   });
+  // });
 
-  it('remove workflow mapping [clean-up]', function CB(done) {
-    models.WorkflowMapping.destroyAll({}, User1Context, function cb(err, res) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(res);
-      done();
-    });
-  });
+  // it('remove workflow mapping [clean-up]', function CB(done) {
+  //   models.WorkflowMapping.destroyAll({}, User1Context, function cb(err, res) {
+  //     if (err) {
+  //       log.error(err);
+  //       return done(err);
+  //     }
+  //     log.debug(res);
+  //     done();
+  //   });
+  // });
 });

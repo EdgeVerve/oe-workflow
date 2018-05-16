@@ -9,12 +9,12 @@
       <bpmn2:incoming>SequenceFlow_1r3xezu</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_1r3xezu" sourceRef="ServiceTask_17i2ysj" targetRef="EndEvent_14wqhq6" />
-    <bpmn2:serviceTask id="ServiceTask_17i2ysj" name="Fetch Model Instance">
+    <bpmn2:serviceTask id="ServiceTask_17i2ysj" name="Update Model Instance">
       <bpmn2:extensionElements>
         <camunda:oeConnector>
-          <camunda:model>Product</camunda:model>
-          <camunda:method>findById</camunda:method>
-          <camunda:args>![CDATA[["pid002"]]]</camunda:args>
+          <camunda:model>ProductE</camunda:model>
+          <camunda:method>upsert</camunda:method>
+          <camunda:args><![CDATA[[{"id": "p009", "name" : "pepsodent", "_version" : pv("prevVersion") }]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

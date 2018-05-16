@@ -586,9 +586,17 @@ function beforeSaveCreateHook(ctx, next) {
         ctx.instance.setAttribute('_transactionType', 'create');
       }
 
-      ctx.options._workflowBody = mapping.workflowBody;
-      ctx.options._engineType = mapping.engineType;
-      ctx.options._transactionType = 'create';
+      let idName = ctx.Model.definition.idName();
+      // case id is not defined
+      if (typeof ctx.instance[idName] === 'undefined') {
+        ctx.instance.setAttribute(idName, uuidv4());
+      }
+      let key = '__workflow_mn_' + modelName + '_mid_' + ctx.instance[idName];
+      ctx.options[key] = {
+        _workflowBody: mapping.workflowBody,
+        _engineType: mapping.engineType,
+        _transactionType: 'create'
+      };
       next();
     } else {
       log.error(options, 'multiple workflow found attached on create');
@@ -670,9 +678,14 @@ function beforeSaveUpdateHook(ctx, next) {
         ctx.data._transactionType = mapping.operation;
       }
 
-      ctx.options._workflowBody = mapping.workflowBody;
-      ctx.options._engineType = mapping.engineType;
-      ctx.options._transactionType = mapping.operation;
+      let idName = ctx.Model.definition.idName();
+      // case id is not defined
+      let key = '__workflow_mn_' + modelName + '_mid_' + ctx.currentInstance[idName];
+      ctx.options[key] = {
+        _workflowBody: mapping.workflowBody,
+        _engineType: mapping.engineType,
+        _transactionType: mapping.operation
+      };
       next();
     } else {
       log.error(options, 'multiple workflow found attached on update');
@@ -727,6 +740,8 @@ function handleReTrigger(mapping, options) {
 
 function afterSaveCommonHook(ctx, next) {
   var modelName = ctx.Model.definition.name;
+  var idName = ctx.Model.definition.idName();
+  var key = '__workflow_mn_' + modelName + '_mid_' + ctx.instance[idName];
   var options;
   var engineType;
   var variables;
@@ -750,14 +765,14 @@ function afterSaveCommonHook(ctx, next) {
     log.debug(ctx.options, 'skipping workflow after save hook during update');
     delete ctx.options._skip_wf;
     next();
-  } else if (ctx.instance && ctx.isNewInstance === false && (ctx.options._transactionType === 'update' || ctx.options._transactionType === 'save') && ctx.options._workflowBody) {
+  } else if (ctx.instance && ctx.isNewInstance === false && ctx.options[key] && (ctx.options[key]._transactionType === 'update' || ctx.options[key]._transactionType === 'save') && ctx.options[key]._workflowBody) {
     log.debug(ctx.options, 'triggering workflow - during update');
 
     options = ctx.options;
-    engineType = ctx.options._engineType;
+    engineType = ctx.options[key]._engineType;
     variables = util.prepareWorkflowVariables(engineType, ctx.instance, ctx.Model);
-    workflowBody = ctx.options._workflowBody;
-    let transactionType = ctx.options._transactionType;
+    workflowBody = ctx.options[key]._workflowBody;
+    let transactionType = ctx.options[key]._transactionType;
 
     xOptions = JSON.parse(JSON.stringify(options));
     if (xOptions.transaction) {
@@ -766,14 +781,8 @@ function afterSaveCommonHook(ctx, next) {
     if (xOptions.skipIdempotent) {
       delete xOptions.skipIdempotent;
     }
-    if (xOptions._transactionType) {
-      delete xOptions._transactionType;
-    }
-    if (xOptions._workflowBody) {
-      delete xOptions._workflowBody;
-    }
-    if (xOptions._engineType) {
-      delete xOptions._engineType;
+    if (xOptions[key]) {
+      delete xOptions[key];
     }
 
     handleReTrigger({
@@ -789,24 +798,22 @@ function afterSaveCommonHook(ctx, next) {
         next(err);
       }
       var workflowRef = res.id;
-      var operation = ctx.options._transactionType;
+      var operation = ctx.options[key]._transactionType;
       if (operation === 'save') {
         operation = operation + '-update';
       }
-      delete ctx.options._workflowBody;
-      delete ctx.options._engineType;
-      delete ctx.options._transactionType;
+      delete ctx.options[key];
       util.createWFRequest(engineType, modelName, ctx.instance.id, workflowRef, operation, options, next);
     });
 
         // update request anyway wont require after save workflow hook
-  } else if (ctx.instance && (ctx.options._transactionType === 'create'  || ctx.options._transactionType === 'save') && ctx.options._workflowBody) {
+  } else if (ctx.instance && ctx.options[key] && (ctx.options[key]._transactionType === 'create'  || ctx.options[key]._transactionType === 'save') && ctx.options[key]._workflowBody) {
         // trigger workflow & create a WF request only if workflow was triggered
     log.debug(ctx.options, 'triggering workflow - during create');
 
     options = ctx.options;
-    workflowBody = ctx.options._workflowBody;
-    engineType = ctx.options._engineType;
+    workflowBody = ctx.options[key]._workflowBody;
+    engineType = ctx.options[key]._engineType;
     variables = util.prepareWorkflowVariables(engineType, ctx.instance, ctx.Model);
 
     xOptions = JSON.parse(JSON.stringify(options));
@@ -816,14 +823,8 @@ function afterSaveCommonHook(ctx, next) {
     if (xOptions.skipIdempotent) {
       delete xOptions.skipIdempotent;
     }
-    if (xOptions._transactionType) {
-      delete xOptions._transactionType;
-    }
-    if (xOptions._workflowBody) {
-      delete xOptions._workflowBody;
-    }
-    if (xOptions._engineType) {
-      delete xOptions._engineType;
+    if (xOptions[key]) {
+      delete xOptions[key];
     }
 
     util.triggerWorkflow(engineType, variables, workflowBody, xOptions, function triggerWorkflowCb(err, res) {
@@ -831,14 +832,12 @@ function afterSaveCommonHook(ctx, next) {
         log.error(options, err);
         return next(err);
       }
-      var operation = ctx.options._transactionType;
+      var operation = ctx.options[key]._transactionType;
       if (operation === 'save') {
         operation = operation + '-create';
       }
       var workflowRef = res.id;
-      delete ctx.options._workflowBody;
-      delete ctx.options._engineType;
-      delete ctx.options._transactionType;
+      delete ctx.options[key];
       util.createWFRequest(engineType, modelName, ctx.instance.id, workflowRef, operation, options, next);
     });
   } else {

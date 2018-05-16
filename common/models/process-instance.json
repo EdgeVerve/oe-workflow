@@ -66,6 +66,11 @@
       "hidden" : true,
       "required" : false
     },
+    "passive-wait" : {
+      "type" : "boolean",
+      "default" : false,
+      "required" : false
+    },
     "_status" : {
       "type" : "string",
       "required" : false
