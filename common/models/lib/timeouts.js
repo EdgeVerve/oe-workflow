@@ -98,8 +98,7 @@ exports.addBoundaryTimerEvent = function addBoundaryTimerEvent(delta, options, P
     currentProcess.reload(options, function fetchLatestPI(err, currentProcess) {
       if (err) {
         // unable to fetch the latest instance
-        log.error(options, err);
-        return;
+        return log.error(options, err);
       }
       var payload = throwObject.throwObject('timer', timerEventName);
       ProcessInstance.emit('INTERMEDIATE_CATCH_EVENT', options, ProcessInstance, currentProcess, payload, delta );
@@ -154,8 +153,7 @@ exports.addIntermediateTimerEvent = function addIntermediateTimerEvent(delta, op
     currentProcess.reload(options, function fetchLatestPI(err, currentProcess) {
       if (err) {
         // unable to fetch the latest instance
-        log.error(options, err);
-        return;
+        return log.error(options, err);
       }
       var payload = throwObject.throwObject('timer', timerEventName);
       ProcessInstance.emit('INTERMEDIATE_CATCH_EVENT', options, ProcessInstance, currentProcess, payload, delta );

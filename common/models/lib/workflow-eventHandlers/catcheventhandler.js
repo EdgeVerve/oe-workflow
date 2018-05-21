@@ -24,13 +24,11 @@ exports._intermediateCatchEventHandler = function _intermediateCatchEventHandler
   }
   currentProcess.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
     if (err) {
-      log.error(options, err.message);
-      return;
+      return log.error(options, err.message);
     }
     var processDefinition = processDefinitionInstance.processDefinition;
     if (!throwObject.id && !throwObject.code) {
-      log.error(options, 'Invalide throw object');
-      return;
+      return log.error(options, 'Invalide throw object');
     }
     var throwObjectId = throwObject.id;
     if (throwObject.type === 'escalation' || throwObject.type === 'error') {
@@ -46,8 +44,7 @@ exports._intermediateCatchEventHandler = function _intermediateCatchEventHandler
     if (throwObject.type === 'escalation' || throwObject.type === 'error') {
       currentProcess.parentProcess(options, function fetchPI(err, parentProcess) {
         if (err) {
-          log.error(options, err.message);
-          return;
+          return log.error(options, err.message);
         }
         if (parentProcess) {
           ProcessInstance.emit(INTERMEDIATE_CATCH_EVENT, options, ProcessInstance, parentProcess, throwObject);

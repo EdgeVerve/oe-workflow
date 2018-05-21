@@ -712,12 +712,10 @@ function handleReTrigger(mapping, options) {
     }
   }, options, function fetchRequest(err, res) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
     }
     if (res.length === 0) {
-      log.debug(options, 'no previous workflow request for model [' + mapping.modelName + ']');
-      return;
+      return log.debug(options, 'no previous workflow request for model [' + mapping.modelName + ']');
     } else if (res.length === 1) {
       // suspend or delete the previous process instance
       // and delete the previous request
@@ -726,8 +724,7 @@ function handleReTrigger(mapping, options) {
 
       util.terminateWorkflow(engineType, instance.processId, options, function deletePreviousRequest(err, res) {
         if (err) {
-          log.error(options, 'unable to suspend workflow with process id - ' + instance.processId);
-          return;
+          return log.error(options, 'unable to suspend workflow with process id - ' + instance.processId);
         }
         log.debug(options, 'suspended workflow with processId - ' + instance.processId);
       });

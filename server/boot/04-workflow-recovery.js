@@ -31,8 +31,7 @@ module.exports = function attachWorkFlows(app) {
   // just return and will not continue to the boot recovery process.
   workflowMonitor.create({'id': 'node'}, options, function acquireLock(err, inst) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
       // Check the error
     }
     ProcessInstance.find({
@@ -48,8 +47,7 @@ module.exports = function attachWorkFlows(app) {
       }
     }, options, function fetchPendingPI(err, processes) {
       if (err) {
-        log.error(options, err);
-        return;
+        return log.error(options, err);
       }
 
       var buildFilter = function buildFilter(start, end) {
@@ -109,8 +107,7 @@ module.exports = function attachWorkFlows(app) {
       return function wrappedFn() {
         workflowMonitor.destroyById(inst.id, options, function destroyWMI(err, inst) {
           if (err) {
-            log.error(err);
-            return;
+            return log.error(err);
           }
         });
       };

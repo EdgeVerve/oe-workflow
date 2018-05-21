@@ -15,7 +15,6 @@ var log = logger('TaskMarkers-Parser');
  * @return {Boolean} ismultiInstanceLoop
  */
 exports.ismultiInstanceLoop = function ismultiInstanceLoop(localName) {
-  log.debug(log.defaultContext(), 'ismultiInstanceLoop called');
   return (localName.toLowerCase().indexOf('multi') > -1);
 };
 

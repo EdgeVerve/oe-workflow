@@ -109,11 +109,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
         if (err) {
           return done(err);
         } else if (wfDefns.length === 0) {
-          err = new Error('workflow definition not found');
-          return done(err);
+          return done(new Error('workflow definition not found'));
         } else if (wfDefns.length > 1) {
-          err = new Error('multiple workflow definitions found');
-          return done(err);
+          return done(new Error('multiple workflow definitions found'));
         }
         done(null);
       });

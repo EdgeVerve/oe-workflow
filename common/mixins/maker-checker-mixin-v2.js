@@ -811,9 +811,7 @@ function addOERemoteMethods(Model) {
             // we are async ly terminating not holding the main request , might change
           terminateWorkflow(crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
             if (err) {
-              let err = new Error('Unable to interrupt workflow in update retrigger case');
-              log.error(options, err);
-              return;
+              return log.error(options, new Error('Unable to interrupt workflow in update retrigger case'));
             }
             return;
           });

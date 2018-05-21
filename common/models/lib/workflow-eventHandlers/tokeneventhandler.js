@@ -36,8 +36,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
 
   currentProcess.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
     }
     var processDefinition = processDefinitionInstance.processDefinition;
     var currentFlowObject = processDefinitionInstance.getFlowObjectByName(token.name);
@@ -48,8 +47,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
 
     function handlerDone(err, message) {
       if (err) {
-        log.error(options, err);
-        return;
+        return log.error(options, err);
       }
       if (currentFlowObject.isReceiveTask) {
         // do nothing here
@@ -180,8 +178,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           try {
             var payload = sandbox.evaluateDirect(options, '`' + inputData + '`', message, process);
           } catch (err) {
-            log.error(options, err);
-            return;
+            return log.error(options, err);
           }
           return payload;
         };
@@ -244,8 +241,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         }
         ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
           if (err) {
-            log.error(options, err);
-            return;
+            return log.error(options, err);
           }
         });
       } else if (currentFlowObject.isSubProcess || currentFlowObject.isCallActivity) {
@@ -316,21 +312,16 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         ProcessInstance.app.models.WorkflowDefinition.find({'where': filter}, options,
           function fetchCallActivityWD(err, workflowDefinition) {
             if (err) {
-              var errx = new Error('call activity or Subprocess definition fetch error');
-              log.error(options, errx);
-              return;
+              return log.error(options, new Error('call activity or Subprocess definition fetch error'));
             }
             var pdfilter = {'and': [{'name': evaluatedProcessName}, {'workflowDefinitionId': workflowDefinition[0].id}]};
             ProcessInstance.app.models.ProcessDefinition.find({'where': pdfilter
             }, options, function fetchCallActivityPD(err, pDefinition) {
               if (err) {
-                log.error(options, err);
-                return;
+                return log.error(options, err);
               }
               if (pDefinition.length !== 1) {
-                var errx = new Error('call activity process definition not found or found multiple');
-                log.error(options, errx);
-                return;
+                return log.error(options, new Error('call activity process definition not found or found multiple'));
               }
               subProcessesIns.processDefinitionId = pDefinition[0].id;
               subProcessesIns.processDefinitionName = pDefinition[0].name;
@@ -342,8 +333,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
               }
               currentProcess.subProcesses.create(subProcessesIns, options, function createSubProcess(err) {
                 if (err) {
-                  log.error(options, err);
-                  return;
+                  return log.error(options, err);
                 }
               });
             });
@@ -407,7 +397,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           }
         }
         currentProcess._endFlowObject(options, token, processDefinitionInstance, delta, message);
-      } else if (currentFlowObject.isDisabled && currentFlowObject.isBoundaryEvent && currentFlowObject.isTimerEvent) {
+/*      } else if (currentFlowObject.isDisabled && currentFlowObject.isBoundaryEvent && currentFlowObject.isTimerEvent) {
         if (currentFlowObject.isTimerEvent) {
           return;
         }
@@ -449,6 +439,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
 
         log.debug(options, 'Leaving from isBoundaryEvent with token [' + token.name + '] ');
         currentProcess._endFlowObject(options, token, processDefinitionInstance, delta, message);
+      */
       } else if (currentFlowObject.isIntermediateCatchEvent || currentFlowObject.isBoundaryEvent) {
         if (currentFlowObject.isSignalEvent) {
           // for any kind of signal event be it, start, boundary, intermediate, we create a workflow signal and wait

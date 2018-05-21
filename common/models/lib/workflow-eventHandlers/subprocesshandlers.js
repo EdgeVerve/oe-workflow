@@ -25,8 +25,7 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
   var delta = new StateDelta();
   currentProcess.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
     }
 
     var currentFlowObject = processDefinitionInstance.getFlowObjectByName(token.name);
@@ -71,8 +70,7 @@ exports._subProcessEndEventHandler = function _subProcessEndEventHandler(options
 exports._terminateInterruptHandler = function _terminateInterruptHandler(options, ProcessInstance, currentProcess, done) {
   currentProcess.subProcesses({}, options, function fetchSubProcesses(err, subProcesses) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
     }
     for (var i in subProcesses) {
       if (Object.prototype.hasOwnProperty.call(subProcesses, i)) {
@@ -87,8 +85,7 @@ exports._subProcessInterruptHandler = function _subProcessInterruptHandler(optio
   delta.setProcessStatus('interrupted');
   currentProcess.commit(options, delta, function commitCb(err) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
     }
   });
 
@@ -97,8 +94,7 @@ exports._subProcessInterruptHandler = function _subProcessInterruptHandler(optio
 
   currentProcess.tasks({}, _options, function fetchTasks(err, tasks) {
     if (err) {
-      log.error(options, err);
-      return;
+      return log.error(options, err);
     }
     for (var i in tasks) {
       if (Object.prototype.hasOwnProperty.call(tasks, i)) {
@@ -108,8 +104,7 @@ exports._subProcessInterruptHandler = function _subProcessInterruptHandler(optio
 
     currentProcess.subProcesses({}, options, function fetchSubProcesses(err, subProcesses) {
       if (err) {
-        log.error(options, err);
-        return;
+        return log.error(options, err);
       }
       for (var i in subProcesses) {
         if (Object.prototype.hasOwnProperty.call(subProcesses, i)) {
