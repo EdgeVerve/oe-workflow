@@ -128,7 +128,7 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
   });
 
   it('fetch few fields of task instance', function callback(done) {
-    testVars.processes[0].tasks({fields:['name','status']}, ctxUser1, function callback(err, task) {
+    testVars.processes[0].tasks({fields: ['name', 'status']}, ctxUser1, function callback(err, task) {
       if (err) {
         return done(err);
       }

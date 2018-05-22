@@ -77,8 +77,8 @@ module.exports = function recoverWorkflows(app) {
         }
 
         if (NUM_PROCESSES > 0) {
-            let filter = buildFilter(start, end);
-            ProcessInstance.find(filter, options, function fetchPendingPI(err, processes) {
+          let filter = buildFilter(start, end);
+          ProcessInstance.find(filter, options, function fetchPendingPI(err, processes) {
             if (err) {
               log.error(options, err);
               return;

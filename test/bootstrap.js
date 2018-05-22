@@ -13,6 +13,9 @@ var appRoot = require('app-root-path');
 var basePath =  'http://localhost:3000/api';
 var request = require('request');
 
+var uploader = require('./utils/data-uploader');
+uploader.uploadFile('test/cluster-test/recovery-test-data.json');
+
 var oeapp = appRoot.require('/server/server');
 
 var logger = require('oe-logger');

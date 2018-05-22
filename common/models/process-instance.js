@@ -515,6 +515,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
         });
       } else if (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration) {
         var at = token.startTime;
+        if (typeof at === 'string') {
+          at = new Date(at);
+        }
         var now = Date.now();
         // calculating again to handle pending timeout
         var diff = now - at;
