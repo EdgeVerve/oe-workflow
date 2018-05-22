@@ -252,7 +252,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       error: err
     });
   }
-  var data = flowObject.props.data;
+  var data = flowObject.props.data || {};
   if (operation && model) {
     data = evaluateJSON(data, message, process, options);
     model[operation](data[0], options, function evalCB(err, res) {
