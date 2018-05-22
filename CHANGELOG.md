@@ -1,3 +1,11 @@
+2018-01-03, Version 1.2.0
+=========================
+
+ * Implementation of Maker Checker Version 2
+ * Rework functionality for Maker Checker
+ * Additional attributes Due Date, Followup Date and Priority for User Task
+ * Input-Output variable mapping for Call Activity and Subprocess
+
 2017-11-17, Version 1.1.1
 =========================
 
