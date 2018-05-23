@@ -159,7 +159,8 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
         'workflowDefinitionName': wfName
       },
       'operation': 'update',
-      'version': 'v2'
+      'version': 'v2',
+      'makersRecall': true
     };
 
     models.WorkflowManager.attachWorkflow(attachWorkflowDef, bootstrap.defaultContext, function cb(err, res) {
@@ -460,7 +461,8 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - r
         'workflowDefinitionName': wfName
       },
       'operation': 'update',
-      'version': 'v2'
+      'version': 'v2',
+      'makersRecall': true
     };
 
     models.WorkflowManager.attachWorkflow(attachWorkflowDef, bootstrap.defaultContext, function cb(err, res) {

@@ -145,6 +145,12 @@ module.exports = function WorkflowManager(WorkflowManager) {
       if (typeof data === 'object' && typeof data.wfDependent === 'boolean') {
         wfDependent = data.wfDependent;
       }
+
+      var makersRecall = true;
+      if (typeof data === 'object' && typeof data.makersRecall === 'boolean') {
+        makersRecall = data.makersRecall;
+      }
+
       var Model = loopback.getModel(modelName, options);
       var actualModelName = Model.modelName;
 
@@ -155,6 +161,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
         'modelName': modelName,
         'operation': operation,
         'wfDependent': wfDependent,
+        'makersRecall': makersRecall,
         'actualModelName': actualModelName,
         'privilegedUsers': privilegedUsers,
         'privilegedRoles': privilegedRoles

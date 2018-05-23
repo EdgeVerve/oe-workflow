@@ -39,6 +39,10 @@
       "type": "boolean",
       "required": true
     },
+    "makersRecall" : {
+      "type": "boolean",
+      "default": false
+    },
     "privilegedUsers" : {
       "type": "array",
       "required": false

@@ -225,7 +225,8 @@ describe('Test case for Implicit POST scenario', function callback() {
         'workflowDefinitionName': wfName
       },
       'operation': 'create',
-      'version': 'v2'
+      'version': 'v2',
+      'makersRecall': true
     };
 
     models.WorkflowManager.attachWorkflow(attachWorkflowDef
@@ -609,7 +610,8 @@ describe('Test case for Implicit PUT scenario', function callback() {
         'workflowDefinitionName': wfName
       },
       'operation': 'update',
-      'version': 'v2'
+      'version': 'v2',
+      'makersRecall': true
     };
 
     models.WorkflowManager.attachWorkflow(attachWorkflowDef

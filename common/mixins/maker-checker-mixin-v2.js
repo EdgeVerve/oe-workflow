@@ -453,7 +453,7 @@ function addOERemoteMethods(Model) {
                       { 'modelName': modelName },
                       { 'engineType': 'oe-workflow' },
                       { 'version': 'v2' },
-                      { 'operation': 'update' }
+                      { 'operation': { 'inq': ['update', 'save'] } }
                 ]
               }
             }, options, function fetchWM(err, res) {
@@ -856,7 +856,7 @@ function addOERemoteMethods(Model) {
             { 'modelName': modelName },
             { 'engineType': 'oe-workflow' },
             { 'version': 'v2' },
-            { 'operation': 'create' }
+            { 'operation': {'inq': ['create', 'save']}}
               ]
             }
           }, options, function fetchWM(err, res) {
@@ -1035,35 +1035,63 @@ function addOERemoteMethods(Model) {
         return cb(null, null);
       }
 
-      if (!options.ctx || !options.ctx.username) {
-        let err = new Error('Unable to detect user making this request.');
-        log.error(options, err);
-        return cb(err);
+      var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+      var operationFilter = inst[0].operation;
+      if (operationFilter === 'create' || operationFilter === 'update') {
+        operationFilter = { inq: [inst[0].operation, 'save'] };
       }
-      let username = options.ctx.username;
-      let modifiers = inst[0]._modifiers;
-
-      if (modifiers.indexOf(username) === -1) {
-        let err = new Error('Not authorized to recall');
-        log.error(options, err);
-        return cb(err);
-      }
-
-      var workflowInstanceId = inst[0].workflowInstanceId;
-      inst[0].destroy(options, function deleteInstance(err, res) {
+      WorkflowMapping.find({
+        where: {
+          'and': [
+            { 'modelName': modelName },
+            { 'engineType': 'oe-workflow' },
+            { 'version': 'v2' },
+            { 'operation': operationFilter }
+          ]
+        }
+      }, options, function fetchMapping(err, res) {
         if (err) {
-          let err = new Error('Unable to delete change request in recall case');
-          log.error(options, err);
+          log.error(options, 'Unable to find workflow mapping - [OE Workflow-v2-' + inst[0].operation + ']', err);
+          return cb(err);
+        } else if (res && res.length === 0) {
+          // this case should never occur
+          let err = new Error('No maker checker mapping found for ' + inst[0].operation);
+          log.debug(options, err);
           return cb(err);
         }
-        terminateWorkflow(workflowInstanceId, options, function onTerminationWorkflow(err, res) {
-          if (err) {
-            let err = new Error('Unable to interrupt workflow in recall case');
+
+        var mapping = res[0];
+        if (mapping.makersRecall) {
+          if (!options.ctx || !options.ctx.username) {
+            let err = new Error('Unable to detect user making this request.');
             log.error(options, err);
             return cb(err);
           }
-          return cb(null, {
-            'success': true
+          let username = options.ctx.username;
+          let modifiers = inst[0]._modifiers;
+          if (modifiers.indexOf(username) === -1) {
+            let err = new Error('Not authorized to recall');
+            log.error(options, err);
+            return cb(err);
+          }
+        }
+
+        var workflowInstanceId = inst[0].workflowInstanceId;
+        inst[0].destroy(options, function deleteInstance(err, res) {
+          if (err) {
+            let err = new Error('Unable to delete change request in recall case');
+            log.error(options, err);
+            return cb(err);
+          }
+          terminateWorkflow(workflowInstanceId, options, function onTerminationWorkflow(err, res) {
+            if (err) {
+              let err = new Error('Unable to interrupt workflow in recall case');
+              log.error(options, err);
+              return cb(err);
+            }
+            return cb(null, {
+              'success': true
+            });
           });
         });
       });

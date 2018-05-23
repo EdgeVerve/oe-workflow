@@ -221,7 +221,8 @@ describe('Test case for creating and attaching model', function CB() {
         'workflowDefinitionName': wfName
       },
       'operation': 'create',
-      'version': 'v2'
+      'version': 'v2',
+      'makersRecall': true
     };
 
     models.WorkflowManager.attachWorkflow(attachWorkflowDef, bootstrap.defaultContext, function cb(err, res) {
