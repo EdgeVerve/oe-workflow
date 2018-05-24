@@ -146,7 +146,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
         wfDependent = data.wfDependent;
       }
 
-      var makersRecall = true;
+      var makersRecall = false;
       if (typeof data === 'object' && typeof data.makersRecall === 'boolean') {
         makersRecall = data.makersRecall;
       }
