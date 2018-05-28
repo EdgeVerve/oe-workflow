@@ -21,7 +21,6 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
   var RequestModel;
 
   if (engineType === 'oe-workflow') {
-    // RequestModel = app.models.ChangeWorkflowRequest;
     RequestModel = loopback.getModel('ChangeWorkflowRequest', options);
   } else {
     RequestModel = app.models.Activiti_WorkflowRequest;
@@ -94,7 +93,7 @@ function rejectedDeleteInstance(app, request, options, next) {
     _verifiedBy = options.ctx.username;
   }
   var updates = {
-    status: 'complete',
+    status: 'rejected',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -122,7 +121,7 @@ function approvedDeleteInstance(app, request, options, next) {
       _verifiedBy = options.ctx.username;
     }
     var updates = {
-      status: 'complete',
+      status: 'approved',
       _verifiedBy: _verifiedBy,
       _version: request._version
     };
@@ -144,7 +143,7 @@ function rejectedUpdateInstance(app, request, options, next) {
     _verifiedBy = options.ctx.username;
   }
   var updates = {
-    status: 'complete',
+    status: 'rejected',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -194,7 +193,7 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
         _verifiedBy = options.ctx.username;
       }
       var updates = {
-        status: 'complete',
+        status: 'approved',
         _verifiedBy: _verifiedBy,
         _version: request._version
       };
@@ -217,7 +216,7 @@ function rejectedCreateInstance(app, request, options, next) {
     _verifiedBy = options.ctx.username;
   }
   var updates = {
-    status: 'complete',
+    status: 'rejected',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -252,7 +251,7 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
       _verifiedBy = options.ctx.username;
     }
     var updates = {
-      status: 'complete',
+      status: 'approved',
       _verifiedBy: _verifiedBy,
       _version: request._version
     };

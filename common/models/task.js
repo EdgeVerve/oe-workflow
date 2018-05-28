@@ -260,7 +260,7 @@ module.exports = function Task(Task) {
                 }, {
                   modelId: modelId
                 }, {
-                  status: 'pending'
+                  status: { nin: ['approved', 'rejected'] }
                 }]
               }
             }, options, function fetchChangeModel(err, inst) {
@@ -386,6 +386,7 @@ module.exports = function Task(Task) {
               _verifiedBy = options.ctx.username;
             }
             let updates = {
+              status: data.__action__,
               _verifiedBy: _verifiedBy
             };
             request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {

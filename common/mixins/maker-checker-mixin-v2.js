@@ -380,7 +380,7 @@ function addOERemoteMethods(Model) {
           and: [{
             modelName: modelName
           }, {
-            status: 'pending'
+            status: { nin: ['approved', 'rejected'] }
           }, {
             modelId: id
           }]
