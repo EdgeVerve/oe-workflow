@@ -253,7 +253,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     });
   }
   var data = flowObject.props.data || {};
-  if (operation && model) {
+  if (operation && model && model[operation]) {
     data = evaluateJSON(data, message, process, options);
     model[operation](data[0], options, function evalCB(err, res) {
       if (err) {
@@ -276,7 +276,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       return done(null, _res);
     });
   }
-  return;
+  return done(null, {error: new Error('Invalid operation ' + operation + ' on model ' + modelName )});
 }
 
 
