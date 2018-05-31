@@ -89,8 +89,8 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
             if (updatedExp !== expList.reduce(function concat(x, y) {return x + ',' + y;})) {
               var depMessage = '[TO BE DEPRECATED SOON]: Please update UserTask expression from $username to ${username} && $_msg.username to ${msg.username}.\nArrays are also supported now for dynamic evaluation.';
               // eslint-disable-next-line
-              console.log(depMessage);
-              log.error(options, new Error(depMessage));
+              console.warn(depMessage);
+              log.warn(options, depMessage);
             }
             return updatedExp;
           } catch (ex) {

@@ -13,7 +13,7 @@
     <bpmn2:businessRuleTask id="ServiceTask_0yu9g9d" name="BusinessRule Task" camunda:decisionRef="Adjustments">
       <bpmn2:extensionElements>
         <camunda:inputOutput>
-          <camunda:inputParameter name="Customer">Private</camunda:inputParameter>
+          <camunda:inputParameter name="Customer">'Private'</camunda:inputParameter>
           <camunda:inputParameter name="Order size">${13+12}</camunda:inputParameter>
         </camunda:inputOutput>
       </bpmn2:extensionElements>

@@ -55,7 +55,7 @@ describe('Test case for Service Task Fail Case', function callback() {
     var data = {
       'workflowDefinitionName': name,
       'processVariables': {
-        'modelName': 'ProcesInstances'
+        'modelName': 'NonExistentModelName'
       }
     };
     models.WorkflowInstance.create(data, bootstrap.defaultContext, function callback(err, instance) {
@@ -179,7 +179,7 @@ describe('Test case for Service Task Fail Case', function callback() {
     var data = {
       'workflowDefinitionName': name,
       'processVariables': {
-        'modelName': 'ProcesInstances'
+        'modelName': 'NonExistentModelName'
       }
     };
 

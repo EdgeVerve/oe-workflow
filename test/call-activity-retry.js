@@ -57,7 +57,7 @@ describe('Test case for callActivity', function CB() {
   });
 
   it('create workflow instance ', function CB(done) {
-    var processVariables = { 'modelName': 'ProcesInstances' };
+    var processVariables = { 'modelName': 'NonExistentModelName' };
     var data = { 'workflowDefinitionName': name, 'processVariables': processVariables };
     models.WorkflowInstance.create(data, bootstrap.defaultContext, function CB(err, instance) {
       if (err) {

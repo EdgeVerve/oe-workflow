@@ -81,7 +81,7 @@ describe('Test case for Business Rule Task', function cb() {
   /**
    * TODO : Disabling the test case because business rule input format seems to be change, need to update the encodede excel
    */
-  xit('validate process', function cb(done) {
+  it('validate process', function cb(done) {
     models.ProcessInstance.findById(testVars.processes[0].id, bootstrap.defaultContext, function cb(err, instance) {
       if (err) {
         return done(err);
@@ -92,8 +92,9 @@ describe('Test case for Business Rule Task', function cb() {
       var expectedFlow = ['Start', 'BusinessRule Task', 'Script Task', 'End'];
       stateVerifier.verifyFlow(instance._processTokens, expectedFlow);
       assert.isNotNull(instance._processVariables.ruleEngineDecision);
-      assert.equal(instance._processVariables.ruleEngineDecision.Discount, 0.05);
-      assert.equal(instance._processVariables.ruleEngineDecision.Shipping, 'Air');
+      assert.isNotNull(instance._processVariables.ruleEngineDecision.body);
+      assert.equal(instance._processVariables.ruleEngineDecision.body.Discount, 0.05);
+      assert.equal(instance._processVariables.ruleEngineDecision.body.Shipping, 'Air');
       setTimeout(done, 1000);
     });
   });
