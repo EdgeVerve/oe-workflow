@@ -971,7 +971,16 @@ function addOERemoteMethods(Model) {
       } else if (inst.length === 0) {
         // no instance found in change request model
         var Model = app.models[modelName];
-        return Model.findById(id, filter, ctx, cb);
+        return Model.findById(id, filter, ctx, function(err, result) {
+          if (result !== null) {
+            return cb(err, result);
+          }
+          var msg = 'Record with id:' + id + ' not found.';
+          var error = new Error(msg);
+          error.statusCode = error.status = 404;
+          error.code = 'MODEL_NOT_FOUND';
+          cb(error);
+        });
       }
       // unwarap the object
       let cinst = unwrapChangeRequest(inst[0]);
@@ -1032,7 +1041,10 @@ function addOERemoteMethods(Model) {
         return cb(err);
       } else if (inst.length === 0) {
         // no instance found in change request model
-        return cb(null, null);
+        var error = new Error('No change request to recall');
+        error.statusCode = error.status = 404;
+        error.code = 'MODEL_NOT_FOUND';
+        return cb(err);
       }
 
       var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
@@ -1128,7 +1140,7 @@ function addOERemoteMethods(Model) {
 
       if (instances.length === 0) {
         log.debug(ctx, 'No workflow instance attached to current Model Instance Id');
-        return cb(null, null);
+        return cb(null, []);
       } else if ( instances.length > 1) {
         let err = new Error('multiple workflow request found with same Model Instance Id');
         log.error(ctx, err);
@@ -1189,7 +1201,7 @@ function addOERemoteMethods(Model) {
 
       if (instances.length === 0) {
         log.debug(ctx.options, 'No workflow instance attached to current Model Instance Id');
-        return cb(null, null);
+        return cb(null, []);
       }
 
       var workflowRef = instances[0].workflowInstanceId;
