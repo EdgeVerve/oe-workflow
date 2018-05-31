@@ -971,7 +971,7 @@ function addOERemoteMethods(Model) {
       } else if (inst.length === 0) {
         // no instance found in change request model
         var Model = app.models[modelName];
-        return Model.findById(id, filter, ctx, function(err, result) {
+        return Model.findById(id, filter, ctx, function findByIdCb(err, result) {
           if (result !== null) {
             return cb(err, result);
           }
