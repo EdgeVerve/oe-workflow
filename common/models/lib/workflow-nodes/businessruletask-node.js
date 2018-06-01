@@ -59,15 +59,14 @@ var evaluatePayload = function evalPayload(inputData, message, process) {
       var propVal = inputData[prop];
       if (!(inputData[prop].constructor && (inputData[prop].constructor.name === 'Array' || inputData[prop].constructor.name === 'Object'))) {
         var propExp = inputData[prop].trim();
-        /* ${..} not required for evaluateExpression. (Older eval needed it)
-           Strip ${...} wrapper if present, for backward compatibility*/
+        var value = sandbox.evaluate$Expression({}, propExp, message, process);
         if (propExp.startsWith('${') && propExp.endsWith('}')) {
-          propExp = propExp.substr(2, propExp.length - 3);
-          let depMessage = '[TO BE DEPRECATED SOON]: Please remove the ${...} wrapper from expression';
-          // eslint-disable-next-line
-          console.log(depMessage);
+          var newValue = parseFloat(value);
+          if (!isNaN(newValue)) {
+            value = newValue;
+          }
         }
-        payload[prop] = sandbox.evaluateExpression({}, propExp, message, process);
+        payload[prop] = value;
       } else {
         payload[prop] = propVal;
       }
