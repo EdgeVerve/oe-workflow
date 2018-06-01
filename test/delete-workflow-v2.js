@@ -285,12 +285,10 @@ describe('Test case for Trigger on Delete OE Workflow [ workflow dependent ] - a
 
   it('find instance of ' + modelName + ' via findByIdX : author - user1', function CB(done) {
     models[modelName].findByIdX(testVars.instanceId, User1Context, function cb(err, instance) {
-      if (err) {
-        log.error(err);
-        return done(err);
-      }
-      log.debug(instance);
-      assert.isNull(instance);
+      assert.isNotNull(err);
+      assert.strictEqual(err.statusCode, 404);
+      assert.strictEqual(err.code, 'MODEL_NOT_FOUND');
+      assert.isNotOk(instance);
       done();
     });
   });

@@ -27,6 +27,14 @@
       "required": true,
       "default": "pending"
     },
+    "verificationStatus": {
+      "type": "string",
+      "required": true,
+      "default": "pending"
+    },
+    "verificationComments": {
+      "type": "string"
+    },
     "workflowInstanceId": {
       "type": "string",
       "required": true

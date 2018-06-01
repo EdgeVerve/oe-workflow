@@ -260,7 +260,7 @@ module.exports = function Task(Task) {
                 }, {
                   modelId: modelId
                 }, {
-                  status: { nin: ['approved', 'rejected'] }
+                  status: 'pending'
                 }]
               }
             }, options, function fetchChangeModel(err, inst) {
@@ -386,7 +386,7 @@ module.exports = function Task(Task) {
               _verifiedBy = options.ctx.username;
             }
             let updates = {
-              status: data.__action__,
+              verificationStatus: data.__action__,
               _verifiedBy: _verifiedBy
             };
             request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
@@ -455,6 +455,7 @@ module.exports = function Task(Task) {
               return self.complete_(pdata, options, next);
             });
           } else {
+            // TODO: Update ChangeWorkflowRequest verificationStatus here.
             return self.complete_(pdata, options, next);
           }
         } else {

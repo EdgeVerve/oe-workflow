@@ -275,8 +275,9 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       }
       return done(null, _res);
     });
+  } else {
+    return done(null, {error: new Error('Invalid operation ' + operation + ' on model ' + modelName )});
   }
-  return done(null, {error: new Error('Invalid operation ' + operation + ' on model ' + modelName )});
 }
 
 

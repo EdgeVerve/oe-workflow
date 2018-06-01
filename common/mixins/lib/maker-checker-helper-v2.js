@@ -93,7 +93,8 @@ function rejectedDeleteInstance(app, request, options, next) {
     _verifiedBy = options.ctx.username;
   }
   var updates = {
-    status: 'rejected',
+    status: 'complete',
+    verificationStatus: 'rejected',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -121,7 +122,8 @@ function approvedDeleteInstance(app, request, options, next) {
       _verifiedBy = options.ctx.username;
     }
     var updates = {
-      status: 'approved',
+      status: 'complete',
+      verificationStatus: 'approved',
       _verifiedBy: _verifiedBy,
       _version: request._version
     };
@@ -143,7 +145,8 @@ function rejectedUpdateInstance(app, request, options, next) {
     _verifiedBy = options.ctx.username;
   }
   var updates = {
-    status: 'rejected',
+    status: 'complete',
+    verificationStatus: 'rejected',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -193,7 +196,8 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
         _verifiedBy = options.ctx.username;
       }
       var updates = {
-        status: 'approved',
+        status: 'complete',
+        verificationStatus: 'approved',
         _verifiedBy: _verifiedBy,
         _version: request._version
       };
@@ -216,7 +220,8 @@ function rejectedCreateInstance(app, request, options, next) {
     _verifiedBy = options.ctx.username;
   }
   var updates = {
-    status: 'rejected',
+    status: 'complete',
+    verificationStatus: 'rejected',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -251,7 +256,8 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
       _verifiedBy = options.ctx.username;
     }
     var updates = {
-      status: 'approved',
+      status: 'complete',
+      verificationStatus: 'approved',
       _verifiedBy: _verifiedBy,
       _version: request._version
     };
