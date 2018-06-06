@@ -32,7 +32,7 @@
       "required": true,
       "default": "pending"
     },
-    "verificationComments": {
+    "remarks": {
       "type": "string"
     },
     "workflowInstanceId": {

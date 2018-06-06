@@ -95,6 +95,7 @@ function rejectedDeleteInstance(app, request, options, next) {
   var updates = {
     status: 'complete',
     verificationStatus: 'rejected',
+    remarks: options.__comments__ || '',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -124,6 +125,7 @@ function approvedDeleteInstance(app, request, options, next) {
     var updates = {
       status: 'complete',
       verificationStatus: 'approved',
+      remarks: options.__comments__ || '',
       _verifiedBy: _verifiedBy,
       _version: request._version
     };
@@ -147,6 +149,7 @@ function rejectedUpdateInstance(app, request, options, next) {
   var updates = {
     status: 'complete',
     verificationStatus: 'rejected',
+    remarks: options.__comments__ || '',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -198,6 +201,7 @@ function approvedUpdateInstance(app, request, wfupdates, options, next) {
       var updates = {
         status: 'complete',
         verificationStatus: 'approved',
+        remarks: options.__comments__ || '',
         _verifiedBy: _verifiedBy,
         _version: request._version
       };
@@ -222,6 +226,7 @@ function rejectedCreateInstance(app, request, options, next) {
   var updates = {
     status: 'complete',
     verificationStatus: 'rejected',
+    remarks: options.__comments__ || '',
     _verifiedBy: _verifiedBy,
     _version: request._version
   };
@@ -258,6 +263,7 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
     var updates = {
       status: 'complete',
       verificationStatus: 'approved',
+      remarks: options.__comments__ || '',
       _verifiedBy: _verifiedBy,
       _version: request._version
     };
