@@ -265,7 +265,7 @@ module.exports = function Task(Task) {
           }
           var modelName = process._processVariables._modelInstance._type;
           var Model = loopback.getModel(modelName, options);
-          var modelId = process._processVariables._modelInstance._modelId;
+          var modelId = process._processVariables._modelId;
           Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
             if (err) {
               log.error(options, err);
@@ -290,19 +290,19 @@ module.exports = function Task(Task) {
               }
               var instObj = inst.toObject();
               var operation = instObj.operation;
-              var instx = JSON.parse(JSON.stringify(instObj.data));
+              //var instx = JSON.parse(JSON.stringify(instObj.data));
               /* For second-maker currentInstance should have partially changed data from change-request */
-              currentInstance = new Model(instx);
-              for (let key in updates) {
-                if (Object.prototype.hasOwnProperty.call(updates, key)) {
-                  var val = updates[key];
-                  instx[key] = val;
-                }
-              }
+              currentInstance = new Model(instObj.data);
+              // for (let key in updates) {
+              //   if (Object.prototype.hasOwnProperty.call(updates, key)) {
+              //     var val = updates[key];
+              //     instx[key] = val;
+              //   }
+              // }
 
               var modifiers = inst._modifiers || [];
               modifiers.push(options.ctx.username);
-              instx._modifiedBy = options.ctx.username;
+              //instx._modifiedBy = options.ctx.username;
 
               Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
@@ -310,9 +310,9 @@ module.exports = function Task(Task) {
                   return next(err);
                 }
                 log.debug(options, 'Instance has been validated during maker checker creation');
-
+                _data._modifiedBy = options.ctx.username;
                 inst.updateAttributes({
-                  data: instx,
+                  data: _data,
                   remarks: data.__comments__,
                   _modifiers: modifiers
                 }, options, function updateCM(err, res) {
@@ -324,7 +324,8 @@ module.exports = function Task(Task) {
                   var xdata = {};
                   xdata.pv = pdata.pv || {};
                   xdata.pv._modifiers = modifiers;
-                  xdata.pv._modelInstance = instx;
+                  xdata.pv._modelInstance = _data;
+
                   xdata.msg = pdata.msg;
                   xdata.__comments__ = pdata.__comments__;
                   return self.complete_(xdata, options, next);
