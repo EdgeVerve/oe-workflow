@@ -355,6 +355,8 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var operation = 'update';
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+    var inputPV = data.pv;
+    delete data.pv;
 
     Model.findById(id, options, function fetchInstance(err, cinst) {
       if (err) {
@@ -468,7 +470,7 @@ function addOERemoteMethods(Model) {
                 var mapping = res[0];
 
                 let workflowBody = mapping.workflowBody;
-                workflowBody.processVariables = workflowBody.processVariables || {};
+                workflowBody.processVariables = Object.assign(workflowBody.processVariables || {}, inputPV);
                 workflowBody.processVariables._operation = mData.operation;
                 workflowBody.processVariables._modifiers = mData._modifiers;
                 workflowBody.processVariables._modelInstance = mData.data;
