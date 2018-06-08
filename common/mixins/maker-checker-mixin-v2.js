@@ -579,15 +579,16 @@ function addOERemoteMethods(Model) {
       dpBeforeSave[0](context, function beforeSaveCb(err) {
         if (err) return next(err);
 
-        // update instance's properties after 'before workflow' hooks are invoked.
-        try {
-          newInstance.setAttributes(data);
-        } catch (err) {
-          return process.nextTick(function asyncErrorCb() {
-            next(err);
-          });
+        if(context.currentInstance) { /* When in UpdateX */
+          // update instance's properties after 'before workflow' hooks are invoked.
+          try {
+            newInstance.setAttributes(data);
+          } catch (err) {
+            return process.nextTick(function asyncErrorCb() {
+              next(err);
+            });
+          }
         }
-
         // validation required
         newInstance.isValid(function validateCb(valid) {
           if (valid) {
