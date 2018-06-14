@@ -279,6 +279,7 @@ function addOERemoteMethods(Model) {
           modelId: id,
           operation: 'delete',
           data: einst,
+          verificationStatus: data.__verificationStatus__,
           _modifiers: [
             options.ctx.username
           ]
@@ -440,6 +441,7 @@ function addOERemoteMethods(Model) {
               modelId: id,
               operation: 'update',
               data: _data,
+              verificationStatus: data.__verificationStatus__,
               _modifiers: [
                 options.ctx.username
               ]
@@ -843,6 +845,7 @@ function addOERemoteMethods(Model) {
             modelId: id,
             operation: 'create',
             data: _data,
+            verificationStatus: data.__verificationStatus__,
             _modifiers: [
               options.ctx.username
             ]

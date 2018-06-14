@@ -311,11 +311,15 @@ module.exports = function Task(Task) {
                 }
                 log.debug(options, 'Instance has been validated during maker checker creation');
                 _data._modifiedBy = options.ctx.username;
-                inst.updateAttributes({
+                var changeRequestChanges = {
                   data: _data,
                   remarks: data.__comments__,
                   _modifiers: modifiers
-                }, options, function updateCM(err, res) {
+                };
+                if(data.__verificationStatus__) {
+                  changeRequestChanges.verificationStatus = data.__verificationStatus__;
+                }
+                inst.updateAttributes(changeRequestChanges, options, function updateCM(err, res) {
                   if (err) {
                     log.error(options, err);
                     return next(err);

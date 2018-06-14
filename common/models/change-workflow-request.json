@@ -28,9 +28,7 @@
       "default": "pending"
     },
     "verificationStatus": {
-      "type": "string",
-      "required": true,
-      "default": "pending"
+      "type": "string"
     },
     "remarks": {
       "type": "string"
