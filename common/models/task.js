@@ -290,19 +290,11 @@ module.exports = function Task(Task) {
               }
               var instObj = inst.toObject();
               var operation = instObj.operation;
-              //var instx = JSON.parse(JSON.stringify(instObj.data));
               /* For second-maker currentInstance should have partially changed data from change-request */
               currentInstance = new Model(instObj.data);
-              // for (let key in updates) {
-              //   if (Object.prototype.hasOwnProperty.call(updates, key)) {
-              //     var val = updates[key];
-              //     instx[key] = val;
-              //   }
-              // }
 
               var modifiers = inst._modifiers || [];
               modifiers.push(options.ctx.username);
-              //instx._modifiedBy = options.ctx.username;
 
               Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
@@ -316,7 +308,7 @@ module.exports = function Task(Task) {
                   remarks: data.__comments__,
                   _modifiers: modifiers
                 };
-                if(data.__verificationStatus__) {
+                if (data.__verificationStatus__) {
                   changeRequestChanges.verificationStatus = data.__verificationStatus__;
                 }
                 inst.updateAttributes(changeRequestChanges, options, function updateCM(err, res) {
@@ -447,7 +439,8 @@ module.exports = function Task(Task) {
           }
           pdata.__comments__ = data.__comments__;
           pdata.pv.__action__ = data.__action__;
-          options.__comments__ = data.__comments__; /*Set for updating Remarks*/
+          /* Set __comments__ for updating Remarks*/
+          options.__comments__ = data.__comments__;
           if (['approved', 'rejected'].indexOf(data.__action__) > -1 ) {
             WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
               delete options.__comments__;

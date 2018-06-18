@@ -279,7 +279,7 @@ function addOERemoteMethods(Model) {
           modelId: id,
           operation: 'delete',
           data: einst,
-          verificationStatus: data.__verificationStatus__,
+          verificationStatus: 'pending',
           _modifiers: [
             options.ctx.username
           ]
@@ -581,7 +581,8 @@ function addOERemoteMethods(Model) {
       dpBeforeSave[0](context, function beforeSaveCb(err) {
         if (err) return next(err);
 
-        if(context.currentInstance) { /* When in UpdateX */
+        if (context.currentInstance) {
+          /* When in UpdateX */
           // update instance's properties after 'before workflow' hooks are invoked.
           try {
             newInstance.setAttributes(data);
@@ -609,7 +610,6 @@ function addOERemoteMethods(Model) {
   Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
     // get hasOne, hasMany relation metadata
     var relations = [];
-//ufr    var _usedFields = [];
     var childData = {};
     var parentData = JSON.parse(JSON.stringify(data));
     for (let r in Model.relations) {
@@ -646,13 +646,6 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        // pushing _data fields generated as part of MakerValidation to not get
-        // overidden later
-        //ufr for (var key in _data) {
-        //   if (Object.prototype.hasOwnProperty.call(_data, key)) {
-        //     _usedFields.push(key);
-        //   }
-        // }
         async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
@@ -671,19 +664,16 @@ function addOERemoteMethods(Model) {
             let relationName = relations[i].relationName;
             if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
-                //ufr _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               _data[relationName].push(dataArray[i]);
             } else {
-              //ufr _usedFields.push(relationName);
               _data[relationName] = dataArray[i];
             }
           }
           if (err) {
             return next(err);
           }
-          //ufr _data._usedFields = _usedFields;
           delete options.childData;
           delete options.parentData;
           next(null, _data);
@@ -695,13 +685,6 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        // pushing _data fields generated as part of MakerValidation to not get
-        // overidden later
-        //ufr for (var key in _data) {
-        //   if (Object.prototype.hasOwnProperty.call(_data, key)) {
-        //     _usedFields.push(key);
-        //   }
-        // }
         async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
@@ -744,14 +727,12 @@ function addOERemoteMethods(Model) {
             let relationName = relations[i].relationName;
             if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
-                //ufr _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName].push(data);
             } else {
-              //ufr _usedFields.push(relationName);
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName] = data;
@@ -760,7 +741,6 @@ function addOERemoteMethods(Model) {
           if (err) {
             return next(err);
           }
-          //ufr _data._usedFields = _usedFields;
           delete options.childData;
           delete options.parentData;
           next(null, _data);
