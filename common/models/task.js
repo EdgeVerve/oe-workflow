@@ -302,7 +302,7 @@ module.exports = function Task(Task) {
               var modifiers = inst._modifiers || [];
               modifiers.push(options.ctx.username);
 
-              /* data could be partial changes submitted by maker-2 
+              /* data could be partial changes submitted by maker-2
               So we should always apply data on currentInstance and send that for _makerValidation */
               Model._makerValidate(Model, operation, instx, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
