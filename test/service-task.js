@@ -227,7 +227,7 @@ describe('Test case for Service Task Evaluations (By Attaching on Create)', func
       assert.equal(res._status, 'private');
       testVars.instanceId = res.id;
       log.debug(JSON.stringify(res, null, '\t'));
-      done();
+      setTimeout(done, 1000);
     });
   });
 

@@ -292,11 +292,19 @@ module.exports = function Task(Task) {
               var operation = instObj.operation;
               /* For second-maker currentInstance should have partially changed data from change-request */
               currentInstance = new Model(instObj.data);
+              var instx = JSON.parse(JSON.stringify(instObj.data));
+              for (let key in updates) {
+                if (Object.prototype.hasOwnProperty.call(updates, key)) {
+                  instx[key] = updates[key];
+                }
+              }
 
               var modifiers = inst._modifiers || [];
               modifiers.push(options.ctx.username);
 
-              Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+              /* data could be partial changes submitted by maker-2 
+              So we should always apply data on currentInstance and send that for _makerValidation */
+              Model._makerValidate(Model, operation, instx, currentInstance, options, function _validateCb(err, _data) {
                 if (err) {
                   log.error(options, err);
                   return next(err);
