@@ -120,7 +120,7 @@ describe('Test case for Service Task Fail Case', function callback() {
       if (err) {
         return done(err);
       }
-      setTimeout(done, 2000);
+      setTimeout(done, 5000);
     });
   });
 
@@ -194,7 +194,7 @@ describe('Test case for Service Task Fail Case', function callback() {
         return done(err);
       }
       testVars.mainWorkflowInstance = instance;
-      setTimeout(done, 3000);
+      setTimeout(done, 5000);
     });
   });
 

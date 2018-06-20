@@ -5,7 +5,7 @@
   "idInjection": true,
   "properties": {
     "data": {
-      "type": "any",
+      "type": "object",
       "required": true
     },
     "operation" : {
@@ -26,6 +26,12 @@
       "type": "string",
       "required": true,
       "default": "pending"
+    },
+    "verificationStatus": {
+      "type": "string"
+    },
+    "remarks": {
+      "type": "string"
     },
     "workflowInstanceId": {
       "type": "string",

@@ -279,6 +279,7 @@ function addOERemoteMethods(Model) {
           modelId: id,
           operation: 'delete',
           data: einst,
+          verificationStatus: 'pending',
           _modifiers: [
             options.ctx.username
           ]
@@ -314,7 +315,7 @@ function addOERemoteMethods(Model) {
             workflowBody.processVariables._modelInstance = mData.data;
             workflowBody.processVariables._modelInstance._type = modelName;
             workflowBody.processVariables._modelInstance._deletedBy = options.ctx.username;
-            workflowBody.processVariables._modelInstance._modelId = id;
+            workflowBody.processVariables._modelId = id;
           // this is to identify while executing Finalize Transaction to follow which implementation
             workflowBody.processVariables._maker_checker_impl = 'v2';
             WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -355,6 +356,8 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var operation = 'update';
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+    var inputPV = data.pv;
+    delete data.pv;
 
     Model.findById(id, options, function fetchInstance(err, cinst) {
       if (err) {
@@ -380,7 +383,7 @@ function addOERemoteMethods(Model) {
           and: [{
             modelName: modelName
           }, {
-            status: { nin: ['approved', 'rejected'] }
+            status: 'pending'
           }, {
             modelId: id
           }]
@@ -429,16 +432,16 @@ function addOERemoteMethods(Model) {
             // reapply data over _data to regain related Model data, except the
             // data which has been generated via Validation
             for (let key in data) {
-              if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
+              if (Object.prototype.hasOwnProperty.call(data, key) && !Object.prototype.hasOwnProperty.call(_data, key)) {
                 _data[key] = data[key];
               }
             }
-            delete _data._usedFields;
             var mData = {
               modelName: modelName,
               modelId: id,
               operation: 'update',
               data: _data,
+              verificationStatus: data.__verificationStatus__,
               _modifiers: [
                 options.ctx.username
               ]
@@ -469,13 +472,13 @@ function addOERemoteMethods(Model) {
                 var mapping = res[0];
 
                 let workflowBody = mapping.workflowBody;
-                workflowBody.processVariables = workflowBody.processVariables || {};
+                workflowBody.processVariables = Object.assign(workflowBody.processVariables || {}, inputPV);
                 workflowBody.processVariables._operation = mData.operation;
                 workflowBody.processVariables._modifiers = mData._modifiers;
                 workflowBody.processVariables._modelInstance = mData.data;
                 workflowBody.processVariables._modelInstance._type = modelName;
                 workflowBody.processVariables._modelInstance._modifiedBy = options.ctx.username;
-                workflowBody.processVariables._modelInstance._modelId = id;
+                workflowBody.processVariables._modelId = id;
                 // this is to identify while executing Finalize Transaction to follow which implementation
                 workflowBody.processVariables._maker_checker_impl = 'v2';
                 WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -578,15 +581,17 @@ function addOERemoteMethods(Model) {
       dpBeforeSave[0](context, function beforeSaveCb(err) {
         if (err) return next(err);
 
-        // update instance's properties after 'before workflow' hooks are invoked.
-        try {
-          newInstance.setAttributes(data);
-        } catch (err) {
-          return process.nextTick(function asyncErrorCb() {
-            next(err);
-          });
+        if (context.currentInstance) {
+          /* When in UpdateX */
+          // update instance's properties after 'before workflow' hooks are invoked.
+          try {
+            newInstance.setAttributes(data);
+          } catch (err) {
+            return process.nextTick(function asyncErrorCb() {
+              next(err);
+            });
+          }
         }
-
         // validation required
         newInstance.isValid(function validateCb(valid) {
           if (valid) {
@@ -605,7 +610,6 @@ function addOERemoteMethods(Model) {
   Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
     // get hasOne, hasMany relation metadata
     var relations = [];
-    var _usedFields = [];
     var childData = {};
     var parentData = JSON.parse(JSON.stringify(data));
     for (let r in Model.relations) {
@@ -642,18 +646,11 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        // pushing _data fields generated as part of MakerValidation to not get
-        // overidden later
-        for (var key in _data) {
-          if (Object.prototype.hasOwnProperty.call(_data, key)) {
-            _usedFields.push(key);
-          }
-        }
         async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
           let data = relation.data;
-          makerValidation(Model, operation, data, null, options, cb);
+          _makerValidate(Model, operation, data, null, options, cb);
         },
         function allDone(err, dataArray) {
           if (err) {
@@ -667,19 +664,16 @@ function addOERemoteMethods(Model) {
             let relationName = relations[i].relationName;
             if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
-                _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               _data[relationName].push(dataArray[i]);
             } else {
-              _usedFields.push(relationName);
               _data[relationName] = dataArray[i];
             }
           }
           if (err) {
             return next(err);
           }
-          _data._usedFields = _usedFields;
           delete options.childData;
           delete options.parentData;
           next(null, _data);
@@ -691,13 +685,6 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        // pushing _data fields generated as part of MakerValidation to not get
-        // overidden later
-        for (var key in _data) {
-          if (Object.prototype.hasOwnProperty.call(_data, key)) {
-            _usedFields.push(key);
-          }
-        }
         async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
@@ -710,7 +697,7 @@ function addOERemoteMethods(Model) {
             });
           } else if (data.__row_status === 'added') {
             // new related model instance data
-            return makerValidation(Model, 'create', data, null, options, cb);
+            return _makerValidate(Model, 'create', data, null, options, cb);
           } else if (data.__row_status === 'modified') {
             let idName = Model.definition.idName();
             let modelId = data[idName];
@@ -719,7 +706,7 @@ function addOERemoteMethods(Model) {
                 log.error(options, err);
                 return cb(err);
               }
-              return makerValidation(Model, 'update', data, currentInstance, options, cb);
+              return _makerValidate(Model, 'update', data, currentInstance, options, cb);
             });
           } else {
             // no need to validate, if row status is not given
@@ -740,14 +727,12 @@ function addOERemoteMethods(Model) {
             let relationName = relations[i].relationName;
             if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
-                _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName].push(data);
             } else {
-              _usedFields.push(relationName);
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName] = data;
@@ -756,7 +741,6 @@ function addOERemoteMethods(Model) {
           if (err) {
             return next(err);
           }
-          _data._usedFields = _usedFields;
           delete options.childData;
           delete options.parentData;
           next(null, _data);
@@ -828,19 +812,20 @@ function addOERemoteMethods(Model) {
             _data[idName] =  uuidv4();
           }
           var id = _data[idName];
+
           // reapply data over _data to regain related Model data, except the
           // data which has been generated via Validation
           for (let key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
+            if (Object.prototype.hasOwnProperty.call(data, key) && !Object.prototype.hasOwnProperty.call(_data, key)) {
               _data[key] = data[key];
             }
           }
-          delete _data._usedFields;
           var mData = {
             modelName: modelName,
             modelId: id,
             operation: 'create',
             data: _data,
+            verificationStatus: data.__verificationStatus__,
             _modifiers: [
               options.ctx.username
             ]
@@ -878,7 +863,7 @@ function addOERemoteMethods(Model) {
               workflowBody.processVariables._modelInstance = mData.data;
               workflowBody.processVariables._modelInstance._type = modelName;
               workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
-              workflowBody.processVariables._modelInstance._modelId = id;
+              workflowBody.processVariables._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
               WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -945,7 +930,8 @@ function addOERemoteMethods(Model) {
       filter = {};
     }
 
-    var userQuery = filter ? JSON.parse(JSON.stringify(filter)) : {};
+    /* Use only the where-clause as filter on change-workflow-request */
+    var userQuery = filter && filter.where ? {where: JSON.parse(JSON.stringify(filter.where))} : {};
     var baseQuery = {
       where: {
         and: [{

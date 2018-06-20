@@ -289,8 +289,10 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
   });
 
   it('complete user task by checker', function CB(done) {
+    var completionComments = 'completion comments';
     testVars.taskInstance.complete({
-      '__action__': 'approved'
+      '__action__': 'approved',
+      '__comments__': completionComments
     }, User3Context, function cb(err, res) {
       if (err) {
         log.error(err);
@@ -298,6 +300,7 @@ describe('Test case for Trigger on Update OE Workflow [ workflow dependent ] - a
       }
       log.debug(res);
       assert.isNotNull(res);
+      assert.strictEqual(res.comments, completionComments);
       setTimeout(done, 2000);
     });
   });
