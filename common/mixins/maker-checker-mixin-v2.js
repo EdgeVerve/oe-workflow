@@ -421,7 +421,7 @@ function addOERemoteMethods(Model) {
           }
 
           options.isNewChangeRequest = true;
-          Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+          Model._makerValidate(Model, operation, data, currentInstance, null, options, function _validateCb(err, _data) {
             if (err) {
               return next(err);
             }
@@ -524,7 +524,7 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  function makerValidation(Model, operation, data, currentInstance, options, next) {
+  function makerValidation(Model, operation, data, currentInstance, parentData, options, next) {
     var newInstance = null;
     var context = {};
     // might need to a property like isNewChangeRequest to identify before
@@ -533,6 +533,7 @@ function addOERemoteMethods(Model) {
       newInstance = new Model(data);
       context = {
         Model: Model,
+        parentData: parentData,
         instance: newInstance,
         isNewInstance: true,
         hookState: {},
@@ -543,6 +544,7 @@ function addOERemoteMethods(Model) {
       context = {
         Model: Model,
         where: {},
+        parentData: parentData,
         currentInstance: currentInstance,
         data: data,
         hookState: {},
@@ -551,7 +553,6 @@ function addOERemoteMethods(Model) {
     }
 
     if (options.isNewChangeRequest) {
-      delete options.isNewChangeRequest;
       context.isNewChangeRequest = true;
     }
     Model.notifyObserversOf('before workflow', context, function beforeWorkflowCb(err) {
@@ -607,16 +608,14 @@ function addOERemoteMethods(Model) {
     });
   }
 
-  Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
+  Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, parentData, options, next) {
     // get hasOne, hasMany relation metadata
     var relations = [];
     var childData = {};
-    var parentData = JSON.parse(JSON.stringify(data));
     for (let r in Model.relations) {
       if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
         let relation = Model.relations[r];
-        childData = data[r];
-        delete parentData[r];
+        childData[r] = data[r];
         if (relation.type && (relation.type === 'hasMany' || relation.type === 'embedsMany') && typeof data[r] !== 'undefined') {
           for (let i = 0; i < data[r].length; i++) {
             let _relObj = {
@@ -641,7 +640,7 @@ function addOERemoteMethods(Model) {
     options.childData = childData;
     options.parentData = parentData;
     if (operation === 'create') {
-      makerValidation(Model, operation, data, null, options, function _validateCb(err, _data) {
+      makerValidation(Model, operation, data, null, parentData, options, function _validateCb(err, _data) {
         if (err) {
           return next(err);
         }
@@ -650,7 +649,7 @@ function addOERemoteMethods(Model) {
         function validateEach(relation, cb) {
           let Model = relation.Model;
           let data = relation.data;
-          _makerValidate(Model, operation, data, null, options, cb);
+          _makerValidate(Model, operation, data, null, _data, options, cb);
         },
         function allDone(err, dataArray) {
           if (err) {
@@ -680,7 +679,7 @@ function addOERemoteMethods(Model) {
         });
       });
     } else if (operation === 'update') {
-      makerValidation(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+      makerValidation(Model, operation, data, currentInstance, parentData, options, function _validateCb(err, _data) {
         if (err) {
           return next(err);
         }
@@ -697,7 +696,7 @@ function addOERemoteMethods(Model) {
             });
           } else if (data.__row_status === 'added') {
             // new related model instance data
-            return _makerValidate(Model, 'create', data, null, options, cb);
+            return _makerValidate(Model, 'create', data, null, _data, options, cb);
           } else if (data.__row_status === 'modified') {
             let idName = Model.definition.idName();
             let modelId = data[idName];
@@ -706,7 +705,7 @@ function addOERemoteMethods(Model) {
                 log.error(options, err);
                 return cb(err);
               }
-              return _makerValidate(Model, 'update', data, currentInstance, options, cb);
+              return _makerValidate(Model, 'update', data, currentInstance, _data, options, cb);
             });
           } else {
             // no need to validate, if row status is not given
@@ -801,7 +800,7 @@ function addOERemoteMethods(Model) {
           });
         }
         options.isNewChangeRequest = true;
-        Model._makerValidate(Model, 'create', data, null, options, function _validateCb(err, _data) {
+        Model._makerValidate(Model, 'create', data, null, null, options, function _validateCb(err, _data) {
           if (err) {
             return next(err);
           }
