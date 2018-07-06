@@ -34,6 +34,7 @@
     "istanbul": "0.4.1",
     "mocha": "2.3.4",
     "node-uuid": "^1.4.8",
+    "supertest": "^1.1.0",
     "oe-cloud": "git+https://github.com/EdgeVerve/oe-cloud.git#master",
     "oe-logger": "git+https://github.com/EdgeVerve/oe-logger.git#master"
   },

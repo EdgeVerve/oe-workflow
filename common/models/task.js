@@ -123,7 +123,7 @@ module.exports = function Task(Task) {
     }
 
     function groupMatch(group, candidateGroups, excludedGroups) {
-      if (candidateGroups.indexOf(group) !== -1 ) {
+      if (candidateGroups.indexOf(group) !== -1) {
         // group found
         return 1;
       } else if (excludedGroups.indexOf(group) !== -1) {
@@ -155,7 +155,7 @@ module.exports = function Task(Task) {
     }
 
     function userMatch(user, candidateUsers, excludedUsers) {
-      if (candidateUsers.indexOf(user) !== -1 ) {
+      if (candidateUsers.indexOf(user) !== -1) {
         // user found
         return 1;
       } else if (excludedUsers.indexOf(user) !== -1) {
@@ -254,7 +254,7 @@ module.exports = function Task(Task) {
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           var updates = data;
-          pdata = {__comments__: data.__comments__};
+          pdata = { __comments__: data.__comments__ };
           if (typeof data.pv !== 'undefined') {
             pdata.pv = data.pv;
             delete updates.pv;
@@ -324,7 +324,7 @@ module.exports = function Task(Task) {
                     log.error(options, err);
                     return next(err);
                   }
-                    // process._processVariables._modelInstance = instx;
+                  // process._processVariables._modelInstance = instx;
                   var xdata = {};
                   xdata.pv = pdata.pv || {};
                   xdata.pv._modifiers = modifiers;
@@ -343,18 +343,18 @@ module.exports = function Task(Task) {
           WorkflowManager = loopback.getModel('WorkflowManager', options);
           workflowInstanceId = process._processVariables._workflowInstanceId;
 
-          if ( typeof data.__action__ === 'undefined' ) {
+          if (typeof data.__action__ === 'undefined') {
             let err = new Error('__action__ not provided. Checker enabled task requires this field.');
             log.error(options, err);
             return next(err);
           }
 
-          let validActArr = [ 'approved', 'rejected' ];
-          if ( taskObj.stepVariables && taskObj.stepVariables.__action__ ) {
+          let validActArr = ['approved', 'rejected'];
+          if (taskObj.stepVariables && taskObj.stepVariables.__action__) {
             validActArr = validActArr.concat(taskObj.stepVariables.__action__);
           }
 
-          let isValid = ( validActArr.indexOf(data.__action__) > -1 );
+          let isValid = (validActArr.indexOf(data.__action__) > -1);
           if (!isValid) {
             let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
             log.error(options, err);
@@ -406,18 +406,18 @@ module.exports = function Task(Task) {
           WorkflowManager = loopback.getModel('WorkflowManager', options);
           workflowInstanceId = process._processVariables._workflowInstanceId;
 
-          if ( typeof data.__action__ === 'undefined' ) {
+          if (typeof data.__action__ === 'undefined') {
             let err = new Error('__action__ not provided. Checker enabled task requires this field.');
             log.error(options, err);
             return next(err);
           }
 
-          let validActArr = [ 'approved', 'rejected' ];
-          if ( self.stepVariables && self.stepVariables.__action__ ) {
+          let validActArr = ['approved', 'rejected'];
+          if (self.stepVariables && self.stepVariables.__action__) {
             validActArr = validActArr.concat(self.stepVariables.__action__);
           }
 
-          let isValid = ( validActArr.indexOf(data.__action__) > -1 );
+          let isValid = (validActArr.indexOf(data.__action__) > -1);
           if (!isValid) {
             let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
             log.error(options, err);
@@ -449,7 +449,7 @@ module.exports = function Task(Task) {
           pdata.pv.__action__ = data.__action__;
           /* Set __comments__ for updating Remarks*/
           options.__comments__ = data.__comments__;
-          if (['approved', 'rejected'].indexOf(data.__action__) > -1 ) {
+          if (['approved', 'rejected'].indexOf(data.__action__) > -1) {
             WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
               delete options.__comments__;
               if (err) {
@@ -533,7 +533,7 @@ module.exports = function Task(Task) {
           }
         }
         // self.status = status;
-        var updates = {'status': status, comments: data.__comments__, '_version': self._version};
+        var updates = { 'status': status, comments: data.__comments__, '_version': self._version };
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);
@@ -547,7 +547,7 @@ module.exports = function Task(Task) {
 
 
   /**
-   * REST endpoint for completing User-Task
+   * REST endpoint for assigning task to another user or role.
    * @param  {Object}   data              Process-Variables & Message data
    * @param  {Object}   options           Options
    * @param  {Function} next              Callback
@@ -555,12 +555,19 @@ module.exports = function Task(Task) {
    */
   Task.prototype.delegate = function delegate(data, options, next) {
     var self = this;
+    var updates = {
+      'candidateUsers': [],
+      'candidateRoles': [],
+      'id': self.id,
+      '_version': self._version
+    };
 
-    var assignee;
     if (data && data.assignee) {
-      assignee = data.assignee;
+      updates.candidateUsers = [data.assignee];
+    } else if (data && data.role) {
+      updates.candidateRoles = [data.role];
     } else {
-      var error = new Error('Assignee is required to delegate task.');
+      var error = new Error('Assignee or role is required to delegate task.');
       log.error(options, error);
       return next(error);
     }
@@ -571,25 +578,36 @@ module.exports = function Task(Task) {
       return next(errorx);
     }
 
-    var updates = {
-      'candidateUsers': [
-        assignee
-      ],
-      'candidateRoles': [],
-      'candidateGroups': [],
-      'excludedUsers': [],
-      'excludedRoles': [],
-      'excludedGroups': [],
-      'id': self.id,
-      '_version': self._version
-    };
 
+
+    data.comments && (updates.comments = data.comments);
     self.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
         log.error(options, err);
         return next(err);
       }
       next(null, inst);
+    });
+  };
+
+  /**
+  * REST endpoint for updating user comments
+  * @param  {string}   comments          user comments
+  * @param  {Object}   options           Options
+  * @param  {Function} next              Callback
+  * @returns {void}
+  */
+  Task.prototype.updateComments = function comments(comments, options, next) {
+    var data = {
+      _version: this._version,
+      comments: comments
+    };
+    this.updateAttributes(data, options, function updateAttributesCbFn(err, data) {
+      if (err) {
+        next(err);
+      } else {
+        next(null, data);
+      }
     });
   };
 
@@ -654,6 +672,27 @@ module.exports = function Task(Task) {
     description: 'Delegate the assigned task to a different user',
     http: {
       verb: 'put'
+    },
+    isStatic: false,
+    returns: {
+      type: 'object',
+      root: true
+    }
+  });
+
+  Task.remoteMethod('updateComments', {
+    accessType: 'WRITE',
+    accepts: {
+      arg: 'comments',
+      type: 'string',
+      required: true,
+      description: 'Task instance',
+      http: { source: 'path' }
+    },
+    description: 'Sends a request to update task comments',
+    http: {
+      verb: 'put',
+      path: '/comments/:comments'
     },
     isStatic: false,
     returns: {
