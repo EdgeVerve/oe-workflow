@@ -578,8 +578,6 @@ module.exports = function Task(Task) {
       return next(errorx);
     }
 
-
-
     data.comments && (updates.comments = data.comments);
     self.updateAttributes(updates, options, function cb(err, inst) {
       if (err) {
