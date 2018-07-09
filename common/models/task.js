@@ -558,6 +558,7 @@ module.exports = function Task(Task) {
     var updates = {
       'candidateUsers': [],
       'candidateRoles': [],
+      'candidateGroups': [],
       'id': self.id,
       '_version': self._version
     };
@@ -566,8 +567,10 @@ module.exports = function Task(Task) {
       updates.candidateUsers = [data.assignee];
     } else if (data && data.role) {
       updates.candidateRoles = [data.role];
+    } else if (data && data.group) {
+      updates.candidateRoles = [data.group];
     } else {
-      var error = new Error('Assignee or role is required to delegate task.');
+      var error = new Error('Assignee/role/group is required to delegate task.');
       log.error(options, error);
       return next(error);
     }
@@ -590,17 +593,23 @@ module.exports = function Task(Task) {
 
   /**
   * REST endpoint for updating user comments
-  * @param  {string}   comments          user comments
+  * @param  {objet}    data          user comments
   * @param  {Object}   options           Options
   * @param  {Function} next              Callback
   * @returns {void}
   */
-  Task.prototype.updateComments = function comments(comments, options, next) {
-    var data = {
-      _version: this._version,
-      comments: comments
-    };
-    this.updateAttributes(data, options, function updateAttributesCbFn(err, data) {
+  Task.prototype.updateComments = function comments(data, options, next) {
+    if (data && data.comments) {
+      var updates = {
+        _version: this._version,
+        comments: data.comments
+      };
+    } else {
+      var error = new Error('comments are required for update');
+      return next(error);
+    }
+
+    this.updateAttributes(updates, options, function updateAttributesCbFn(err, data) {
       if (err) {
         next(err);
       } else {
@@ -681,16 +690,16 @@ module.exports = function Task(Task) {
   Task.remoteMethod('updateComments', {
     accessType: 'WRITE',
     accepts: {
-      arg: 'comments',
-      type: 'string',
+      arg: 'data',
+      type: 'object',
       required: true,
       description: 'Task instance',
-      http: { source: 'path' }
+      http: { source: 'body' }
     },
     description: 'Sends a request to update task comments',
     http: {
       verb: 'put',
-      path: '/comments/:comments'
+      path: '/updateComments/'
     },
     isStatic: false,
     returns: {

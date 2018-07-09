@@ -232,7 +232,7 @@ describe(chalk.blue('Task delegation to a role or user and providing comments'),
         expect(task).not.to.be.null;
         expect(task).not.to.be.empty;
         expect(task).not.to.be.undefined;
-        task[0].updateComments('Test comments', ctxUser3, function cb(err, updatedTask) {
+        task[0].updateComments({ comments: 'Test comments' }, ctxUser3, function cb(err, updatedTask) {
           if (err) {
             done(err);
           } else {
@@ -438,11 +438,12 @@ describe(chalk.blue('Task delegation to a role or user and providing comments'),
         expect(task).not.to.be.null;
         expect(task).not.to.be.empty;
         expect(task).not.to.be.undefined;
-        var comments = 'updating comments through api';
+        var comments = { comments: 'updating comments through api' };
         taskId = task[0].id;
-        var url = basePath + '/Tasks/' + taskId + '/comments/' + comments + '?access_token=' + atUser3;
+        var url = basePath + '/Tasks/' + taskId + '/updateComments?access_token=' + atUser3;
         api
           .put(url)
+          .send(comments)
           .set('Content-Type', 'application/json')
           .set('Accept', 'application/json')
           .expect(200)
@@ -457,6 +458,26 @@ describe(chalk.blue('Task delegation to a role or user and providing comments'),
           });
       }
     });
+  });
+
+  it('Test to Update the comments of the task', function cb(done) {
+    var url = basePath + '/Tasks/' + taskId + '/updateComments?access_token=' + atUser3;
+    api
+      .put(url)
+      .send({})
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .expect(500)
+      .end(function cb(err, response) {
+        if (err) {
+          done(err);
+        } else {
+          expect(response.body).to.be.defined;
+          expect(response.body.error).to.be.defined;
+          expect(response.body.error.message).to.be.equal('comments are required for update');
+          done();
+        }
+      });
   });
 
   it('Test to delegate the task to different user with comments', function cb(done) {
