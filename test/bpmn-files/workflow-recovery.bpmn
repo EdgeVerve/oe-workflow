@@ -47,7 +47,7 @@ _setPV("count2",count2);]]></bpmn2:script>
       <bpmn2:extensionElements>
         <camunda:oeConnector>
           <camunda:model>Literal</camunda:model>
-          <camunda:method>read</camunda:method>
+          <camunda:method>find</camunda:method>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_1a0q4g9</bpmn2:incoming>
@@ -57,7 +57,7 @@ _setPV("count2",count2);]]></bpmn2:script>
       <bpmn2:extensionElements>
         <camunda:oeConnector>
           <camunda:model>Literal</camunda:model>
-          <camunda:method>read</camunda:method>
+          <camunda:method>find</camunda:method>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0kw5zm3</bpmn2:incoming>

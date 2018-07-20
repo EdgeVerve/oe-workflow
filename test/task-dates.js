@@ -127,6 +127,19 @@ describe('Test case for taskManagement [ Authorized User ]', function callback()
     });
   });
 
+  it('fetch few fields of task instance', function callback(done) {
+    testVars.processes[0].tasks({fields: ['name', 'status']}, ctxUser1, function callback(err, task) {
+      if (err) {
+        return done(err);
+      }
+      assert.isNotNull(task);
+      assert.lengthOf(task, 1);
+      assert.isOk(task[0].name);
+      assert.isOk(task[0].status);
+      assert.isNotOk(task[0].followUpDate);
+      setTimeout(done, 2000);
+    });
+  });
 
   it('fetch task instance', function callback(done) {
     testVars.processes[0].tasks({}, ctxUser1, function callback(err, task) {

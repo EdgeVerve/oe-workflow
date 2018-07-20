@@ -332,8 +332,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       if (instance._status === 'complete') {
         instance.parentProcess({}, options, function fetchParentProcess(err, parentProcess) {
           if (err) {
-            log.error(options, err.message);
-            return;
+            return log.error(options, err.message);
           }
 
           // This is to allow a subprocess to not go to the parent process unless all the subflows have ended
@@ -516,6 +515,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
         });
       } else if (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration) {
         var at = token.startTime;
+        if (typeof at === 'string') {
+          at = new Date(at);
+        }
         var now = Date.now();
         // calculating again to handle pending timeout
         var diff = now - at;
@@ -694,8 +696,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var self = this;
     self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
       if (err) {
-        log.error(options, err);
-        return;
+        return log.error(options, err);
       }
       var boundaryEvents = processDefinitionInstance.getBoundaryEventsAt(currentFlowObject);
       boundaryEvents.forEach(function iterateBoundaryEvents(boundaryEvent) {

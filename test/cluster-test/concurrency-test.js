@@ -8,7 +8,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var bootstrap = require('./bootstrap');
+var bootstrap = require('../bootstrap');
 var chai = bootstrap.chai;
 var assert = chai.assert;
 var models = bootstrap.models;

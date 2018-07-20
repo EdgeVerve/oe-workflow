@@ -9,7 +9,7 @@
         "recovery":{
             "batchSize": 500,
             "batchTime": 2000,
-            "updateInterval": 100
+            "updateInterval": 1000
         }
     }
 }

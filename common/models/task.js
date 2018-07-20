@@ -29,6 +29,28 @@ module.exports = function Task(Task) {
 
   Task.on(TASK_INTERRUPT_EVENT, taskEventHandler._taskInterruptHandler);
 
+  Task.observe('access', function addCandidateFields(ctx, next) {
+    if (ctx && ctx.options && ctx.options._skip_tf === true) {
+      // instance to be read internally by workflow
+      return next();
+    }
+
+    /* If fields filter is specified, add additional fields required for candidate-filtering in 'after access' */
+    /* Also set _fieldToRemove in ctx.option so that only the requested fields are returned */
+    if (ctx.query && ctx.query.fields) {
+      var mandatoryFields = ['candidateUsers', 'excludedUsers', 'candidateRoles', 'excludedRoles', 'candidateGroups', 'excludedGroups'];
+      var fieldsToRemove = [];
+      mandatoryFields.forEach(function addMandatoryField(val) {
+        if (ctx.query.fields.indexOf(val) < 0) {
+          ctx.query.fields.push(val);
+          fieldsToRemove.push(val);
+        }
+      });
+      ctx.options._fieldsToRemove = fieldsToRemove;
+    }
+    next();
+  });
+
   Task.observe('after accesss', function restrictDataCb(ctx, next) {
     if (ctx && ctx.options && ctx.options._skip_tf === true) {
       // instance to be read internally by workflow
@@ -58,6 +80,12 @@ module.exports = function Task(Task) {
       var candidateGroups = self.candidateGroups  || [];
       var excludedGroups  = self.excludedGroups   || [];
 
+      if (ctx.options._fieldsToRemove) {
+        /* Remove the fields that were added purely for candidate filtering*/
+        for (var j = 0; j < ctx.options._fieldsToRemove.length; j++) {
+          delete self[ctx.options._fieldsToRemove[j]];
+        }
+      }
       var finalCall = userMatch(currUser, candidateUsers, excludedUsers);
       if (finalCall === -1) {
         continue;
@@ -185,6 +213,27 @@ module.exports = function Task(Task) {
     });
   };
 
+  function fetchTheChangeRequest(filter, options, cb) {
+    let ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
+    ChangeWorkflowRequest.find(filter, options, function fetchCB(err, requests) {
+      if (err) {
+        log.error(options, 'Unable to find change-request', err);
+        return cb(err);
+      }
+      if (requests.length === 0) {
+        let errInvalidid = new Error('No change-request found for given criteria');
+        log.error(options, errInvalidid);
+        return cb(errInvalidid);
+      }
+      if (requests.length > 1) {
+        let errInvalidid = new Error('Multiple change-requests found for given criteria');
+        log.error(options, errInvalidid);
+        return cb(errInvalidid);
+      }
+      cb(null, requests[0]);
+    });
+  }
+
   Task.prototype.complete = function complete(data, options, next) {
     var self = this;
     var tname = self.name;
@@ -205,7 +254,7 @@ module.exports = function Task(Task) {
         if (taskObj.isMultiMaker) {
           // this task is a maker user task, so no need to have pv and msg and directly take obj as update
           var updates = data;
-          pdata = {};
+          pdata = {__comments__: data.__comments__};
           if (typeof data.pv !== 'undefined') {
             pdata.pv = data.pv;
             delete updates.pv;
@@ -214,10 +263,9 @@ module.exports = function Task(Task) {
             pdata.msg = data.msg;
             delete updates.msg;
           }
-          var ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
           var modelName = process._processVariables._modelInstance._type;
           var Model = loopback.getModel(modelName, options);
-          var modelId = process._processVariables._modelInstance._modelId;
+          var modelId = process._processVariables._modelId;
           Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
             if (err) {
               log.error(options, err);
@@ -225,7 +273,7 @@ module.exports = function Task(Task) {
             }
             // if the change request was created on create operation ,
             // currentInstance will be null which is fine
-            ChangeWorkflowRequest.find({
+            fetchTheChangeRequest({
               where: {
                 and: [{
                   modelName: modelName
@@ -240,42 +288,38 @@ module.exports = function Task(Task) {
                 log.error(options, err);
                 return next(err);
               }
-              if (inst.length > 1) {
-                let err = new Error('Multiple instances found with same id in Change Workflow Request');
-                log.error(options, err);
-                return next(err);
-              } else if (inst.length === 0) {
-                // no instance found in change request model
-                let err = new Error('change_request_update failed - no instance found');
-                log.error(options, err);
-                return next(err);
-              }
-
-              var instObj = inst[0].toObject();
+              var instObj = inst.toObject();
               var operation = instObj.operation;
+              /* For second-maker currentInstance should have partially changed data from change-request */
+              currentInstance = new Model(instObj.data);
               var instx = JSON.parse(JSON.stringify(instObj.data));
               for (let key in updates) {
                 if (Object.prototype.hasOwnProperty.call(updates, key)) {
-                  var val = updates[key];
-                  instx[key] = val;
+                  instx[key] = updates[key];
                 }
               }
 
-              var modifiers = inst[0]._modifiers || [];
+              var modifiers = inst._modifiers || [];
               modifiers.push(options.ctx.username);
-              instx._modifiedBy = options.ctx.username;
 
-              Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+              /* data could be partial changes submitted by maker-2
+              So we should always apply data on currentInstance and send that for _makerValidation */
+              Model._makerValidate(Model, operation, instx, currentInstance, null, options, function _validateCb(err, _data) {
                 if (err) {
                   log.error(options, err);
                   return next(err);
                 }
                 log.debug(options, 'Instance has been validated during maker checker creation');
-
-                inst[0].updateAttributes({
-                  data: instx,
+                _data._modifiedBy = options.ctx.username;
+                var changeRequestChanges = {
+                  data: _data,
+                  remarks: data.__comments__,
                   _modifiers: modifiers
-                }, options, function updateCM(err, res) {
+                };
+                if (data.__verificationStatus__) {
+                  changeRequestChanges.verificationStatus = data.__verificationStatus__;
+                }
+                inst.updateAttributes(changeRequestChanges, options, function updateCM(err, res) {
                   if (err) {
                     log.error(options, err);
                     return next(err);
@@ -284,8 +328,10 @@ module.exports = function Task(Task) {
                   var xdata = {};
                   xdata.pv = pdata.pv || {};
                   xdata.pv._modifiers = modifiers;
-                  xdata.pv._modelInstance = instx;
+                  xdata.pv._modelInstance = _data;
+
                   xdata.msg = pdata.msg;
+                  xdata.__comments__ = pdata.__comments__;
                   return self.complete_(xdata, options, next);
                 });
               });
@@ -324,36 +370,25 @@ module.exports = function Task(Task) {
           if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
           }
+          pdata.__comments__ = data.__comments__;
           pdata.pv.__action__ = data.__action__;
 
-          ChangeWorkflowRequest = loopback.getModel('ChangeWorkflowRequest', options);
-          ChangeWorkflowRequest.find({
+          fetchTheChangeRequest({
             where: {
               'workflowInstanceId': workflowInstanceId
             }
-          }, options, function fetchRM(err, requests) {
+          }, options, function fetchRM(err, request) {
             if (err) {
-              log.error(options, 'unable to find request to end', err);
+              log.error(options, err);
               return next(err);
             }
-            if (requests.length === 0) {
-              let errInvalidid;
-              errInvalidid = new Error('No corresponding workflow request found for verification update the Maker-Checker Process.');
-              log.error(options, errInvalidid);
-              return next(errInvalidid);
-            }
-            if (requests.length > 1) {
-              let errInvalidid;
-              errInvalidid = new Error('Multiple workflow requests found for verification update the Maker-Checker Process.');
-              log.error(options, errInvalidid);
-              return next(errInvalidid);
-            }
-            var request = requests[0];
             let _verifiedBy = 'workflow-system';
             if (options.ctx && options.ctx.username) {
               _verifiedBy = options.ctx.username;
             }
             let updates = {
+              verificationStatus: data.__action__,
+              remarks: data.__comments__,
               _verifiedBy: _verifiedBy
             };
             request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
@@ -410,10 +445,13 @@ module.exports = function Task(Task) {
           if (typeof data.msg !== 'undefined') {
             pdata.msg = data.msg;
           }
+          pdata.__comments__ = data.__comments__;
           pdata.pv.__action__ = data.__action__;
-
+          /* Set __comments__ for updating Remarks*/
+          options.__comments__ = data.__comments__;
           if (['approved', 'rejected'].indexOf(data.__action__) > -1 ) {
             WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
+              delete options.__comments__;
               if (err) {
                 log.error(err);
                 return next(err);
@@ -421,7 +459,33 @@ module.exports = function Task(Task) {
               return self.complete_(pdata, options, next);
             });
           } else {
-            return self.complete_(pdata, options, next);
+            /* Update verificationStatus and Remarks on ChangeRequest and mark the task complete */
+            fetchTheChangeRequest({
+              where: {
+                'workflowInstanceId': workflowInstanceId
+              }
+            }, options, function fetchCR(err, request) {
+              if (err) {
+                log.error(options, err);
+                return next(err);
+              }
+              let _verifiedBy = 'workflow-system';
+              if (options.ctx && options.ctx.username) {
+                _verifiedBy = options.ctx.username;
+              }
+              let updates = {
+                verificationStatus: data.__action__,
+                remarks: data.__comments__,
+                _verifiedBy: _verifiedBy
+              };
+              request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
+                if (err) {
+                  log.error(options, 'error in updating change workflow instance', err);
+                  return next(err);
+                }
+                return self.complete_(pdata, options, next);
+              });
+            });
           }
         } else {
           return self.complete_(data, options, next);
@@ -469,7 +533,7 @@ module.exports = function Task(Task) {
           }
         }
         // self.status = status;
-        var updates = {'status': status, '_version': self._version};
+        var updates = {'status': status, comments: data.__comments__, '_version': self._version};
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {
             log.error(options, err, saveError);

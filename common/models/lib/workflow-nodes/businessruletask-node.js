@@ -11,8 +11,9 @@
 
 var loopback = require('loopback');
 var logger = require('oe-logger');
-
 var log = logger('BusinessRuleTask-Node');
+
+var sandbox = require('./sandbox.js');
 
 var exports = module.exports = {};
 
@@ -24,9 +25,7 @@ exports.businessRuleTaskHandler = function businessRuleTaskHandler(ruleName, pay
   model.exec(ruleName, evalPayload, options, function execBR(err, res) {
     var message = {
       documentName: ruleName,
-      data: evalPayload,
-      error: 'undefined',
-      body: 'undefined'
+      data: evalPayload
     };
     if (err) {
       log.error(options, err);
@@ -58,11 +57,16 @@ var evaluatePayload = function evalPayload(inputData, message, process) {
   for (prop in inputData) {
     if (Object.prototype.hasOwnProperty.call(inputData, prop)) {
       var propVal = inputData[prop];
-      if (!(inputData[prop].constructor && (inputData[prop].constructor.name === 'Array' || inputData[prop].constructor.name === 'Object')))      {
-        // TODO : replace eval with sandox
-        var propExp = 'propVal = `' + inputData[prop] + '`';
-        // eslint-disable-next-line
-        payload[prop] = eval(propExp);
+      if (!(inputData[prop].constructor && (inputData[prop].constructor.name === 'Array' || inputData[prop].constructor.name === 'Object'))) {
+        var propExp = inputData[prop].trim();
+        var value = sandbox.evaluate$Expression({}, propExp, message, process);
+        if (propExp.startsWith('${') && propExp.endsWith('}')) {
+          var newValue = parseFloat(value);
+          if (!isNaN(newValue)) {
+            value = newValue;
+          }
+        }
+        payload[prop] = value;
       } else {
         payload[prop] = propVal;
       }

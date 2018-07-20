@@ -28,7 +28,8 @@ module.exports = function GruntConfig(grunt) {
       coverage: {
         src: [
           'test/*.js',
-          'test/activiti-integeration/*.js'
+          'test/activiti-integeration/*.js',
+          'test/cluster-test/recovery-test.js'
         ],
         options: {
           excludes: [],

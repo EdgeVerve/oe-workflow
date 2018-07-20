@@ -183,7 +183,8 @@ describe('Test case for Trigger on Multi Maker Create OE Workflow [ workflow dep
         'workflowDefinitionName': wfName
       },
       'operation': 'create',
-      'version': 'v2'
+      'version': 'v2',
+      'makersRecall': true
     };
 
     models.WorkflowManager.attachWorkflow(attachWorkflowDef, bootstrap.defaultContext, function cb(err, res) {

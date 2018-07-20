@@ -98,8 +98,7 @@ module.exports.evaluateScript = function evaluateScript(options, script, incomin
         // apply updates
         for (key in updates.set) {
           if (Object.prototype.hasOwnProperty.call(updates.set, key)) {
-            var val = updates.set[key];
-            obj[key] = val;
+            obj[key] = updates.set[key];
           }
         }
         for (key in updates.unset) {

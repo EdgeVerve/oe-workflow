@@ -109,11 +109,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
         if (err) {
           return done(err);
         } else if (wfDefns.length === 0) {
-          err = new Error('workflow definition not found');
-          return done(err);
+          return done(new Error('workflow definition not found'));
         } else if (wfDefns.length > 1) {
-          err = new Error('multiple workflow definitions found');
-          return done(err);
+          return done(new Error('multiple workflow definitions found'));
         }
         done(null);
       });
@@ -147,6 +145,12 @@ module.exports = function WorkflowManager(WorkflowManager) {
       if (typeof data === 'object' && typeof data.wfDependent === 'boolean') {
         wfDependent = data.wfDependent;
       }
+
+      var makersRecall = false;
+      if (typeof data === 'object' && typeof data.makersRecall === 'boolean') {
+        makersRecall = data.makersRecall;
+      }
+
       var Model = loopback.getModel(modelName, options);
       var actualModelName = Model.modelName;
 
@@ -157,6 +161,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
         'modelName': modelName,
         'operation': operation,
         'wfDependent': wfDependent,
+        'makersRecall': makersRecall,
         'actualModelName': actualModelName,
         'privilegedUsers': privilegedUsers,
         'privilegedRoles': privilegedRoles

@@ -279,6 +279,7 @@ function addOERemoteMethods(Model) {
           modelId: id,
           operation: 'delete',
           data: einst,
+          verificationStatus: 'pending',
           _modifiers: [
             options.ctx.username
           ]
@@ -314,7 +315,7 @@ function addOERemoteMethods(Model) {
             workflowBody.processVariables._modelInstance = mData.data;
             workflowBody.processVariables._modelInstance._type = modelName;
             workflowBody.processVariables._modelInstance._deletedBy = options.ctx.username;
-            workflowBody.processVariables._modelInstance._modelId = id;
+            workflowBody.processVariables._modelId = id;
           // this is to identify while executing Finalize Transaction to follow which implementation
             workflowBody.processVariables._maker_checker_impl = 'v2';
             WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -355,13 +356,15 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var operation = 'update';
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+    var inputPV = data.pv;
+    delete data.pv;
 
     Model.findById(id, options, function fetchInstance(err, cinst) {
       if (err) {
         log.error(options, err);
         return next(err);
       }
-      if (!err & !cinst) {
+      if (!cinst) {
         let err = new Error('Model id is not valid.');
         log.error(options, err);
         return next(err);
@@ -406,7 +409,7 @@ function addOERemoteMethods(Model) {
               return next(err);
             }
             // now its safe to remove previous change request and interrupt previous workflow
-            // we are async ly terminating not holding the main request , might change
+            // we are asynchronously terminating not holding the main request , might change
             terminateWorkflow(crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
               if (err) {
                 let err = new Error('Unable to interrupt workflow in update retrigger case');
@@ -418,7 +421,7 @@ function addOERemoteMethods(Model) {
           }
 
           options.isNewChangeRequest = true;
-          Model._makerValidate(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+          Model._makerValidate(Model, operation, data, currentInstance, null, options, function _validateCb(err, _data) {
             if (err) {
               return next(err);
             }
@@ -429,16 +432,16 @@ function addOERemoteMethods(Model) {
             // reapply data over _data to regain related Model data, except the
             // data which has been generated via Validation
             for (let key in data) {
-              if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
+              if (Object.prototype.hasOwnProperty.call(data, key) && !Object.prototype.hasOwnProperty.call(_data, key)) {
                 _data[key] = data[key];
               }
             }
-            delete _data._usedFields;
             var mData = {
               modelName: modelName,
               modelId: id,
               operation: 'update',
               data: _data,
+              verificationStatus: data.__verificationStatus__,
               _modifiers: [
                 options.ctx.username
               ]
@@ -453,7 +456,7 @@ function addOERemoteMethods(Model) {
                       { 'modelName': modelName },
                       { 'engineType': 'oe-workflow' },
                       { 'version': 'v2' },
-                      { 'operation': 'update' }
+                      { 'operation': { 'inq': ['update', 'save'] } }
                 ]
               }
             }, options, function fetchWM(err, res) {
@@ -469,13 +472,13 @@ function addOERemoteMethods(Model) {
                 var mapping = res[0];
 
                 let workflowBody = mapping.workflowBody;
-                workflowBody.processVariables = workflowBody.processVariables || {};
+                workflowBody.processVariables = Object.assign(workflowBody.processVariables || {}, inputPV);
                 workflowBody.processVariables._operation = mData.operation;
                 workflowBody.processVariables._modifiers = mData._modifiers;
                 workflowBody.processVariables._modelInstance = mData.data;
                 workflowBody.processVariables._modelInstance._type = modelName;
                 workflowBody.processVariables._modelInstance._modifiedBy = options.ctx.username;
-                workflowBody.processVariables._modelInstance._modelId = id;
+                workflowBody.processVariables._modelId = id;
                 // this is to identify while executing Finalize Transaction to follow which implementation
                 workflowBody.processVariables._maker_checker_impl = 'v2';
                 WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -521,42 +524,35 @@ function addOERemoteMethods(Model) {
     });
   };
 
-  function makerValidation(Model, operation, data, currentInstance, options, next) {
-    var obj = null;
+  function makerValidation(Model, operation, data, currentInstance, parentData, options, next) {
+    var newInstance = null;
     var context = {};
     // might need to a property like isNewChangeRequest to identify before
     // workflow is called as part of initial maker or not, could be useful
     if (operation === 'create') {
-      obj = new Model(data);
+      newInstance = new Model(data);
       context = {
         Model: Model,
-        instance: obj,
+        parentData: parentData,
+        instance: newInstance,
         isNewInstance: true,
         hookState: {},
         options: options
       };
     } else if (operation === 'update') {
-      obj = currentInstance;
+      newInstance = new Model(currentInstance.toObject(), {persisted: true});
       context = {
         Model: Model,
         where: {},
+        parentData: parentData,
         currentInstance: currentInstance,
         data: data,
         hookState: {},
         options: options
       };
-      // update instance's properties
-      try {
-        obj.setAttributes(data);
-      } catch (err) {
-        return process.nextTick(function asyncErrorCb() {
-          next(err);
-        });
-      }
     }
 
     if (options.isNewChangeRequest) {
-      delete options.isNewChangeRequest;
       context.isNewChangeRequest = true;
     }
     Model.notifyObserversOf('before workflow', context, function beforeWorkflowCb(err) {
@@ -586,13 +582,24 @@ function addOERemoteMethods(Model) {
       dpBeforeSave[0](context, function beforeSaveCb(err) {
         if (err) return next(err);
 
+        if (context.currentInstance) {
+          /* When in UpdateX */
+          // update instance's properties after 'before workflow' hooks are invoked.
+          try {
+            newInstance.setAttributes(data);
+          } catch (err) {
+            return process.nextTick(function asyncErrorCb() {
+              next(err);
+            });
+          }
+        }
         // validation required
-        obj.isValid(function validateCb(valid) {
+        newInstance.isValid(function validateCb(valid) {
           if (valid) {
-            let data = obj.toObject(true);
+            let data = newInstance.toObject(true);
             next(null, data);
           } else {
-            let err = validationError(obj);
+            let err = validationError(newInstance);
             log.error(options, err);
             return next(err);
           }
@@ -601,32 +608,29 @@ function addOERemoteMethods(Model) {
     });
   }
 
-  Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, options, next) {
+  Model._makerValidate = function _makerValidate(Model, operation, data, currentInstance, parentData, options, next) {
     // get hasOne, hasMany relation metadata
     var relations = [];
-    var _usedFields = [];
     var childData = {};
-    var parentData = JSON.parse(JSON.stringify(data));
     for (let r in Model.relations) {
       if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
         let relation = Model.relations[r];
-        childData = data[r];
-        delete parentData[r];
-        if (relation.type && relation.type === 'hasMany' && typeof data[r] !== 'undefined') {
+        childData[r] = data[r];
+        if (relation.type && (relation.type === 'hasMany' || relation.type === 'embedsMany') && typeof data[r] !== 'undefined') {
           for (let i = 0; i < data[r].length; i++) {
             let _relObj = {
               Model: relation.modelTo,
               data: data[r][i],
-              type: 'hasMany',
+              type: relation.type,
               relationName: r
             };
             relations.push(_relObj);
           }
-        } else if (relation.type && relation.type === 'hasOne' && typeof data[r] !== 'undefined') {
+        } else if (relation.type && (relation.type === 'hasOne' || relation.type === 'embedsOne') && typeof data[r] !== 'undefined') {
           let _relObj = {
             Model: relation.modelTo,
             data: data[r],
-            type: 'hasOne',
+            type: relation.type,
             relationName: r
           };
           relations.push(_relObj);
@@ -636,23 +640,16 @@ function addOERemoteMethods(Model) {
     options.childData = childData;
     options.parentData = parentData;
     if (operation === 'create') {
-      makerValidation(Model, operation, data, null, options, function _validateCb(err, _data) {
+      makerValidation(Model, operation, data, null, parentData, options, function _validateCb(err, _data) {
         if (err) {
           return next(err);
         }
 
-        // pushing _data fields generated as part of MakerValidation to not get
-        // overidden later
-        for (var key in _data) {
-          if (Object.prototype.hasOwnProperty.call(_data, key)) {
-            _usedFields.push(key);
-          }
-        }
         async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
           let data = relation.data;
-          makerValidation(Model, operation, data, null, options, cb);
+          _makerValidate(Model, operation, data, null, _data, options, cb);
         },
         function allDone(err, dataArray) {
           if (err) {
@@ -664,39 +661,29 @@ function addOERemoteMethods(Model) {
           }
           for (let i = 0; i < relations.length; i++) {
             let relationName = relations[i].relationName;
-            if (relations[i].type === 'hasMany') {
+            if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
-                _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               _data[relationName].push(dataArray[i]);
             } else {
-              _usedFields.push(relationName);
               _data[relationName] = dataArray[i];
             }
           }
           if (err) {
             return next(err);
           }
-          _data._usedFields = _usedFields;
           delete options.childData;
           delete options.parentData;
           next(null, _data);
         });
       });
     } else if (operation === 'update') {
-      makerValidation(Model, operation, data, currentInstance, options, function _validateCb(err, _data) {
+      makerValidation(Model, operation, data, currentInstance, parentData, options, function _validateCb(err, _data) {
         if (err) {
           return next(err);
         }
 
-        // pushing _data fields generated as part of MakerValidation to not get
-        // overidden later
-        for (var key in _data) {
-          if (Object.prototype.hasOwnProperty.call(_data, key)) {
-            _usedFields.push(key);
-          }
-        }
         async.map(relations,
         function validateEach(relation, cb) {
           let Model = relation.Model;
@@ -709,7 +696,7 @@ function addOERemoteMethods(Model) {
             });
           } else if (data.__row_status === 'added') {
             // new related model instance data
-            return makerValidation(Model, 'create', data, null, options, cb);
+            return _makerValidate(Model, 'create', data, null, _data, options, cb);
           } else if (data.__row_status === 'modified') {
             let idName = Model.definition.idName();
             let modelId = data[idName];
@@ -718,7 +705,7 @@ function addOERemoteMethods(Model) {
                 log.error(options, err);
                 return cb(err);
               }
-              return makerValidation(Model, 'update', data, currentInstance, options, cb);
+              return _makerValidate(Model, 'update', data, currentInstance, _data, options, cb);
             });
           } else {
             // no need to validate, if row status is not given
@@ -737,16 +724,14 @@ function addOERemoteMethods(Model) {
           }
           for (let i = 0; i < relations.length; i++) {
             let relationName = relations[i].relationName;
-            if (relations[i].type === 'hasMany') {
+            if (relations[i].type === 'hasMany' || relations[i].type === 'embedsMany') {
               if (typeof _data[relationName] === 'undefined') {
-                _usedFields.push(relationName);
                 _data[relationName] = [];
               }
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName].push(data);
             } else {
-              _usedFields.push(relationName);
               let data = dataArray[i];
               data.__row_status = relations[i].data.__row_status;
               _data[relationName] = data;
@@ -755,7 +740,6 @@ function addOERemoteMethods(Model) {
           if (err) {
             return next(err);
           }
-          _data._usedFields = _usedFields;
           delete options.childData;
           delete options.parentData;
           next(null, _data);
@@ -810,15 +794,13 @@ function addOERemoteMethods(Model) {
             // we are async ly terminating not holding the main request , might change
           terminateWorkflow(crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
             if (err) {
-              let err = new Error('Unable to interrupt workflow in update retrigger case');
-              log.error(options, err);
-              return;
+              return log.error(options, new Error('Unable to interrupt workflow in update retrigger case'));
             }
             return;
           });
         }
         options.isNewChangeRequest = true;
-        Model._makerValidate(Model, 'create', data, null, options, function _validateCb(err, _data) {
+        Model._makerValidate(Model, 'create', data, null, null, options, function _validateCb(err, _data) {
           if (err) {
             return next(err);
           }
@@ -829,19 +811,20 @@ function addOERemoteMethods(Model) {
             _data[idName] =  uuidv4();
           }
           var id = _data[idName];
+
           // reapply data over _data to regain related Model data, except the
           // data which has been generated via Validation
           for (let key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key) && _data._usedFields.indexOf(key) < 0) {
+            if (Object.prototype.hasOwnProperty.call(data, key) && !Object.prototype.hasOwnProperty.call(_data, key)) {
               _data[key] = data[key];
             }
           }
-          delete _data._usedFields;
           var mData = {
             modelName: modelName,
             modelId: id,
             operation: 'create',
             data: _data,
+            verificationStatus: data.__verificationStatus__,
             _modifiers: [
               options.ctx.username
             ]
@@ -857,7 +840,7 @@ function addOERemoteMethods(Model) {
             { 'modelName': modelName },
             { 'engineType': 'oe-workflow' },
             { 'version': 'v2' },
-            { 'operation': 'create' }
+            { 'operation': {'inq': ['create', 'save']}}
               ]
             }
           }, options, function fetchWM(err, res) {
@@ -879,7 +862,7 @@ function addOERemoteMethods(Model) {
               workflowBody.processVariables._modelInstance = mData.data;
               workflowBody.processVariables._modelInstance._type = modelName;
               workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
-              workflowBody.processVariables._modelInstance._modelId = id;
+              workflowBody.processVariables._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
               WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
@@ -946,7 +929,8 @@ function addOERemoteMethods(Model) {
       filter = {};
     }
 
-    var userQuery = JSON.parse(JSON.stringify(filter));
+    /* Use only the where-clause as filter on change-workflow-request */
+    var userQuery = filter && filter.where ? {where: JSON.parse(JSON.stringify(filter.where))} : {};
     var baseQuery = {
       where: {
         and: [{
@@ -972,7 +956,16 @@ function addOERemoteMethods(Model) {
       } else if (inst.length === 0) {
         // no instance found in change request model
         var Model = app.models[modelName];
-        return Model.findById(id, filter, ctx, cb);
+        return Model.findById(id, filter, ctx, function findByIdCb(err, result) {
+          if (result !== null) {
+            return cb(err, result);
+          }
+          var msg = 'Record with id:' + id + ' not found.';
+          var error = new Error(msg);
+          error.statusCode = error.status = 404;
+          error.code = 'MODEL_NOT_FOUND';
+          cb(error);
+        });
       }
       // unwarap the object
       let cinst = unwrapChangeRequest(inst[0]);
@@ -1033,38 +1026,69 @@ function addOERemoteMethods(Model) {
         return cb(err);
       } else if (inst.length === 0) {
         // no instance found in change request model
-        return cb(null, null);
-      }
-
-      if (!options.ctx || !options.ctx.username) {
-        let err = new Error('Unable to detect user making this request.');
-        log.error(options, err);
-        return cb(err);
-      }
-      let username = options.ctx.username;
-      let modifiers = inst[0]._modifiers;
-
-      if (modifiers.indexOf(username) === -1) {
-        let err = new Error('Not authorized to recall');
-        log.error(options, err);
+        var error = new Error('No change request to recall');
+        error.statusCode = error.status = 404;
+        error.code = 'MODEL_NOT_FOUND';
         return cb(err);
       }
 
-      var workflowInstanceId = inst[0].workflowInstanceId;
-      inst[0].destroy(options, function deleteInstance(err, res) {
+      var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+      var operationFilter = inst[0].operation;
+      if (operationFilter === 'create' || operationFilter === 'update') {
+        operationFilter = { inq: [inst[0].operation, 'save'] };
+      }
+      WorkflowMapping.find({
+        where: {
+          'and': [
+            { 'modelName': modelName },
+            { 'engineType': 'oe-workflow' },
+            { 'version': 'v2' },
+            { 'operation': operationFilter }
+          ]
+        }
+      }, options, function fetchMapping(err, res) {
         if (err) {
-          let err = new Error('Unable to delete change request in recall case');
-          log.error(options, err);
+          log.error(options, 'Unable to find workflow mapping - [OE Workflow-v2-' + inst[0].operation + ']', err);
+          return cb(err);
+        } else if (res && res.length === 0) {
+          // this case should never occur
+          let err = new Error('No maker checker mapping found for ' + inst[0].operation);
+          log.debug(options, err);
           return cb(err);
         }
-        terminateWorkflow(workflowInstanceId, options, function onTerminationWorkflow(err, res) {
-          if (err) {
-            let err = new Error('Unable to interrupt workflow in recall case');
+
+        var mapping = res[0];
+        if (mapping.makersRecall) {
+          if (!options.ctx || !options.ctx.username) {
+            let err = new Error('Unable to detect user making this request.');
             log.error(options, err);
             return cb(err);
           }
-          return cb(null, {
-            'success': true
+          let username = options.ctx.username;
+          let modifiers = inst[0]._modifiers;
+          if (modifiers.indexOf(username) === -1) {
+            let err = new Error('Not authorized to recall');
+            log.error(options, err);
+            return cb(err);
+          }
+        }
+
+        var workflowInstanceId = inst[0].workflowInstanceId;
+        inst[0].destroy(options, function deleteInstance(err, res) {
+          if (err) {
+            let err = new Error('Unable to delete change request in recall case');
+            log.error(options, err);
+            return cb(err);
+          }
+          terminateWorkflow(workflowInstanceId, options, function onTerminationWorkflow(err, res) {
+            if (err) {
+              let err = new Error('Unable to interrupt workflow in recall case');
+              log.error(options, err);
+              return cb(err);
+            }
+            return cb(null, {
+              'success': true
+            });
           });
         });
       });
@@ -1101,7 +1125,7 @@ function addOERemoteMethods(Model) {
 
       if (instances.length === 0) {
         log.debug(ctx, 'No workflow instance attached to current Model Instance Id');
-        return cb(null, null);
+        return cb(null, []);
       } else if ( instances.length > 1) {
         let err = new Error('multiple workflow request found with same Model Instance Id');
         log.error(ctx, err);
@@ -1162,7 +1186,7 @@ function addOERemoteMethods(Model) {
 
       if (instances.length === 0) {
         log.debug(ctx.options, 'No workflow instance attached to current Model Instance Id');
-        return cb(null, null);
+        return cb(null, []);
       }
 
       var workflowRef = instances[0].workflowInstanceId;
