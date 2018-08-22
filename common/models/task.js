@@ -237,6 +237,14 @@ module.exports = function Task(Task) {
   Task.prototype.complete = function complete(data, options, next) {
     var self = this;
     var tname = self.name;
+
+    if (self.status !== 'pending') {
+      let error = new Error('Task already completed');
+      error.code = 'TASK_ALREADY_COMPLETED';
+      error.status = error.statusCode = 409;
+      return next(error);
+    }
+
     self.processInstance({}, options, function fetchProcessDef(err, process) {
       if (err) {
         log.error(options, err);
