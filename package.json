@@ -1,6 +1,6 @@
 {
   "name": "oe-workflow",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "main": "server/server.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
@@ -34,6 +34,7 @@
     "istanbul": "0.4.1",
     "mocha": "2.3.4",
     "node-uuid": "^1.4.8",
+    "supertest": "^1.1.0",
     "oe-cloud": "git+https://github.com/EdgeVerve/oe-cloud.git#master",
     "oe-logger": "git+https://github.com/EdgeVerve/oe-logger.git#master"
   },
