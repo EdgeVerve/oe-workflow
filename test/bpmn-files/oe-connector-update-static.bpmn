@@ -14,7 +14,7 @@
         <camunda:oeConnector>
           <camunda:model>Product</camunda:model>
           <camunda:method>upsert</camunda:method>
-          <camunda:args><![CDATA[[{ "id": "p002", "name" : "pepsodent", "_version" : pv("prevVersion") }]]]></camunda:args>
+          <camunda:args><![CDATA[[{ "id": "p002", "name" : "pepsodent", "_version" : pv("prevVersion") }, options]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

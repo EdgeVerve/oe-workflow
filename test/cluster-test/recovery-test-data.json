@@ -288,7 +288,8 @@
                     "connectorType" : "oeConnector",
                     "props" : {
                         "model" : "Literal",
-                        "method" : "find"
+                        "method" : "find",
+                        "data": "[{}, options]"
                     }
                 }, 
                 {
@@ -308,7 +309,8 @@
                     "connectorType" : "oeConnector",
                     "props" : {
                         "model" : "Literal",
-                        "method" : "find"
+                        "method" : "find",
+                        "data": "[{}, options]"
                     }
                 }, 
                 {
@@ -494,7 +496,8 @@
                     "connectorType" : "oeConnector",
                     "props" : {
                         "model" : "Literal",
-                        "method" : "find"
+                        "method" : "find",
+                        "data": "[{}, options]"
                     }
                 },
                 "ServiceTask_1oafq7n" : {
@@ -514,7 +517,8 @@
                     "connectorType" : "oeConnector",
                     "props" : {
                         "model" : "Literal",
-                        "method" : "find"
+                        "method" : "find",
+                        "data": "[{}, options]"
                     }
                 },
                 "IntermediateCatchEvent_0ltasuj" : {

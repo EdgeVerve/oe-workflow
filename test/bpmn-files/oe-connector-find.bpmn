@@ -14,7 +14,7 @@
         <camunda:oeConnector>
           <camunda:model>Product</camunda:model>
           <camunda:method>findById</camunda:method>
-          <camunda:args>![CDATA[["pid002"]]]</camunda:args>
+          <camunda:args><![CDATA[["pid002", options]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>
