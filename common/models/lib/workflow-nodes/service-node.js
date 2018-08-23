@@ -255,7 +255,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
   }
   var data = flowObject.props.data || {};
   if (operationName && model && model[operationName]) {
-    operationArguments = evaluateJSON(data, message, process, options);
+    let operationArguments = evaluateJSON(data, message, process, options);
 
     let operation = model[operationName];
 
