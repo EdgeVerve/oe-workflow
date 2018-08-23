@@ -262,7 +262,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     return done(null, { error: new Error('Invalid operation ' + operationName + ' on model ' + modelName) });
   }
 
-  let evalCB = function (err, result) {
+  let evalCB = function evalCB(err, result) {
     if (err) {
       log.error(options, err);
       return done(null, {
@@ -278,8 +278,8 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
       result = result.toObject();
     }
     return done(null, result);
-  }
-console.log(operationArguments)
+  };
+
   if (!Array.isArray(operationArguments)) {
     operationArguments = [operationArguments];
   }
@@ -287,7 +287,7 @@ console.log(operationArguments)
   operation.apply(model, operationArguments);
 }
 
-
+// eslint-disable-next-line no-unused-vars
 function evaluateProp(data, incomingMsg, process, options) {
   // check if prop needs to be evaluated
   if (data && (data.indexOf('pv(') > -1 || data.indexOf('msg(') > -1)) {
