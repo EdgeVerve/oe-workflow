@@ -87,7 +87,7 @@ module.exports.evaluateJSON = evaluateJSON;
  */
 function evaluateFTConnector(options, flowObject, message, process, done) {
   var variableType = flowObject.variableType;
-  var status       = 'approved';
+  var status = 'approved';
 
   if (variableType === 'ProcessVariable' || variableType === 'processvariable') {
     status = process._processVariables[flowObject.variableValue];
@@ -208,7 +208,7 @@ function makeRESTCalls(urlOptions, retry, callback) {
       message.statusMessage = response.statusMessage;
     }
 
-    if (response && response.statusCode >= 500 && retry > 0 ) {
+    if (response && response.statusCode >= 500 && retry > 0) {
       log.debug(log.defaultContext(), 'making a retry attempt to url : ' + urlOptions.url);
       makeRESTCalls(urlOptions, retry - 1, callback);
     } else {
@@ -241,43 +241,50 @@ function makeRESTCalls(urlOptions, retry, callback) {
  * @returns  {void}
  */
 function evaluateOEConnector(options, flowObject, message, process, done) {
-  var modelName = evaluateProp(flowObject.props.model, message, process, options);
-  // var modelName = flowObject.props.model;
-  var operation = flowObject.props.method;
+  let results = sandbox.evaluateExpressions(options, ['`' + flowObject.props.model + '`', '`' + flowObject.props.method + '`', flowObject.props.data], message, process);
+  let modelName = results[0];
+  let operationName = results[1];
+  let operationArguments = results[2];
+  let model;
   try {
-    var model = loopback.getModel(modelName, options);
+    model = loopback.getModel(modelName, options);
   } catch (err) {
     log.error(options, err);
     return done(null, {
       error: err
     });
   }
-  var data = flowObject.props.data || {};
-  if (operation && model && model[operation]) {
-    data = evaluateJSON(data, message, process, options);
-    model[operation](data[0], options, function evalCB(err, res) {
-      if (err) {
-        log.error(options, err);
-        return done(null, {
-          error: err
-        });
-      }
-      var result = res;
-      if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
-        if (typeof result.toObject !== 'undefined') {
-          return done(null, result.toObject());
-        }
-        return done(null, result);
-      }
-      var _res = [];
-      for (var i = 0; i < res.length; i++) {
-        _res.push(res[i].toObject());
-      }
-      return done(null, _res);
-    });
-  } else {
-    return done(null, {error: new Error('Invalid operation ' + operation + ' on model ' + modelName )});
+  if (!model) {
+    return done(null, { error: new Error('Invalid model ' + modelName) });
   }
+  let operation = model[operationName];
+  if (!operation || typeof operation !== 'function') {
+    return done(null, { error: new Error('Invalid operation ' + operationName + ' on model ' + modelName) });
+  }
+
+  let evalCB = function (err, result) {
+    if (err) {
+      log.error(options, err);
+      return done(null, {
+        error: err
+      });
+    }
+
+    if (result && Array.isArray(result)) {
+      result = result.map(v => {
+        return (typeof v.toObject === 'function') ? v.toObject() : v;
+      });
+    } else if (result && typeof result === 'object' && typeof result.toObject === 'function') {
+      result = result.toObject();
+    }
+    return done(null, result);
+  }
+console.log(operationArguments)
+  if (!Array.isArray(operationArguments)) {
+    operationArguments = [operationArguments];
+  }
+  operationArguments.push(evalCB);
+  operation.apply(model, operationArguments);
 }
 
 

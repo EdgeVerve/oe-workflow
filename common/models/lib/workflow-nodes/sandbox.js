@@ -127,6 +127,49 @@ module.exports.evaluateScript = function evaluateScript(options, script, incomin
   return { msg: message };
 };
 
+module.exports.evaluateExpressions = function evalExpressions(options, expressions, msg, process, inVariables) {
+  var sandbox = {
+    _output: {},
+    msg: msg,
+    options: options,
+    accessToken: options.accessToken,
+    pv: function pv(name) {
+      if (inVariables && inVariables[name]) {
+        return inVariables[name];
+      }
+      return process._processVariables[name];
+    },
+    _msg: msg,
+    _getPV: function _getPV(name) {
+      console.warn(depMessage);
+      if (inVariables && inVariables[name]) {
+        return inVariables[name];
+      }
+      return process._processVariables[name];
+    }
+  };
+
+  let results = [];
+  // eslint-disable-next-line
+  var context = new vm.createContext(sandbox);
+  try {
+    expressions.forEach(v => {
+      if (v) {
+        vm.runInContext('_output = ' + v, context, {
+          timeout: 500
+        });
+        results.push(sandbox._output);
+      } else {
+        results.push(v);
+      }
+    });
+  } catch (e) {
+    log.error(options, e);
+    throw e;
+  }
+  return results;
+};
+
 module.exports.evaluateExpression = function evalExpression(options, expression, msg, process, inVariables) {
   var sandbox = {
     _output: {},

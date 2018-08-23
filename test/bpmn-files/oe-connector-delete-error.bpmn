@@ -14,7 +14,7 @@
         <camunda:oeConnector>
           <camunda:model>ProductE</camunda:model>
           <camunda:method>deleteWithVersion</camunda:method>
-          <camunda:args><![CDATA[["p002", pv("prevVersion")]]]></camunda:args>
+          <camunda:args><![CDATA[["p002", pv("prevVersion"), options]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>
