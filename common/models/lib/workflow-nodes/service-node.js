@@ -45,7 +45,7 @@ module.exports.run = function run(options, flowObject, message, process, token, 
 var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
   var sandbox = {
     msg: incomingMsg,
-    options: options, 
+    options: options,
     pv: function pv(name) {
       if (name === 'accessToken') {
         return options.accessToken;
@@ -282,7 +282,6 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     }
     operationArguments.push(evalCB);
     operation.apply(model, operationArguments);
- 
     // model[operation](data[0], options, function evalCB(err, res) {
     //   if (err) {
     //     log.error(options, err);
@@ -304,7 +303,7 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     //   return done(null, _res);
     // });
   } else {
-    return done(null, { error: new Error('Invalid operation ' + operation + ' on model ' + modelName) });
+    return done(null, { error: new Error('Invalid operation ' + operationName + ' on model ' + modelName) });
   }
 }
 
