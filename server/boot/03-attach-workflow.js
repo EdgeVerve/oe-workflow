@@ -41,17 +41,17 @@ module.exports = function attachWorkFlows(app) {
   function newMappingHandler(mapping, options) {
     var actualModelName = mapping.actualModelName;
     var Model = app.models[actualModelName];
-    if(mapping.version === 'v1') {
+    if (mapping.version === 'v1') {
       applyMakerCheckerMixin1(Model);
     } else {
       applyMakerCheckerMixin2(Model);
     }
   }
-  function workflowMappingAfterSave(ctx, next){
+  function workflowMappingAfterSave(ctx, next) {
     let data = ctx.data || ctx.instance;
-    globalMessaging.publish('workflowMappingAfterSave', {version: data.version,actualModelName: data.actualModelName, modelName: data.modelName}, ctx.options);
+    globalMessaging.publish('workflowMappingAfterSave', {version: data.version, actualModelName: data.actualModelName, modelName: data.modelName}, ctx.options);
   }
-  
+
   WorkflowMapping.observe('after save', workflowMappingAfterSave);
   globalMessaging.subscribe('workflowMappingAfterSave', newMappingHandler);
 };
