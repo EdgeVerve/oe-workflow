@@ -50,6 +50,7 @@ module.exports = function attachWorkFlows(app) {
   function workflowMappingAfterSave(ctx, next) {
     let data = ctx.data || ctx.instance;
     globalMessaging.publish('workflowMappingAfterSave', {version: data.version, actualModelName: data.actualModelName, modelName: data.modelName}, ctx.options);
+    next();
   }
 
   WorkflowMapping.observe('after save', workflowMappingAfterSave);
