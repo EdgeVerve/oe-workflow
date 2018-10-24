@@ -458,6 +458,13 @@ module.exports = function Task(Task) {
           /* Set __comments__ for updating Remarks*/
           options.__comments__ = data.__comments__;
           if (['approved', 'rejected'].indexOf(data.__action__) > -1) {
+            Object.keys(data).forEach( (key) => {
+              if (!(key === 'pv' || key === 'msg' || key === '__action__' || key === '__comments__')) {
+                postData.updates = postData.updates || {};
+                postData.updates.set = postData.updates.set || {};
+                postData.updates.set[key] = data[key];
+              }
+            });
             WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
               delete options.__comments__;
               if (err) {
