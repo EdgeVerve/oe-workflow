@@ -169,7 +169,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         if (currentFlowObject.formType) {
           taskObj.formType = currentFlowObject.formType;
           if (currentFlowObject.formKey) {
-            taskObj.formKey = currentFlowObject.formKey;
+            taskObj.formKey = sandbox.evaluate$Expression(options, currentFlowObject.formKey, token.message, currentProcess, token);
           }
         }
 
