@@ -14,7 +14,7 @@
         <camunda:oeConnector>
           <camunda:model>pv("modelName")</camunda:model>
           <camunda:method>create</camunda:method>
-          <camunda:args><![CDATA[[{ "id" : "p002", "name" : pv("pname"), "price" : pv("pprice") }]]]></camunda:args>
+          <camunda:args><![CDATA[[{ "id" : "p002", "name" : pv("pname"), "price" : pv("pprice") }, options]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0iqudkv</bpmn2:incoming>

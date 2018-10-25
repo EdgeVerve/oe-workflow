@@ -45,6 +45,7 @@ module.exports.run = function run(options, flowObject, message, process, token, 
 var evaluateJSON = function evaluateJSON(data, incomingMsg, process, options) {
   var sandbox = {
     msg: incomingMsg,
+    options: options,
     pv: function pv(name) {
       if (name === 'accessToken') {
         return options.accessToken;
@@ -87,7 +88,7 @@ module.exports.evaluateJSON = evaluateJSON;
  */
 function evaluateFTConnector(options, flowObject, message, process, done) {
   var variableType = flowObject.variableType;
-  var status       = 'approved';
+  var status = 'approved';
 
   if (variableType === 'ProcessVariable' || variableType === 'processvariable') {
     status = process._processVariables[flowObject.variableValue];
@@ -208,7 +209,7 @@ function makeRESTCalls(urlOptions, retry, callback) {
       message.statusMessage = response.statusMessage;
     }
 
-    if (response && response.statusCode >= 500 && retry > 0 ) {
+    if (response && response.statusCode >= 500 && retry > 0) {
       log.debug(log.defaultContext(), 'making a retry attempt to url : ' + urlOptions.url);
       makeRESTCalls(urlOptions, retry - 1, callback);
     } else {
@@ -243,7 +244,7 @@ function makeRESTCalls(urlOptions, retry, callback) {
 function evaluateOEConnector(options, flowObject, message, process, done) {
   var modelName = evaluateProp(flowObject.props.model, message, process, options);
   // var modelName = flowObject.props.model;
-  var operation = flowObject.props.method;
+  var operationName = flowObject.props.method;
   try {
     var model = loopback.getModel(modelName, options);
   } catch (err) {
@@ -253,34 +254,60 @@ function evaluateOEConnector(options, flowObject, message, process, done) {
     });
   }
   var data = flowObject.props.data || {};
-  if (operation && model && model[operation]) {
-    data = evaluateJSON(data, message, process, options);
-    model[operation](data[0], options, function evalCB(err, res) {
+  if (operationName && model && model[operationName]) {
+    let operationArguments = evaluateJSON(data, message, process, options);
+
+    let operation = model[operationName];
+
+    let evalCB = function evalCB(err, result) {
       if (err) {
         log.error(options, err);
         return done(null, {
           error: err
         });
       }
-      var result = res;
-      if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
-        if (typeof result.toObject !== 'undefined') {
-          return done(null, result.toObject());
-        }
-        return done(null, result);
+
+      if (result && Array.isArray(result)) {
+        result = result.map(v => {
+          return (typeof v.toObject === 'function') ? v.toObject() : v;
+        });
+      } else if (result && typeof result === 'object' && typeof result.toObject === 'function') {
+        result = result.toObject();
       }
-      var _res = [];
-      for (var i = 0; i < res.length; i++) {
-        _res.push(res[i].toObject());
-      }
-      return done(null, _res);
-    });
+      return done(null, result);
+    };
+
+    if (!Array.isArray(operationArguments)) {
+      operationArguments = [operationArguments];
+    }
+    operationArguments.push(evalCB);
+    operation.apply(model, operationArguments);
+    // model[operation](data[0], options, function evalCB(err, res) {
+    //   if (err) {
+    //     log.error(options, err);
+    //     return done(null, {
+    //       error: err
+    //     });
+    //   }
+    //   var result = res;
+    //   if (result && typeof result === 'object' && result.constructor.name !== 'Array') {
+    //     if (typeof result.toObject !== 'undefined') {
+    //       return done(null, result.toObject());
+    //     }
+    //     return done(null, result);
+    //   }
+    //   var _res = [];
+    //   for (var i = 0; i < res.length; i++) {
+    //     _res.push(res[i].toObject());
+    //   }
+    //   return done(null, _res);
+    // });
   } else {
-    return done(null, {error: new Error('Invalid operation ' + operation + ' on model ' + modelName )});
+    return done(null, { error: new Error('Invalid operation ' + operationName + ' on model ' + modelName) });
   }
 }
 
-
+// eslint-disable-next-line no-unused-vars
 function evaluateProp(data, incomingMsg, process, options) {
   // check if prop needs to be evaluated
   if (data && (data.indexOf('pv(') > -1 || data.indexOf('msg(') > -1)) {

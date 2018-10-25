@@ -57,6 +57,7 @@ _setPV("count2",count2);]]></bpmn2:script>
         <camunda:oeConnector>
           <camunda:model>Literal</camunda:model>
           <camunda:method>find</camunda:method>
+          <camunda:args><![CDATA[[{}, options]]]></camunda:args>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0mng97h</bpmn2:incoming>
