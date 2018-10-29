@@ -122,6 +122,12 @@ BPMNTask.prototype.addUserTaskAttributes = function addUserTaskAttributes(defObj
   if (defObject.attributes_['camunda:priority']) {
     currentProcessElement.priority = defObject.attributes_['camunda:priority'].value;
   }
+  if (defObject.attributes_['camunda:creationHook']) {
+    currentProcessElement.creationHook = defObject.attributes_['camunda:creationHook'].value;
+  }
+  if (defObject.attributes_['camunda:completionHook']) {
+    currentProcessElement.completionHook = defObject.attributes_['camunda:completionHook'].value;
+  }
   if (defObject['bpmn2:extensionElements'] && defObject['bpmn2:extensionElements']['camunda:inputOutput']) {
     currentProcessElement.inputOutputParameters = extractInputOutputParameters(defObject['bpmn2:extensionElements']['camunda:inputOutput']);
   }

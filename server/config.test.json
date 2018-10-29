@@ -6,6 +6,7 @@
     "app": "oe-workflow",
     "disableNodered": true,
     "workflow":{
+        "addonModule": "test/utils/addon-functions.js",
         "recovery":{
             "batchSize": 500,
             "batchTime": 2000,
