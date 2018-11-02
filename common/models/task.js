@@ -259,244 +259,278 @@ module.exports = function Task(Task) {
         var workflowInstanceId;
         var WorkflowManager;
         let taskObj = processDef.getFlowObjectByName(tname);
-        if (taskObj.isMultiMaker) {
-          // this task is a maker user task, so no need to have pv and msg and directly take obj as update
-          var updates = data;
-          pdata = { __comments__: data.__comments__ };
-          if (typeof data.pv !== 'undefined') {
-            pdata.pv = data.pv;
-            delete updates.pv;
+        let preCompleteFunction = function preCompleteFunction(payload, taskInstance, taskDef, cb) {
+          /* default do-nothing */
+          return cb();
+        };
+        let workflowAddons = Task.app.workflowAddons || {};
+        if (taskObj.completionHook) {
+          if (workflowAddons[taskObj.completionHook]) {
+            preCompleteFunction =  workflowAddons[taskObj.completionHook];
+          } else {
+            log.error('preComplete function ' + taskObj.completionHook + ' not defined');
           }
-          if (typeof data.msg !== 'undefined') {
-            pdata.msg = data.msg;
-            delete updates.msg;
-          }
-          var modelName = process._processVariables._modelInstance._type;
-          var Model = loopback.getModel(modelName, options);
-          var modelId = process._processVariables._modelId;
-          Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
+        } else if (workflowAddons.defaultTaskCompletionHook) {
+          preCompleteFunction = workflowAddons.defaultTaskCompletionHook;
+        }
+
+        try {
+          /* Invoke with process-instance as 'this' */
+          preCompleteFunction.call(process, data, self, taskObj, function preCompleteCallback(err) {
             if (err) {
-              log.error(options, err);
               return next(err);
             }
-            // if the change request was created on create operation ,
-            // currentInstance will be null which is fine
-            fetchTheChangeRequest({
-              where: {
-                and: [{
-                  modelName: modelName
-                }, {
-                  modelId: modelId
-                }, {
-                  status: 'pending'
-                }]
-              }
-            }, options, function fetchChangeModel(err, inst) {
-              if (err) {
-                log.error(options, err);
-                return next(err);
-              }
-              var instObj = inst.toObject();
-              var operation = instObj.operation;
-              /* For second-maker currentInstance should have partially changed data from change-request */
-              currentInstance = new Model(instObj.data);
-              var instx = JSON.parse(JSON.stringify(instObj.data));
-              for (let key in updates) {
-                if (Object.prototype.hasOwnProperty.call(updates, key)) {
-                  instx[key] = updates[key];
-                }
-              }
 
-              var modifiers = inst._modifiers || [];
-              modifiers.push(options.ctx.username);
-
-              /* data could be partial changes submitted by maker-2
-              So we should always apply data on currentInstance and send that for _makerValidation */
-              Model._makerValidate(Model, operation, instx, currentInstance, null, options, function _validateCb(err, _data) {
+            if (taskObj.isMultiMaker) {
+              // this task is a maker user task, so no need to have pv and msg and directly take obj as update
+              var updates = data;
+              pdata = { __comments__: data.__comments__ };
+              if (typeof data.pv !== 'undefined') {
+                pdata.pv = data.pv;
+                delete updates.pv;
+              }
+              if (typeof data.msg !== 'undefined') {
+                pdata.msg = data.msg;
+                delete updates.msg;
+              }
+              var modelName = process._processVariables._modelInstance._type;
+              var Model = loopback.getModel(modelName, options);
+              var modelId = process._processVariables._modelId;
+              Model.findById(modelId, options, function fetchCurrentInstance(err, currentInstance) {
                 if (err) {
                   log.error(options, err);
                   return next(err);
                 }
-                log.debug(options, 'Instance has been validated during maker checker creation');
-                _data._modifiedBy = options.ctx.username;
-                var changeRequestChanges = {
-                  data: _data,
-                  remarks: data.__comments__,
-                  _modifiers: modifiers
-                };
-                if (data.__verificationStatus__) {
-                  changeRequestChanges.verificationStatus = data.__verificationStatus__;
-                }
-                inst.updateAttributes(changeRequestChanges, options, function updateCM(err, res) {
+                // if the change request was created on create operation ,
+                // currentInstance will be null which is fine
+                fetchTheChangeRequest({
+                  where: {
+                    and: [{
+                      modelName: modelName
+                    }, {
+                      modelId: modelId
+                    }, {
+                      status: 'pending'
+                    }]
+                  }
+                }, options, function fetchChangeModel(err, inst) {
                   if (err) {
                     log.error(options, err);
                     return next(err);
                   }
-                  // process._processVariables._modelInstance = instx;
-                  var xdata = {};
-                  xdata.pv = pdata.pv || {};
-                  xdata.pv._modifiers = modifiers;
-                  xdata.pv._modelInstance = _data;
+                  var instObj = inst.toObject();
+                  var operation = instObj.operation;
+                  /* For second-maker currentInstance should have partially changed data from change-request */
+                  currentInstance = new Model(instObj.data);
+                  var instx = JSON.parse(JSON.stringify(instObj.data));
+                  for (let key in updates) {
+                    if (Object.prototype.hasOwnProperty.call(updates, key)) {
+                      instx[key] = updates[key];
+                    }
+                  }
 
-                  xdata.msg = pdata.msg;
-                  xdata.__comments__ = pdata.__comments__;
-                  return self.complete_(xdata, options, next);
+                  var modifiers = inst._modifiers || [];
+                  modifiers.push(options.ctx.username);
+
+                  /* data could be partial changes submitted by maker-2
+                  So we should always apply data on currentInstance and send that for _makerValidation */
+                  Model._makerValidate(Model, operation, instx, currentInstance, null, options, function _validateCb(err, _data) {
+                    if (err) {
+                      log.error(options, err);
+                      return next(err);
+                    }
+                    log.debug(options, 'Instance has been validated during maker checker creation');
+                    _data._modifiedBy = options.ctx.username;
+                    var changeRequestChanges = {
+                      data: _data,
+                      remarks: data.__comments__,
+                      _modifiers: modifiers
+                    };
+                    if (data.__verificationStatus__) {
+                      changeRequestChanges.verificationStatus = data.__verificationStatus__;
+                    }
+                    inst.updateAttributes(changeRequestChanges, options, function updateCM(err, res) {
+                      if (err) {
+                        log.error(options, err);
+                        return next(err);
+                      }
+                      // process._processVariables._modelInstance = instx;
+                      var xdata = {};
+                      xdata.pv = pdata.pv || {};
+                      xdata.pv._modifiers = modifiers;
+                      xdata.pv._modelInstance = _data;
+
+                      xdata.msg = pdata.msg;
+                      xdata.__comments__ = pdata.__comments__;
+                      return self.complete_(xdata, options, next);
+                    });
+                  });
                 });
               });
-            });
-          });
-        } else if (taskObj.isChecker) {
-          // do handling of finalize transaction first, only then complete the task
-          // user task wont complete till finalize transaction is successful
-          WorkflowManager = loopback.getModel('WorkflowManager', options);
-          workflowInstanceId = process._processVariables._workflowInstanceId;
+            } else if (taskObj.isChecker) {
+              // do handling of finalize transaction first, only then complete the task
+              // user task wont complete till finalize transaction is successful
+              WorkflowManager = loopback.getModel('WorkflowManager', options);
+              workflowInstanceId = process._processVariables._workflowInstanceId;
 
-          if (typeof data.__action__ === 'undefined') {
-            let err = new Error('__action__ not provided. Checker enabled task requires this field.');
-            log.error(options, err);
-            return next(err);
-          }
-
-          let validActArr = ['approved', 'rejected'];
-          if (taskObj.stepVariables && taskObj.stepVariables.__action__) {
-            validActArr = validActArr.concat(taskObj.stepVariables.__action__);
-          }
-
-          let isValid = (validActArr.indexOf(data.__action__) > -1);
-          if (!isValid) {
-            let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
-            log.error(options, err);
-            return next(err);
-          }
-
-          pdata = {
-            pv: {}
-          };
-          if (typeof data.pv !== 'undefined') {
-            pdata.pv = data.pv;
-          }
-          if (typeof data.msg !== 'undefined') {
-            pdata.msg = data.msg;
-          }
-          pdata.__comments__ = data.__comments__;
-          pdata.pv.__action__ = data.__action__;
-
-          fetchTheChangeRequest({
-            where: {
-              'workflowInstanceId': workflowInstanceId
-            }
-          }, options, function fetchRM(err, request) {
-            if (err) {
-              log.error(options, err);
-              return next(err);
-            }
-            let _verifiedBy = 'workflow-system';
-            if (options.ctx && options.ctx.username) {
-              _verifiedBy = options.ctx.username;
-            }
-            let updates = {
-              verificationStatus: data.__action__,
-              remarks: data.__comments__,
-              _verifiedBy: _verifiedBy
-            };
-            request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
-              if (err) {
-                log.error(options, 'error in updating change workflow instance verifiedBy field', err);
-                return next(err);
-              }
-              log.debug(options, 'updated verified by field in change request by checker');
-              return self.complete_(pdata, options, next);
-            });
-          });
-        } else if (taskObj.isCheckerAutoFinalize) {
-          // do handling of finalize transaction first, only then complete the task
-          // user task wont complete till finalize transaction is successful
-          WorkflowManager = loopback.getModel('WorkflowManager', options);
-          workflowInstanceId = process._processVariables._workflowInstanceId;
-
-          if (typeof data.__action__ === 'undefined') {
-            let err = new Error('__action__ not provided. Checker enabled task requires this field.');
-            log.error(options, err);
-            return next(err);
-          }
-
-          let validActArr = ['approved', 'rejected'];
-          if (self.stepVariables && self.stepVariables.__action__) {
-            validActArr = validActArr.concat(self.stepVariables.__action__);
-          }
-
-          let isValid = (validActArr.indexOf(data.__action__) > -1);
-          if (!isValid) {
-            let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
-            log.error(options, err);
-            return next(err);
-          }
-
-          var postData = {
-            'workflowInstanceId': workflowInstanceId,
-            'status': data.__action__
-          };
-
-          if (process._processVariables._updates) {
-            postData.updates = process._processVariables._updates;
-          }
-
-          if (process._processVariables._maker_checker_impl === 'v2') {
-            postData.version = 'v2';
-          }
-          pdata = {
-            pv: {}
-          };
-          if (typeof data.pv !== 'undefined') {
-            pdata.pv = data.pv;
-          }
-          if (typeof data.msg !== 'undefined') {
-            pdata.msg = data.msg;
-          }
-          pdata.__comments__ = data.__comments__;
-          pdata.pv.__action__ = data.__action__;
-          /* Set __comments__ for updating Remarks*/
-          options.__comments__ = data.__comments__;
-          if (['approved', 'rejected'].indexOf(data.__action__) > -1) {
-            WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
-              delete options.__comments__;
-              if (err) {
-                log.error(err);
-                return next(err);
-              }
-              return self.complete_(pdata, options, next);
-            });
-          } else {
-            /* Update verificationStatus and Remarks on ChangeRequest and mark the task complete */
-            fetchTheChangeRequest({
-              where: {
-                'workflowInstanceId': workflowInstanceId
-              }
-            }, options, function fetchCR(err, request) {
-              if (err) {
+              if (typeof data.__action__ === 'undefined') {
+                let err = new Error('__action__ not provided. Checker enabled task requires this field.');
                 log.error(options, err);
                 return next(err);
               }
-              let _verifiedBy = 'workflow-system';
-              if (options.ctx && options.ctx.username) {
-                _verifiedBy = options.ctx.username;
+
+              let validActArr = ['approved', 'rejected'];
+              if (taskObj.stepVariables && taskObj.stepVariables.__action__) {
+                validActArr = validActArr.concat(taskObj.stepVariables.__action__);
               }
-              let updates = {
-                verificationStatus: data.__action__,
-                remarks: data.__comments__,
-                _verifiedBy: _verifiedBy
+
+              let isValid = (validActArr.indexOf(data.__action__) > -1);
+              if (!isValid) {
+                let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+                log.error(options, err);
+                return next(err);
+              }
+
+              pdata = {
+                pv: {}
               };
-              request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
+              if (typeof data.pv !== 'undefined') {
+                pdata.pv = data.pv;
+              }
+              if (typeof data.msg !== 'undefined') {
+                pdata.msg = data.msg;
+              }
+              pdata.__comments__ = data.__comments__;
+              pdata.pv.__action__ = data.__action__;
+
+              fetchTheChangeRequest({
+                where: {
+                  'workflowInstanceId': workflowInstanceId
+                }
+              }, options, function fetchRM(err, request) {
                 if (err) {
-                  log.error(options, 'error in updating change workflow instance', err);
+                  log.error(options, err);
                   return next(err);
                 }
-                return self.complete_(pdata, options, next);
+                let _verifiedBy = 'workflow-system';
+                if (options.ctx && options.ctx.username) {
+                  _verifiedBy = options.ctx.username;
+                }
+                let updates = {
+                  verificationStatus: data.__action__,
+                  remarks: data.__comments__,
+                  _verifiedBy: _verifiedBy
+                };
+                request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
+                  if (err) {
+                    log.error(options, 'error in updating change workflow instance verifiedBy field', err);
+                    return next(err);
+                  }
+                  log.debug(options, 'updated verified by field in change request by checker');
+                  return self.complete_(pdata, options, next);
+                });
               });
-            });
-          }
-        } else {
-          return self.complete_(data, options, next);
+            } else if (taskObj.isCheckerAutoFinalize) {
+              // do handling of finalize transaction first, only then complete the task
+              // user task wont complete till finalize transaction is successful
+              WorkflowManager = loopback.getModel('WorkflowManager', options);
+              workflowInstanceId = process._processVariables._workflowInstanceId;
+
+              if (typeof data.__action__ === 'undefined') {
+                let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+                log.error(options, err);
+                return next(err);
+              }
+
+              let validActArr = ['approved', 'rejected'];
+              if (self.stepVariables && self.stepVariables.__action__) {
+                validActArr = validActArr.concat(self.stepVariables.__action__);
+              }
+
+              let isValid = (validActArr.indexOf(data.__action__) > -1);
+              if (!isValid) {
+                let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+                log.error(options, err);
+                return next(err);
+              }
+
+              var postData = {
+                'workflowInstanceId': workflowInstanceId,
+                'status': data.__action__
+              };
+
+              if (process._processVariables._updates) {
+                postData.updates = process._processVariables._updates;
+              }
+
+              if (process._processVariables._maker_checker_impl === 'v2') {
+                postData.version = 'v2';
+              }
+              pdata = {
+                pv: {}
+              };
+              if (typeof data.pv !== 'undefined') {
+                pdata.pv = data.pv;
+              }
+              if (typeof data.msg !== 'undefined') {
+                pdata.msg = data.msg;
+              }
+              pdata.__comments__ = data.__comments__;
+              pdata.pv.__action__ = data.__action__;
+              /* Set __comments__ for updating Remarks*/
+              options.__comments__ = data.__comments__;
+              if (['approved', 'rejected'].indexOf(data.__action__) > -1) {
+                Object.keys(data).forEach( (key) => {
+                  if (!(key === 'pv' || key === 'msg' || key === '__action__' || key === '__comments__')) {
+                    postData.updates = postData.updates || {};
+                    postData.updates.set = postData.updates.set || {};
+                    postData.updates.set[key] = data[key];
+                  }
+                });
+                WorkflowManager.endAttachWfRequest(postData, options, function completeMakerCheckerRequest(err, res) {
+                  delete options.__comments__;
+                  if (err) {
+                    log.error(err);
+                    return next(err);
+                  }
+                  return self.complete_(pdata, options, next);
+                });
+              } else {
+                /* Update verificationStatus and Remarks on ChangeRequest and mark the task complete */
+                fetchTheChangeRequest({
+                  where: {
+                    'workflowInstanceId': workflowInstanceId
+                  }
+                }, options, function fetchCR(err, request) {
+                  if (err) {
+                    log.error(options, err);
+                    return next(err);
+                  }
+                  let _verifiedBy = 'workflow-system';
+                  if (options.ctx && options.ctx.username) {
+                    _verifiedBy = options.ctx.username;
+                  }
+                  let updates = {
+                    verificationStatus: data.__action__,
+                    remarks: data.__comments__,
+                    _verifiedBy: _verifiedBy
+                  };
+                  request.updateAttributes(updates, options, function updateVerifiedByField(err, inst) {
+                    if (err) {
+                      log.error(options, 'error in updating change workflow instance', err);
+                      return next(err);
+                    }
+                    return self.complete_(pdata, options, next);
+                  });
+                });
+              }
+            } else {
+              return self.complete_(data, options, next);
+            }
+          });
+        } catch (err) {
+          log.error(options, err);
+          return next(err);
         }
       });
     });

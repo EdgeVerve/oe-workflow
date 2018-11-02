@@ -239,10 +239,34 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
             taskObj.priority = evaluatedList[0];
           }
         }
-        ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
-          if (err) {
-            return log.error(options, err);
+
+        let preCreateFunction = function preCreateFunction(taskDef, taskData, cb) {
+          /* default do-nothing */
+          return cb(null, taskData);
+        };
+
+        let workflowAddons = ProcessInstance.app.workflowAddons || {};
+        if (currentFlowObject.creationHook) {
+          if (workflowAddons[currentFlowObject.creationHook]) {
+            preCreateFunction =  workflowAddons[currentFlowObject.creationHook];
+          } else {
+            log.error('Pre Complete function ' + currentFlowObject.creationHook + ' not defined');
           }
+        } else if (workflowAddons.defaultTaskCreationHook) {
+          preCreateFunction = workflowAddons.defaultTaskCreationHook;
+        }
+
+        /* Invoke with process-instance as 'this' */
+        preCreateFunction.call(currentProcess, currentFlowObject, taskObj, function preCreateCallback(err, modifiedTaskObj) {
+          /* istanbul ignore if*/
+          if (err) {
+            log.error(options, err);
+          }
+          ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
+            if (err) {
+              return log.error(options, err);
+            }
+          });
         });
       } else if (currentFlowObject.isSubProcess || currentFlowObject.isCallActivity) {
         var processVariablesToPass = {};
