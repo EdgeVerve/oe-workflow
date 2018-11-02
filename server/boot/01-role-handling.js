@@ -25,7 +25,7 @@ module.exports = function roleHandling(app) {
     discriminator: 'ownerType'
   }, as: 'tasks'
   });
-  log.debug(oe.bootContext(), 'relation from base-user to base-role created');
+  log.debug(oe.bootContext(), 'relation from base-user to base-task created');
 
   BaseRole.hasMany(Task, { polymorphic: {
     foreignKey: 'ownerId',
