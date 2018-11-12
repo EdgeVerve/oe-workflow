@@ -136,7 +136,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           }
         }
         var userInfo;
-        // additionaly add to the includede pool info
+        // additionaly add to the included pool info
         if (poolInfo) {
           if (poolInfo.startsWith('Role:')) {
             userInfo = poolInfo.split(':');
@@ -214,7 +214,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           Object.assign(variables, variableObj);
         } else {
           // give a copy of all Process Variables - possible risk
-          Object.assign(variables, currentProcess._processVariables);
+          Object.assign(variables, currentProcess._processVariables, token.inVariables || {});
         }
         taskObj.formVariables = variables;
         taskObj.processInstanceId = currentProcess.id;
