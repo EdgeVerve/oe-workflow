@@ -1,6 +1,6 @@
 {
   "name": "oe-workflow",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "main": "server/server.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
