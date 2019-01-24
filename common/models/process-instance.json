@@ -74,7 +74,11 @@
     "_status" : {
       "type" : "string",
       "required" : false
+    },
+    "correlationId":{
+      "type":"string"
     }
+
 },
   "validations": [],
   "relations": {

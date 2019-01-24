@@ -79,6 +79,14 @@ exports._endWorkflowRequest = function _endWorkflowRequest(engineType, processId
       } else {
         next(new Error('invalid status passed during maker checker completition process'));
       }
+    } else if (request.operation === 'custom') {
+      if (status === 'approved') {
+        approvedCustomInstance(app, request, wfupdates, options, next);
+      } else if (status === 'rejected') {
+        rejectedCustomInstance(app, request, options, next);
+      } else {
+        next(new Error('invalid status passed during maker checker completition process'));
+      }
     } else {
       err = new Error('invalid operation passed during maker checker completition process');
       log.error(options, err);
@@ -278,6 +286,65 @@ function approvedCreateInstance(app, request, wfupdates, options, next) {
   });
 }
 
+function rejectedCustomInstance(app, request, options, next) {
+  // TODO : create better error message so that user can understand why it failed
+  var updates = {
+    status: 'complete',
+    verificationStatus: 'rejected',
+    remarks: options.__comments__ || '',
+    _version: request._version
+  };
+  populateVerifiedBy(app.models.ChangeWorkflowRequest, updates, options);
+  request.updateAttributes(updates, options, function cb(err, inst) {
+    if (err) {
+      return handleError(err, options, next);
+    }
+    log.debug(options, 'Workflow request completed for rejected create Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+    next(null, inst);
+  });
+}
+
+function approvedCustomInstance(app, request, wfupdates, options, next) {
+  var model = loopback.getModel(request.modelName, options);
+  let data = request.data;
+  let method = data.pop();
+  if (wfupdates) {
+    applyWorkflowUpdates(data, wfupdates);
+  }
+  populateVerifiedBy(model, data, options);
+  var args = data.map(function (item) {
+    if (item === 'options') {
+      return options;
+    }
+    return item;
+  });
+  var customMethod = model[method];
+  if (customMethod) {
+    customMethod(...args, function (err) {
+      if (err) {
+        return handleError(err, options, next);
+      }
+      var updates = {
+        status: 'complete',
+        verificationStatus: 'approved',
+        remarks: options.__comments__ || '',
+        _version: request._version
+      };
+      populateVerifiedBy(app.models.ChangeWorkflowRequest, updates, options);
+      request.updateAttributes(updates, options, function cb(err, inst) {
+        if (err) {
+          return handleError(err, options, next);
+        }
+        log.debug(options, 'Workflow request completed for approved create Maker Checker Request [' + request.modelName + ',' + request.modelId + ']');
+        next();
+      });
+    });
+  } else {
+    return handleError('The custom method defined is not available on the model', options, next);
+  }
+}
+
+
 function applyWorkflowUpdates(updates, wfupdates) {
   var key;
 
@@ -295,4 +362,9 @@ function applyWorkflowUpdates(updates, wfupdates) {
       }
     }
   }
+}
+
+function handleError(err, options, callback) {
+  log.error(options, err);
+  return callback(err);
 }
