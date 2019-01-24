@@ -58,17 +58,25 @@ module.exports = function WorkflowManager(WorkflowManager) {
       log.error(options, err);
       return cb(err);
     } else if (!(data.operation === 'create' || data.operation === 'update' ||
-                  data.operation === 'delete' || data.operation === 'save')) {
+      data.operation === 'delete' || data.operation === 'save' || data.operation === 'custom')) {
       err = new Error('operation is not valid');
       log.error(options, err);
       return cb(err);
+    }
+
+    if (data.operation === 'custom') {
+      if (!data.remote || !data.remote.path || !data.remote.method || !data.remote.verb) {
+        err = new Error('remote parameters (path,method,verb) are required for custom operation');
+        err.code = 'INVALID_MAPPING_DATA';
+        return cb(err);
+      }
     }
 
     if (!data.modelName) {
       err = new Error('modelName parameter is required to attachWorkflow');
       log.error(options, err);
       return cb(err);
-    // } else if (typeof app.models[data.modelName] === 'undefined') {
+      // } else if (typeof app.models[data.modelName] === 'undefined') {
     } else if (typeof loopback.getModel(data.modelName, options) === 'undefined') {
       err = new Error('modelName is not valid');
       log.error(options, err);
@@ -102,7 +110,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
     }
 
     function validateWorkflowDeployment(name, done) {
-      var filter = {'and': [{'name': name}, {'latest': true}]};
+      var filter = { 'and': [{ 'name': name }, { 'latest': true }] };
       app.models.WorkflowDefinition.find({
         'where': filter
       }, options, function fetchWD(err, wfDefns) {
@@ -189,7 +197,14 @@ module.exports = function WorkflowManager(WorkflowManager) {
             }]
           }
         };
-
+        if (instance.operation === 'custom') {
+          if (instance.version === 'v2') {
+            filter.where.and.push({ 'mappingName': instance.mappingName });
+          } else if (instance.version === 'v0') {
+            filter.where.and.push({ 'remote.path': instance.remote.path });
+            filter.where.and.push({ 'remote.verb': instance.remote.verb });
+          }
+        }
         WorkflowMapping.find(filter, options, function findWM(err, mapping) {
           if (err) {
             log.error(options, err);
@@ -211,8 +226,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
               }
               if (mapping.version === 'v2') {
                 applyMakerCheckerMixinV2(Model);
-              } else {
+              } else if (mapping.version === 'v1') {
                 applyMakerCheckerMixin(Model);
+              } else {
+                workflowMixin(Model);
               }
               log.debug(options, 'WorkflowMapping successfully created.');
               mappingsList.push(mapping);
@@ -262,7 +279,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
           return cb(attachmentErr);
         });
       } else {
-        var response = {'mappings': mappingsList};
+        var response = { 'mappings': mappingsList };
         return cb(null, response);
       }
     });
@@ -344,7 +361,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
     var app = WorkflowManager.app;
     var relatedModelNames = [];
     var relationModelNameMap = {};
-    var modelConstruct  = app.models[modelName];
+    var modelConstruct = app.models[modelName];
     if (modelConstruct && modelConstruct.settings && modelConstruct.settings.relations) {
       var relations = modelConstruct.settings.relations;
       for (var relation in relations) {
@@ -380,11 +397,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
           innerWorkflowBody = {};
           modelName = relationModelNameMap[relation];
           if (typeof relatedData.relatedModelWorkflowBody[relation] !== 'undefined' &&
-                typeof relatedData.relatedModelWorkflowBody[relation].workflowBody !== 'undefined') {
+            typeof relatedData.relatedModelWorkflowBody[relation].workflowBody !== 'undefined') {
             processVariables.CallActivityWorkflow = relatedData.relatedModelWorkflowBody[relation].workflowBody.workflowDefinitionName;
             innerWorkflowBody.workflowDefinitionName = relatedWorkflowCallActivity;
             innerWorkflowBody.processVariables = processVariables;
-            relatedWorkflowBody[modelName] = {'workflowBody': innerWorkflowBody};
+            relatedWorkflowBody[modelName] = { 'workflowBody': innerWorkflowBody };
           }
         }
       }
@@ -404,7 +421,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
           if (relatedData.relatedModelWorkflowBody[relation]) {
             innerWorkflowBody.workflowDefinitionName = relatedData.relatedModelWorkflowBody[relation].workflowBody.workflowDefinitionName;
             innerWorkflowBody.processVariables = relatedData.relatedModelWorkflowBody[relation].workflowBody.processVariables;
-            relatedWorkflowBody[modelName] = {'workflowBody': innerWorkflowBody};
+            relatedWorkflowBody[modelName] = { 'workflowBody': innerWorkflowBody };
           }
         }
       }
