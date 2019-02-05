@@ -610,7 +610,7 @@ module.exports = function Task(Task) {
     } else if (data && data.role) {
       updates.candidateRoles = [data.role];
     } else if (data && data.group) {
-      updates.candidateRoles = [data.group];
+      updates.candidateGroups = [data.group];
     } else {
       var error = new Error('Assignee/role/group is required to delegate task.');
       log.error(options, error);
