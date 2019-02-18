@@ -1,6 +1,6 @@
 {
   "name": "WorkflowManager",
-  "base": "WorkflowBaseEntity",
+  "base": "Model",
   "description" : "Manages oe-framework model interactions with oe-workflow engine",
   "idInjection": true,
   "options": {

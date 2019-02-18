@@ -14,7 +14,7 @@ var loopback = require('loopback');
 var async = require('async');
 const uuidv4 = require('uuid/v4');
 
-var validationError = require('loopback-datasource-juggler/lib/validations.js').ValidationError;
+// var validationError = require('loopback-datasource-juggler/lib/validations.js').ValidationError;
 var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
 
 var logger = require('oe-logger');
@@ -53,7 +53,13 @@ function addOERemoteMethods(Model) {
         source: 'path'
       },
       description: 'Model id'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'get',
       path: '/maker-checker/:id/workflow'
@@ -75,7 +81,13 @@ function addOERemoteMethods(Model) {
         source: 'body'
       },
       description: 'Model data to be posted'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'post',
       path: '/maker-checker'
@@ -104,7 +116,13 @@ function addOERemoteMethods(Model) {
         source: 'path'
       },
       description: 'Model version'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'delete',
       path: '/maker-checker/:id/:version'
@@ -133,7 +151,13 @@ function addOERemoteMethods(Model) {
         source: 'body'
       },
       description: 'Model data to be posted'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'put',
       path: '/maker-checker/:id'
@@ -163,6 +187,11 @@ function addOERemoteMethods(Model) {
         source: 'body'
       },
       description: 'Remote method arguments list'
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
     }],
     http: {
       verb: 'post',
@@ -178,7 +207,11 @@ function addOERemoteMethods(Model) {
   Model.remoteMethod('findX', {
     description: 'Find all the intermediate instances present in Change Request Model.',
     accessType: 'READ',
-    accepts: [],
+    accepts: [{
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
     http: {
       verb: 'get',
       path: '/maker-checker'
@@ -205,7 +238,13 @@ function addOERemoteMethods(Model) {
       arg: 'filter',
       type: 'object',
       description: 'Filter defining fields and include'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'get',
       path: '/maker-checker/:id'
@@ -227,7 +266,13 @@ function addOERemoteMethods(Model) {
         source: 'path'
       },
       description: 'Model id'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'delete',
       path: '/maker-checker/:id/recall'
@@ -254,7 +299,13 @@ function addOERemoteMethods(Model) {
       arg: 'filter',
       type: 'object',
       description: 'Filter defining fields and include'
-    }],
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }
+    ],
     http: {
       verb: 'get',
       path: '/maker-checker/:id/tasks'
@@ -269,10 +320,12 @@ function addOERemoteMethods(Model) {
   Model.deleteX = function deleteX(id, version, options, next) {
     if (!id) {
       let err = new Error('please provide id');
+      // log.error(options, err);
       return next(err);
     }
     if (!version) {
       let err = new Error('please provide version');
+      // log.error(options, err);
       return next(err);
     }
 
@@ -289,88 +342,128 @@ function addOERemoteMethods(Model) {
       if (!sinst) {
         return handleError(new Error('Model id is not valid'), options, next);
       }
-      let einst = sinst.toObject();
-      var context = {
-        Model: Model,
-        id: id,
-        options: options,
-        instance: sinst,
-        hookState: {},
-        where: {}
-      };
 
-      Model.notifyObserversOf('before delete workflow', context, function beforeWorkflowCb(err) {
+      ChangeWorkflowRequest.find({
+        where: {
+          and: [{
+            modelName: modelName
+          }, {
+            status: 'pending'
+          }, {
+            modelId: id
+          }]
+        }
+      }, options, function checkExisitingRequest(err, crinsts) {
+        /* istanbul ignore if*/
         if (err) {
           return handleError(err, options, next);
         }
+        if (crinsts.length > 1) {
+          return handleError(new Error('Multiple change requests found, pertaining to same model Instance'), options, next);
+        }
+        if (crinsts.length === 1) {
+          // existing change request found,
+          // Can not delete, Raise appropriate error
+          let crinst = crinsts[0];
+          if (crinst.operation === 'delete') {
+            return next(new Error('Delete request already pending'));
+          }
+          return next(new Error('Can not delete, ' + crinst.operation + ' request pending'));
+        }
+        // is the instance to be passed also ? if the user just passes the updates ?
+        let einst = sinst.toObject();
 
-        var mData = {
-          modelName: modelName,
-          modelId: id,
-          operation: 'delete',
-          data: einst,
-          verificationStatus: 'pending',
-          _modifiers: [
-            options.ctx.username
-          ]
+        var context = {
+          Model: Model,
+          id: id,
+          options: options,
+          instance: sinst,
+          hookState: {},
+          where: {}
         };
 
-        var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
-        var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
-
-        WorkflowMapping.find({
-          where: {
-            'and': [
-              { 'modelName': modelName },
-              { 'engineType': 'oe-workflow' },
-              { 'version': 'v2' },
-              { 'operation': 'delete' }
-            ]
-          }
-        }, options, function fetchWM(err, res) {
+        Model.notifyObserversOf('before delete workflow', context, function beforeWorkflowCb(err) {
           if (err) {
             return handleError(err, options, next);
-          } else if (res && res.length === 0) {
-            // this case should never occur
-            let err = new Error('no delete maker checker mapping found');
-            log.debug(options, err);
-            return next(err);
-          } else if (res.length === 1) {
-            var mapping = res[0];
+          }
 
-            let workflowBody = mapping.workflowBody;
-            workflowBody.processVariables = workflowBody.processVariables || {};
-            workflowBody.processVariables._operation = mData.operation;
-            workflowBody.processVariables._modelInstance = mData.data;
-            workflowBody.processVariables._modelInstance._type = modelName;
-            workflowBody.processVariables._modelInstance._deletedBy = options.ctx.username;
-            workflowBody.processVariables._modelId = id;
-            // this is to identify while executing Finalize Transaction to follow which implementation
-            workflowBody.processVariables._maker_checker_impl = 'v2';
-            WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
-              if (err) {
-                return handleError(err, options, next);
+          var mData = {
+            modelName: modelName,
+            modelId: id,
+            operation: 'delete',
+            data: einst,
+            verificationStatus: 'pending',
+            _modifiers: [
+              options.ctx.username
+            ]
+          };
+
+          var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
+          var WorkflowInstance = loopback.getModel('WorkflowInstance', options);
+
+          WorkflowMapping.find({
+            where: {
+              'and': [{
+                'modelName': modelName
+              },
+              {
+                'engineType': 'oe-workflow'
+              },
+              {
+                'version': 'v2'
+              },
+              {
+                'operation': 'delete'
               }
-              mData.workflowInstanceId = winst.id;
-              ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+              ]
+            }
+          }, options, function fetchWM(err, res) {
+            /* istanbul ignore if*/
+            if (err) {
+              return handleError(err, options, next);
+            } else if (res && res.length === 0) {
+              // this case should never occur
+              let err = new Error('no delete maker checker mapping found');
+              log.debug(options, err);
+              return next(err);
+            } else if (res.length === 1) {
+              var mapping = res[0];
+
+              let workflowBody = mapping.workflowBody;
+              workflowBody.processVariables = workflowBody.processVariables || {};
+              workflowBody.processVariables._operation = mData.operation;
+              workflowBody.processVariables._modelInstance = mData.data;
+              workflowBody.processVariables._modelInstance._type = modelName;
+              workflowBody.processVariables._modelInstance._deletedBy = options.ctx.username;
+              workflowBody.processVariables._modelId = id;
+              // this is to identify while executing Finalize Transaction to follow which implementation
+              workflowBody.processVariables._maker_checker_impl = 'v2';
+              WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
                 if (err) {
                   return handleError(err, options, next);
                 }
-                log.debug(options, inst);
-                // wrapping back data properly
-                let cinst = inst.toObject();
-                for (let i in cinst.data) {
-                  if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
-                    cinst[i] = cinst.data[i];
+                mData.workflowInstanceId = winst.id;
+                ChangeWorkflowRequest.create(mData, options, function createChangeModel(err, inst) {
+                  if (err) {
+                    return handleError(err, options, next);
                   }
-                }
-                delete cinst.data;
-                return next(null, cinst);
+                  log.debug(options, inst);
+                  // wrapping back data properly
+                  let cinst = unwrapChangeRequest(inst);
+                  // let cinst = inst.toObject();
+                  // for (let i in cinst.data) {
+                  //   if (Object.prototype.hasOwnProperty.call(cinst.data, i)) {
+                  //     cinst[i] = cinst.data[i];
+                  //   }
+                  // }
+                  // delete cinst.data;
+                  return next(null, cinst);
+                });
               });
-            });
-          } else {
-            return handleError(new Error('Multiple workflows attached to same Model.'), options, next);
-          }
+            } else {
+              return handleError(new Error('Multiple workflows attached to same Model.'), options, next);
+            }
+          });
         });
       });
     });
@@ -385,6 +478,7 @@ function addOERemoteMethods(Model) {
     delete data.pv;
 
     Model.findById(id, options, function fetchInstance(err, cinst) {
+      /* istanbul ignore if*/
       if (err) {
         return handleError(err, options, next);
       }
@@ -411,6 +505,7 @@ function addOERemoteMethods(Model) {
           }]
         }
       }, options, function checkExisitingRequest(err, crinsts) {
+        /* istanbul ignore if*/
         if (err) {
           return handleError(err, options, next);
         }
@@ -468,14 +563,24 @@ function addOERemoteMethods(Model) {
 
           WorkflowMapping.find({
             where: {
-              'and': [
-                { 'modelName': modelName },
-                { 'engineType': 'oe-workflow' },
-                { 'version': 'v2' },
-                { 'operation': { 'inq': ['update', 'save'] } }
+              and: [{
+                modelName: modelName
+              },
+              {
+                engineType: 'oe-workflow'
+              },
+              {
+                version: 'v2'
+              },
+              {
+                operation: {
+                  inq: ['update', 'save']
+                }
+              }
               ]
             }
           }, options, function fetchWM(err, res) {
+            /* istanbul ignore if*/
             if (err) {
               return handleError(err, options, next);
             } else if (res && res.length === 0) {
@@ -549,7 +654,9 @@ function addOERemoteMethods(Model) {
         options: options
       };
     } else if (operation === 'update') {
-      newInstance = new Model(currentInstance.toObject(), { persisted: true });
+      newInstance = new Model(currentInstance.toObject(), {
+        persisted: true
+      });
       context = {
         Model: Model,
         where: {},
@@ -570,24 +677,25 @@ function addOERemoteMethods(Model) {
       }
 
       delete context.isNewChangeRequest;
-      var RootModel = Model;
-      var beforeSaveArray = Model._observers['before save'] || [];
+      // var RootModel = Model;
+      // var beforeSaveArray = Model._observers['before save'] || [];
 
-      while (Model.base.modelName !== 'BaseEntity') {
-        beforeSaveArray = beforeSaveArray.concat(Model.base._observers['before save'] || []);
-        Model = Model.base;
-      }
-      Model = RootModel;
+      // while (Model.base.modelName !== 'BaseEntity') {
+      //   beforeSaveArray = beforeSaveArray.concat(Model.base._observers['before save'] || []);
+      //   Model = Model.base;
+      // }
+      // Model = RootModel;
 
-      var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
-        return beforeSave.name === 'dataPersonalizationBeforeSave';
-      });
-      if (dpBeforeSave.length !== 1) {
-        let err = new Error('DataPersonalizationMixin fetch failed.');
-        log.error(options, err);
-        return next(err);
-      }
-      dpBeforeSave[0](context, function beforeSaveCb(err) {
+      // var dpBeforeSave = beforeSaveArray.filter(function filterBeforeSave(beforeSave) {
+      //   return beforeSave.name === 'dataPersonalizationBeforeSave';
+      // });
+      // if (dpBeforeSave.length !== 1) {
+      //   let err = new Error('DataPersonalizationMixin fetch failed.');
+      //   log.error(options, err);
+      //   return next(err);
+      // }
+      // dpBeforeSave[0](context, function beforeSaveCb(err) {
+      Model.notifyObserversOf('before save', context, function beforeSaveCb(err) {
         if (err) return next(err);
 
         if (context.currentInstance) {
@@ -607,11 +715,12 @@ function addOERemoteMethods(Model) {
             let data = newInstance.toObject(true);
             next(null, data);
           } else {
+            let validationError = Model.ValidationError;
             let err = validationError(newInstance);
-            log.error(options, err);
+            // log.error(options, err);
             return next(err);
           }
-        }, context, data);
+        }, data, context);
       });
     });
   }
@@ -677,9 +786,6 @@ function addOERemoteMethods(Model) {
               } else {
                 _data[relationName] = dataArray[i];
               }
-            }
-            if (err) {
-              return next(err);
             }
             delete options.childData;
             delete options.parentData;
@@ -765,22 +871,19 @@ function addOERemoteMethods(Model) {
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
 
-    var inputPV = data.pv;
+    let inputPV = data.pv;
     delete data.pv;
 
     var idName = Model.definition.idName();
     var id = data[idName] || 'this_id_wont_exist';
     ChangeWorkflowRequest.find({
       where: {
-        and: [{
-          modelName: modelName
-        }, {
-          status: 'pending'
-        }, {
-          modelId: id
-        }]
+        modelName: modelName,
+        status: 'pending',
+        modelId: id
       }
     }, options, function checkExisitingRequest(err, crinsts) {
+      /* istanbul ignore if*/
       if (err) {
         return handleError(err, options, next);
       }
@@ -800,9 +903,8 @@ function addOERemoteMethods(Model) {
         // we are async ly terminating not holding the main request , might change
         terminateWorkflow(crinst.workflowInstanceId, options, function onTerminationWorkflow(err, res) {
           if (err) {
-            return log.error(options, new Error('Unable to interrupt workflow in update retrigger case'));
+            log.error(options, new Error('Unable to interrupt workflow in update retrigger case'));
           }
-          return
         });
       }
       options.isNewChangeRequest = true;
@@ -842,11 +944,20 @@ function addOERemoteMethods(Model) {
 
         WorkflowMapping.find({
           where: {
-            'and': [
-          { 'modelName': modelName },
-          { 'engineType': 'oe-workflow' },
-          { 'version': 'v2' },
-          { 'operation': {'inq': ['create', 'save']}}
+            'and': [{
+              'modelName': modelName
+            },
+            {
+              'engineType': 'oe-workflow'
+            },
+            {
+              'version': 'v2'
+            },
+            {
+              'operation': {
+                'inq': ['create', 'save']
+              }
+            }
             ]
           }
         }, options, function fetchWM(err, res) {
@@ -915,6 +1026,10 @@ function addOERemoteMethods(Model) {
   };
 
   Model.findByIdX = function findByIdX(id, filter, ctx, cb) {
+    // var app = Model.app;
+    // var modelName = Model.definition.name;
+    // var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+
     if (typeof ctx === 'function') {
       cb = ctx;
       ctx = filter;
@@ -1022,7 +1137,9 @@ function addOERemoteMethods(Model) {
       var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
       var operationFilter = inst[0].operation;
       if (operationFilter === 'create' || operationFilter === 'update') {
-        operationFilter = { inq: [inst[0].operation, 'save'] };
+        operationFilter = {
+          inq: [inst[0].operation, 'save']
+        };
       }
       WorkflowMapping.find({
         where: {
@@ -1032,7 +1149,8 @@ function addOERemoteMethods(Model) {
           operation: operationFilter
         }
       }, options, function fetchMapping(err, mappings) {
-       if (err) {
+        /* istanbul ignore if*/
+        if (err) {
           return handleError(err, options, cb);
         }
 
@@ -1062,45 +1180,46 @@ function addOERemoteMethods(Model) {
   };
 
   Model.workflow = function workflow(id, ctx, cb) {
-    var app = Model.app;
-    var modelName = Model.definition.name;
-    var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
-    var WorkflowInstance = app.models.WorkflowInstance;
-
     if (!id) {
-      var err = new Error('id is required to find attached Workflow Instance.');
-      log.error(ctx.options, err);
+      var err = new Error('id is required');
+      // log.error(ctx.options, err);
       return cb(err);
     }
 
+    if (typeof id === 'object') {
+      id = id.toString();
+    }
     var filter = {
       'where': {
-        'and': [
-          { 'modelName': modelName },
-          { 'status': 'pending' },
-          { 'modelId': id }
+        'and': [{
+          'modelName': Model.definition.name
+        },
+        {
+          'status': 'pending'
+        },
+        {
+          'modelId': id
+        }
         ]
       }
     };
 
-    ChangeWorkflowRequest.find(filter, ctx, function fetchWR(err, instances) {
+    Model.app.models.ChangeWorkflowRequest.find(filter, ctx, function fetchWR(err, instances) {
+      /* istanbul ignore if*/
       if (err) {
-        log.error(ctx.options, err);
-        return cb(err);
+        return handleError(err, ctx.options, cb);
       }
 
       if (instances.length === 0) {
         log.debug(ctx, 'No workflow instance attached to current Model Instance Id');
         return cb(null, []);
-      } else if ( instances.length > 1) {
-        let err = new Error('multiple workflow request found with same Model Instance Id');
-        log.error(ctx, err);
-        return cb(err);
+      } else if (instances.length > 1) {
+        return handleError(new Error('multiple workflow request found with same Model Instance Id'), ctx.options, cb);
       }
 
       var workflowRef = instances[0].workflowInstanceId;
 
-      WorkflowInstance.find({
+      Model.app.models.WorkflowInstance.find({
         'where': {
           'id': workflowRef
         },
@@ -1108,9 +1227,9 @@ function addOERemoteMethods(Model) {
           'relation': 'processes'
         }
       }, ctx, function fetchWI(err, res) {
+        /* istanbul ignore if*/
         if (err) {
-          log.error(ctx.options, err);
-          return cb(err);
+          return handleError(err, ctx.options, cb);
         }
         // filtered on id so will always be a single instance
         cb(null, res[0]);
@@ -1119,10 +1238,7 @@ function addOERemoteMethods(Model) {
   };
 
   Model.tasks = function tasks(id, tfilter, ctx, cb) {
-    var app = Model.app;
-    var modelName = Model.definition.name;
-    var WorkflowRequest = app.models.ChangeWorkflowRequest;
-    var WorkflowInstance = app.models.WorkflowInstance;
+    var WorkflowInstance = Model.app.models.WorkflowInstance;
 
     if (typeof ctx === 'function') {
       cb = ctx;
@@ -1132,21 +1248,25 @@ function addOERemoteMethods(Model) {
 
     var filter = {
       'where': {
-        'and': [
-          { 'modelName': modelName },
-          { 'status': 'pending' },
-          { 'modelId': id }
+        'and': [{
+          'modelName': Model.definition.name
+        },
+        {
+          'status': 'pending'
+        },
+        {
+          'modelId': id
+        }
         ]
       }
     };
 
-    WorkflowRequest.find(filter, ctx, function fetchWR(err, instances) {
+    Model.app.models.ChangeWorkflowRequest.find(filter, ctx, function fetchWR(err, instances) {
+      /* istanbul ignore if*/
       if (err) {
-        log.error(ctx.options, err);
-        return cb(err);
+        return handleError(err, ctx.options, cb);
       } else if (instances.length > 1) {
-        let err = new Error('multiple workflow request found with same Model Instance Id');
-        return handleError(err, options, cb);
+        return handleError(new Error('multiple workflow request found with same Model Instance Id'), ctx.options, cb);
       }
 
       if (instances.length === 0) {
@@ -1157,14 +1277,15 @@ function addOERemoteMethods(Model) {
       var workflowRef = instances[0].workflowInstanceId;
 
       WorkflowInstance.findById(workflowRef, ctx, function fetchWI(err, workflowInstance) {
+        /* istanbul ignore if*/
         if (err) {
-          log.error(ctx.options, err);
-          return cb(err);
+          return handleError(err, ctx.options, cb);
         }
 
         workflowInstance.tasks(tfilter, ctx, function fetchProcesses(err, tasks) {
+          /* istanbul ignore if*/
           if (err) {
-            return handleError(err, options, cb);
+            return handleError(err, ctx.options, cb);
           }
 
           cb(null, tasks);
@@ -1262,7 +1383,6 @@ function addOERemoteMethods(Model) {
           workflowBody.processVariables._modelInstance._type = modelName;
           workflowBody.processVariables._modelInstance._createdBy = options.ctx.username;
           workflowBody.processVariables._modelId = id;
-          workflowBody.correlationId = id;
           // this is to identify while executing Finalize Transaction to follow which implementation
           workflowBody.processVariables._maker_checker_impl = 'v2';
           _data.push(mapping.remote.method);

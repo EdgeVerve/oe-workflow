@@ -7,6 +7,10 @@
   "options": {
     "validateUpsert": true
   },
+  "mixins":{
+    "VersionMixin": true,
+    "HistoryMixin": true
+  },
   "properties": {
     "name": {
       "type": "string",
@@ -21,7 +25,7 @@
       "required": false
     },
     "participants": {
-      "type": "object",
+      "type": ["object"],
       "required": false
     },
     "latest": {

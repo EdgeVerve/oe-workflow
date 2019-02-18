@@ -9,11 +9,11 @@
       <bpmn2:incoming>SequenceFlow_13n4sjv</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_13n4sjv" sourceRef="IntermediateCatchEvent_145bchc" targetRef="EndEvent_064rj4q" />
-    <bpmn2:intermediateCatchEvent id="IntermediateCatchEvent_145bchc" name="Wait 3s">
+    <bpmn2:intermediateCatchEvent id="IntermediateCatchEvent_145bchc" name="Wait200">
       <bpmn2:incoming>SequenceFlow_1wcnntp</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_13n4sjv</bpmn2:outgoing>
       <bpmn2:timerEventDefinition>
-        <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression">3000</bpmn2:timeDuration>
+        <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression">200</bpmn2:timeDuration>
       </bpmn2:timerEventDefinition>
     </bpmn2:intermediateCatchEvent>
   </bpmn2:process>

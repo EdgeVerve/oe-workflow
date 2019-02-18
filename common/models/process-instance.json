@@ -1,10 +1,13 @@
-
 {
   "name": "ProcessInstance",
   "base": "WorkflowBaseEntity",
   "description" : "Stores Process level instance data of workflows in oe-workflow engine",
   "idInjection": true,
   "cacheable" : false,
+  "mixins":{
+    "VersionMixin": true,
+    "HistoryMixin": true
+  },
   "options": {
     "validateUpsert": true
   },
@@ -13,17 +16,9 @@
       "type" : "string",
       "required" : true
     },
-    "processDefinitionId" : {
-      "type" : "string",
-      "required" : true
-    },
     "processDefinitionBpmnId" : {
       "type" : "string",
       "required" : false
-    },
-    "workflowInstanceId" : {
-      "type" : "string",
-      "required" : true
     },
     "_processTokens" : {
       "type" : "object",
@@ -66,7 +61,7 @@
       "hidden" : true,
       "required" : false
     },
-    "passive-wait" : {
+    "passiveWait" : {
       "type" : "boolean",
       "default" : false,
       "required" : false
@@ -78,7 +73,6 @@
     "correlationId":{
       "type":"string"
     }
-
 },
   "validations": [],
   "relations": {

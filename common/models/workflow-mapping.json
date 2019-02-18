@@ -6,7 +6,7 @@
     "validateUpsert": true
   },
   "mixins":{
-    "SoftDeleteMixin" : false
+    "VersionMixin": true
   },
   "properties": {   
     "engineType": {
@@ -44,11 +44,11 @@
       "default": false
     },
     "privilegedUsers" : {
-      "type": "array",
+      "type": ["string"],
       "required": false
     },
     "privilegedRoles": {
-      "type": "array",
+      "type": ["string"],
       "required": false
     },
     "remote":{

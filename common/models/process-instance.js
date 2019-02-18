@@ -21,17 +21,16 @@ var log = logger('ProcessInstance');
 
 var _ = require('lodash');
 
-var timerEvents = require('./lib/timeouts');
-var processTokens = require('./process-tokens.js');
-var StateDelta = require('./process-state-delta.js');
-var sandbox = require('./lib/workflow-nodes/sandbox.js');
+var timerEvents = require('../../lib/utils/timeouts.js');
+var processTokens = require('../../lib/utils/process-tokens.js');
+var StateDelta = require('../../lib/utils/process-state-delta.js');
+var sandbox = require('../../lib/workflow-nodes/sandbox.js');
 
-var subprocessEventHandler = require('./lib/workflow-eventHandlers/subprocesshandlers.js');
-var catchEventHandler = require('./lib/workflow-eventHandlers/catcheventhandler.js');
-var tokenEventHandler = require('./lib/workflow-eventHandlers/tokeneventhandler.js');
+var subprocessEventHandler = require('../../lib/workflow-eventHandlers/subprocesshandlers.js');
+var catchEventHandler = require('../../lib/workflow-eventHandlers/catcheventhandler.js');
+var tokenEventHandler = require('../../lib/workflow-eventHandlers/tokeneventhandler.js');
 
-var TokenEmission = require('./lib/tokenemission');
-var throwObject = require('./lib/throwobject.js');
+var TokenEmission = require('../../lib/utils/tokenemission.js');
 
 /**
  * @param  {Object} ProcessInstance Process-Instance
@@ -44,13 +43,14 @@ module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.on(PROCESS_TERMINATE, subprocessEventHandler._subProcessInterruptHandler);
   ProcessInstance.on(TERMINATE_INTERRUPT_EVENT, subprocessEventHandler._terminateInterruptHandler);
 
-    /**
-     * Before Save Observer Hook
-     */
+  /**
+   * Before Save Observer Hook
+   */
   ProcessInstance.observe('before save', function beforeSavePI(ctx, next) {
     if (ctx.isNewInstance) {
       var instance = ctx.instance;
       instance.processDefinition({}, ctx.options, function fetchPD(err, processDefinitionInstance) {
+        /* istanbul ignore if*/
         if (err) {
           log.error(ctx.options, err.message);
           return next(err);
@@ -82,18 +82,18 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
   });
 
-    /**
-     * After Save Observer Hook
-     */
+  /**
+   * After Save Observer Hook
+   */
   ProcessInstance.observe('after save', function afterSavePD(ctx, next) {
     if (ctx.isNewInstance) {
       var instance = ctx.instance;
-      var options = instance._workflowCtx;
+      var options = instance._workflowCtx || ctx.options;
 
       var tokenIds = Object.keys(instance._processTokens);
       if (tokenIds.length === 1) {
         ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, instance._processTokens[tokenIds[0]]);
-      } else  {
+      } else {
         // multiple start events found, or no start event found
         var err = new Error('multiple start events found, or no start event found');
         log.error(ctx.options, err);
@@ -105,11 +105,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
   });
 
-    /**
-     * Initialize the embedded properties
-     * @param {Object} options Workflow Context
-     * @returns {void}
-     */
+  /**
+   * Initialize the embedded properties
+   * @param {Object} options Workflow Context
+   * @returns {void}
+   */
   ProcessInstance.prototype.init = function init(options) {
     this._processTokens = {};
     if (this.processVariables && typeof (this.processVariables) !== 'object') {
@@ -127,20 +127,25 @@ module.exports = function ProcessInstance(ProcessInstance) {
       timerIds: {}
     };
     this._synchronizeFlow = {};
-    this._workflowCtx = JSON.parse(JSON.stringify(options));
+
+    // Check if this is really required.
+    // Referring the invoking context instead of storing the context as part of workflow instance.
+    // The property is still present but will remain undefined
+    // this._workflowCtx = JSON.parse(JSON.stringify(options));
   };
 
-    /**
-     * Interaction point for RecieveMessage
-     * @param  {Object}   options Options
-     * @param  {String}   bpmnId  Bpmn Id
-     * @param  {Object}   message Message
-     * @param  {Function} next    Callback
-     */
+  /**
+   * Interaction point for RecieveMessage
+   * @param  {Object}   options Options
+   * @param  {String}   bpmnId  Bpmn Id
+   * @param  {Object}   message Message
+   * @param  {Function} next    Callback
+   */
   ProcessInstance.prototype._recieveMessage = function _recieveMessage(options, bpmnId, message, next) {
     next = next || function empty() {};
     var self = this;
     this.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
+      /* istanbul ignore if*/
       if (err) {
         return next(err);
       }
@@ -160,26 +165,27 @@ module.exports = function ProcessInstance(ProcessInstance) {
         log.debug(options, 'Token not found');
         return next(new Error('No corresponding token found.'));
       } else if (token.status !== 'pending') {
-        log.debug(options, 'Task Already completed');
+        log.debug(options, 'Task already completed');
         return next(new Error('Task status is ' + token.status));
       }
 
       var delta = new StateDelta();
       // to disable boundary timer event if task is completed beforehand
       self._clearBoundaryTimerEvents(delta, options, processDefinitionInstance.getFlowObjectByName(token.name));
+      // console.log('171 - _endFlowObject');
       self._endFlowObject(options, token, processDefinitionInstance, delta, message, next);
     });
   };
 
-    /**
-     * Handling Completion of User
-     * @param  {Object}   options          Options
-     * @param  {Object}   task             Task
-     * @param  {Object}   message          Message
-     * @param  {Object}   processVariables ProcessVariables
-     * @param  {Function} next             Callback
-     * @returns {void}
-     */
+  /**
+   * Handling Completion of User
+   * @param  {Object}   options          Options
+   * @param  {Object}   task             Task
+   * @param  {Object}   message          Message
+   * @param  {Object}   processVariables ProcessVariables
+   * @param  {Function} next             Callback
+   * @returns {void}
+   */
   ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, next) {
     var self = this;
     var token = this._processTokens[task.processTokenId];
@@ -195,6 +201,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     delta.setProcessVariables(processVariables);
 
     self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
         return next(err);
@@ -206,18 +213,18 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-    /**
-     * All actions to be performed while ending a flowobject has to be done here
-     * Remove token from state, update end time , clear boundary timer events
-     * Emit further tokens
-     * @param  {Object}   options                   Options
-     * @param  {Object}   flowObjectToken           Process-Token
-     * @param  {Object}   processDefinitionInstance Process-Definition
-     * @param  {Object}   delta                     Process-State-Delta
-     * @param  {Object}   message                   Message
-     * @param  {Function} next                      Callback
-     * @returns {void}
-     */
+  /**
+   * All actions to be performed while ending a flowobject has to be done here
+   * Remove token from state, update end time , clear boundary timer events
+   * Emit further tokens
+   * @param  {Object}   options                   Options
+   * @param  {Object}   flowObjectToken           Process-Token
+   * @param  {Object}   processDefinitionInstance Process-Definition
+   * @param  {Object}   delta                     Process-State-Delta
+   * @param  {Object}   message                   Message
+   * @param  {Function} next                      Callback
+   * @returns {void}
+   */
   ProcessInstance.prototype._endFlowObject = function _endFlowObject(options, flowObjectToken, processDefinitionInstance, delta, message, next) {
     next = next || function empty() {};
 
@@ -226,7 +233,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var self = this;
 
     var nextFlowObjects = TokenEmission.getNextFlowObjects(currentFlowObject, message,
-                                                            processDefinitionInstance, self, options);
+      processDefinitionInstance, self, options);
     if (message && message.error) {
       let failure = {};
       var props = Object.getOwnPropertyNames(message.error);
@@ -322,7 +329,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       }
     }
 
-    self.commit(options, delta, function commit(err, instance) {
+    self.commit(options, delta, function commitCb(err, instance) {
       if (err) {
         // If there are no changes to apply then we don't have to emit further events.
         log.error(options, err.message);
@@ -331,6 +338,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
       if (instance._status === 'complete') {
         instance.parentProcess({}, options, function fetchParentProcess(err, parentProcess) {
+          /* istanbul ignore if*/
           if (err) {
             return log.error(options, err.message);
           }
@@ -349,6 +357,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
         flowObjectToken = instance._processTokens[flowObjectToken.id];
         if (flowObjectToken.isSequential) {
           if (flowObjectToken.nrOfActiveInstances === 1 && flowObjectToken.status === 'pending') {
+            flowObjectToken.inVariables = flowObjectToken.inVariables || {};
+            let index = flowObjectToken.nrOfCompleteInstances ? flowObjectToken.nrOfCompleteInstances : 0;
+            flowObjectToken.inVariables._iteration = index + 1;
+            if (flowObjectToken.collection && flowObjectToken.elementVariable) {
+              flowObjectToken.inVariables[flowObjectToken.elementVariable] = flowObjectToken.collection[index];
+            }
+
             ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, flowObjectToken);
             return next();
           } else if (flowObjectToken.nrOfActiveInstances === 1 && flowObjectToken.status !== 'pending') {
@@ -356,14 +371,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
             // no need to interrupt anything cause its sequential
           }
         } else if (flowObjectToken.isParallel) {
-          if (flowObjectToken.nrOfCompleteInstances !== flowObjectToken.nrOfInstances && flowObjectToken.status === 'pending') {
+          // console.log('359 - flowObjectToken.isParallel');
+          if (flowObjectToken.nrOfCompleteInstances !== flowObjectToken.nrOfInstances && (flowObjectToken.status === 'pending')) {
             return next();
           } else if (flowObjectToken.nrOfCompleteInstances !== flowObjectToken.nrOfInstances && flowObjectToken.status !== 'pending') {
             // all multi instance have not completed but the token has completed, due to completion condition
             // we need to interrupt tasks/subprocess corresponding to this token which are not complete, before continuing
             if (currentFlowObject.isUserTask) {
-              let _options = _.cloneDeep(options);
-              _options._skip_tf = true;
               let Task = ProcessInstance.app.models.Task;
 
               // interrupting after timeout because task completion happens after process state update which will would not have updated to complete by this time
@@ -376,7 +390,8 @@ module.exports = function ProcessInstance(ProcessInstance) {
                       status: 'pending'
                     }]
                   }
-                }, _options, function fetchTask(err, tasks) {
+                }, options, function fetchTask(err, tasks) {
+                  /* istanbul ignore if*/
                   if (err) {
                     return log.error(options, err);
                   }
@@ -419,11 +434,18 @@ module.exports = function ProcessInstance(ProcessInstance) {
           token = instance._processTokens[token.id];
 
           /**
-          * In case of parallel and sequential new tokens will be created only
-          * when all instances end
-          **/
+           * In case of parallel and sequential new tokens will be created only
+           * when all instances end
+           **/
           if (!token) {
             break;
+          }
+          if (token.isSequential) {
+            token.inVariables = token.inVariables || {};
+            token.inVariables._iteration = 1;
+            if (token.collection && token.elementVariable) {
+              token.inVariables[token.elementVariable] = token.collection[0];
+            }
           }
           // TODO : why this check token.id !== delta.tokenToRemove
           if (token.isParallel) {
@@ -436,10 +458,12 @@ module.exports = function ProcessInstance(ProcessInstance) {
               }
               token.inVariables._iteration = counter;
               var _token = _.cloneDeep(token);
+              // console.log('437 - Parallel ', counter , ' of ', loopcount);
               ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);
               counter++;
             }
           } else {
+            // console.log('441 - ', currentFlowObjectName,  ' -> ', token.name);
             ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
           }
         }
@@ -451,7 +475,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.prototype.recover = function recover() {
     var self = this;
     var tokens = self._processTokens;
-    var options = self._workflowCtx;
+    var options = self._workflowCtx || {};
     Object.keys(tokens).filter(function filterPendingTokens(tokenId) {
       return tokens[tokenId].status === 'pending';
     }).forEach(function continueWorkflow(tokenId) {
@@ -461,6 +485,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
   ProcessInstance.prototype.getSubProcessByToken = function getSubProcessByToken(token, instance, options, next) {
     instance.subProcesses({}, options, function fetchSubProcess(err, subprocesses) {
+      /* istanbul ignore if*/
       if (err) {
         return next(err);
       }
@@ -488,19 +513,28 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var currentFlowObjectName = token.name;
 
     instance.processDefinition(options, function fetchDefn(err, processDefinitionInstance) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
         return next(err);
       }
       var currentFlowObject = processDefinitionInstance.getFlowObjectByName(currentFlowObjectName);
 
-      if (currentFlowObject.isMultiInstanceLoop && currentFlowObject.isParallel) {
-        for (var i = 0; i < currentFlowObject.nrOfActiveInstances; i++) {
-          ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
+      if (currentFlowObject.isMultiInstanceLoop && !currentFlowObject.isSequential && token.isParallel) {
+        for (var i = 0; i < token.nrOfActiveInstances; i++) {
+          token.inVariables = token.inVariables || {};
+          if (token.elementVariable && token.collection) {
+            token.inVariables[token.elementVariable] = token.collection[i];
+          }
+          token.inVariables._iteration = i;
+          var _token = _.cloneDeep(token);
+
+          ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);
         }
       } else if (currentFlowObject.isCallActivity || currentFlowObject.isSubProcess) {
         // check if call Activity has created a process, if not only then emit
         instance.getSubProcessByToken(token, instance, options, function fetchSubProcess(err, subprocess) {
+          /* istanbul ignore if*/
           if (err) {
             log.error(options, err);
             return next(err);
@@ -524,22 +558,17 @@ module.exports = function ProcessInstance(ProcessInstance) {
         var recoveryPayload = {
           _diff: diff,
           applicableTo: function applicableTo(flowObject) {
-            if (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration) {
-              return true;
-            }
-            return false;
+            return (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration);
           }
         };
-
-        ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token, null,  recoveryPayload);
-      } else if ( currentFlowObject.isUserTask) {
-        let xoptions = JSON.parse(JSON.stringify(options));
-        xoptions._skip_tf = true;
+        ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token, null, recoveryPayload);
+      } else if (currentFlowObject.isUserTask) {
         instance.tasks({
-          'where': {
-            'name': currentFlowObject.name
+          where: {
+            name: currentFlowObject.name
           }
-        }, xoptions, function fetchTaskToVerifyIfExists(err, tasks) {
+        }, options, function fetchTaskToVerifyIfExists(err, tasks) {
+          /* istanbul ignore if */
           if (err) {
             log.error(options, err);
             return next(err);
@@ -557,38 +586,63 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-    /**
-     * App update calls to the process-instance have to be done using this method
-     * This is required to ensure atomic update to the process-instance.
-     * Try to apply the delta(change in the state to the process instance) to the latest
-     * Throws an error if there are no changes to apply.
-     * @param  {Object}   options Options
-     * @param  {Object}   delta   Process-State-Delta
-     * @param  {Function} next    Callback
-     * @returns {void}
-     */
-  ProcessInstance.prototype.commit = function commit(options, delta, next) {
+  /**
+   * App update calls to the process-instance have to be done using this method
+   * This is required to ensure atomic update to the process-instance.
+   * Try to apply the delta(change in the state to the process instance) to the latest
+   * Throws an error if there are no changes to apply.
+   * @param  {Object}   options Options
+   * @param  {Object}   delta   Process-State-Delta
+   * @param  {Function} next    Callback
+   * @returns {void}
+   */
+  ProcessInstance.prototype.commit = function commitFunction(options, delta, next) {
     var self = this;
     var changes = delta.apply(self, options);
-
-    if (changes ===  null) {
+    // console.log(delta);
+    if (changes === null) {
       var err = new Error('trying to make invalid state change');
       // log debug instead of log error cause some other node might have interuppted or completed the process
       log.debug(options, 'trying to make invalid state change');
       return next(err);
     }
 
-    ProcessInstance.upsert(changes, options, function updatePI(err, instance) {
-      if (err) {
-        log.error(options, err.message);
-        setImmediate(retryCommit, options);
-      } else {
-        next(null, instance);
-      }
-    });
+    // console.log('Updating: ', self._version, changes._version);
+    // console.log(Object.values(changes._processTokens).map(v => {return {name: v.name, status: v.status}}));
 
+
+    /** Ideally self.updateAttributes is good for most of the cases
+     * However, if self.updateAttributes fails due to parallel updates
+     * the 'self' is already modified/contaminated by updateAttributes method.
+     * When self is parallely accessed by another execution path,
+     * the subsequent call to commit will refer to the updated attributes/tokens
+     * which failed update in the DB.
+     * A retry of the original failed update results in error since this time it finds
+     * the original token to be completed is already marked completed accidentally in another path.
+     * So select the record and update it rather than 'self'.
+     */
+    ProcessInstance.findById(self.id, options, function updatePI(err, instance) {
+      if (err) {
+        log.error(options, 'Error Selecting : ' + err.message);
+        instance = self;
+      }
+      // Do not set version again. Selecting new record is purely for not poluting 'this' instance.
+      instance.updateAttributes(changes, options, function updatePI(err, instance) {
+        if (err) {
+          log.debug(options, err.message + ' while completing ', delta.tokenToRemove);
+          setImmediate(retryCommit, options);
+        } else {
+          next(null, instance);
+          /* Proposed changes */
+          // console.log('Emitting ', instance.processDefinitionName + '-' + instance._status);
+          ProcessInstance.emit(instance.processDefinitionName + '-' + instance._status, {instance: instance, delta: delta});
+          /* End Proposed changes */
+        }
+      });
+    });
     function retryCommit(options) {
       ProcessInstance.findById(self.id, options, function fetchPI(err, instance) {
+        /* istanbul ignore if*/
         if (err) {
           log.error(options, err);
           return next(err);
@@ -615,16 +669,16 @@ module.exports = function ProcessInstance(ProcessInstance) {
     return token;
   };
 
-    /**
-     * Finding whether a given flowObject has a token in the process Tokens list
-     * @param  {Object} flowObject FlowObject
-     * @returns {Boolean} Return true if Process Token is pending
-     */
+  /**
+   * Finding whether a given flowObject has a token in the process Tokens list
+   * @param  {Object} flowObject FlowObject
+   * @returns {Boolean} Return true if Process Token is pending
+   */
   ProcessInstance.prototype.isPending = function isPending(flowObject) {
-    var self   = this;
+    var self = this;
     var result = false;
     var status = 'status';
-    var name   = 'name';
+    var name = 'name';
 
     for (var key in self._processTokens) {
       if (self._processTokens[key][name] === flowObject[name] && self._processTokens[key][status] === 'pending') {
@@ -635,13 +689,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
     return result;
   };
 
-    /**
-     * register timer events
-     * @param  {Object} options          Options
-     * @param  {String} type             Type
-     * @param  {Object} currentActivity  CurrentActivity
-     * @param  {String} tokenId          Token ID
-     */
+  /**
+   * register timer events
+   * @param  {Object} options          Options
+   * @param  {String} type             Type
+   * @param  {Object} currentActivity  CurrentActivity
+   * @param  {String} tokenId          Token ID
+   */
   ProcessInstance.prototype._registerTimerEvents = function _registerTimerEvents(options, type, currentActivity, tokenId) {
     var self = this;
     var delta = new StateDelta();
@@ -663,16 +717,17 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
   };
 
-  ProcessInstance.prototype.getFlowObjectByToken = function getFlowObjectByToken(token, options, next) {
-    var self = this;
-    self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
-      if (err) {
-        log.error(options, err);
-        return next(err);
-      }
-      next(null, processDefinitionInstance.getProcessElement(token.bpmnId));
-    });
-  };
+  /* Unused Function */
+  // ProcessInstance.prototype.getFlowObjectByToken = function getFlowObjectByToken(token, options, next) {
+  //   var self = this;
+  //   self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
+  //     if (err) {
+  //       log.error(options, err);
+  //       return next(err);
+  //     }
+  //     next(null, processDefinitionInstance.getProcessElement(token.bpmnId));
+  //   });
+  // };
 
   ProcessInstance.prototype.getTokenByFlowObject = function getTokenByFlowObject(flowobject) {
     var self = this;
@@ -686,12 +741,12 @@ module.exports = function ProcessInstance(ProcessInstance) {
   };
 
 
-    /**
-     * clear boundary timer events
-     * @param  {Object} delta               Process-State-Delta
-     * @param  {Object} options             Options
-     * @param  {Object} currentFlowObject   CurrentFlowObject
-     */
+  /**
+   * clear boundary timer events
+   * @param  {Object} delta               Process-State-Delta
+   * @param  {Object} options             Options
+   * @param  {Object} currentFlowObject   CurrentFlowObject
+   */
   ProcessInstance.prototype._clearBoundaryTimerEvents = function _clearBoundaryTimerEvents(delta, options, currentFlowObject) {
     var self = this;
     self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
@@ -707,29 +762,12 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
-    /**
-     * catch timer events
-     * @param  {Object} delta               Process-State-Delta
-     * @param  {Object} options             Options
-     * @param  {Object} processInstance     Process-Instance
-     * @param  {Object} token               Process-Token
-     * @param  {String} source              Source
-     */
-  ProcessInstance.prototype._catchTimerEvents = function _catchTimerEvents(delta, options, processInstance, token, source) {
-    if (source !== 'undo') {
-      var payLoad = throwObject.throwObject('timer', token.name);
-      ProcessInstance.emit(INTERMEDIATE_CATCH_EVENT, options, ProcessInstance, processInstance, payLoad );
-    } else {
-      ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, processInstance, token, delta);
-    }
-  };
-
-    /**
-     * terminate Sub-Processes
-     * @param  {Object} options     Options
-     * @param  {Object} flowObject  FlowObject
-     * @param  {Object} message     Message
-     */
+  /**
+   * terminate Sub-Processes
+   * @param  {Object} options     Options
+   * @param  {Object} flowObject  FlowObject
+   * @param  {Object} message     Message
+   */
   ProcessInstance.prototype._terminateSubProcesses = function _terminateSubProcesses(options, flowObject, message) {
     var self = this;
     var evaluatedProcessName = flowObject.subProcessId;
@@ -737,8 +775,14 @@ module.exports = function ProcessInstance(ProcessInstance) {
       evaluatedProcessName = sandbox.evaluate$Expression(options, flowObject.subProcessId, message, self);
     }
 
-    var filter = {where: {'processDefinitionName': evaluatedProcessName, '_status': 'running'}};
+    var filter = {
+      where: {
+        'processDefinitionName': evaluatedProcessName,
+        '_status': 'running'
+      }
+    };
     self.subProcesses(filter, options, function fetchSP(err, subProcesses) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
       }
@@ -760,12 +804,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
     delta.setTokenToPending(tokenId);
 
-    self.commit(options, delta, function commit(err, instance) {
+    self.commit(options, delta, function commitCb(err, instance) {
       if (err) {
         log.error(options, err);
-        return next(err);
       }
-      return next(null, instance);
+      return next(err, instance);
     });
   };
 
@@ -773,11 +816,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var inst = this;
     // backward compatibility in ci
     Object.values = function values(obj) {
-      return Object.keys(obj).map( key => {
+      return Object.keys(obj).map(key => {
         return obj[key];
       });
     };
-    var tokens = Object.values(inst._processTokens).filter( token => {
+    var tokens = Object.values(inst._processTokens).filter(token => {
       return token.status === 'failed';
     });
     return next(null, tokens);
@@ -787,6 +830,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
     filter = filter || {};
     data = data || {};
     ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
         return next(err);
@@ -794,7 +838,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
       // backward compatibility in ci
       Object.values = function values(obj) {
-        return Object.keys(obj).map( key => {
+        return Object.keys(obj).map(key => {
           return obj[key];
         });
       };
@@ -815,62 +859,70 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
   ProcessInstance.failures = function failures(filter, options, next) {
     filter = filter || {};
-    if (filter.bpmnData === true) {
-      filter.include = { 'processDefinition': 'bpmndata' };
-    }
+    // if (filter.bpmnData === true) {
+    //   filter.include = {
+    //     processDefinition: 'bpmndata'
+    //   };
+    // }
+    filter.where = filter.where || {};
+    filter.where._status = filter.where._status || {
+      inq: ['pending', 'running', 'running']
+    };
+
     ProcessInstance.find(filter, options, function fetchPDs(err, insts) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
         return next(err);
       }
 
-      if (filter.bpmnData === true) {
-        insts = insts.map(inst => {
-          inst.bpmndata = inst.toObject().processDefinition.bpmndata;
-          delete inst.processDefinition;
-          return inst;
-        });
-      }
-      delete filter.bpmndata;
+      // if (filter.bpmnData === true) {
+      //   insts = insts.map(inst => {
+      //     inst.bpmndata = inst.toObject().processDefinition.bpmndata;
+      //     delete inst.processDefinition;
+      //     return inst;
+      //   });
+      // }
+      // delete filter.bpmndata;
 
       // backward compatibility in ci
       Object.values = function values(obj) {
-        return Object.keys(obj).map( key => {
+        return Object.keys(obj).map(key => {
           return obj[key];
         });
       };
-      return next(null, insts.filter( inst => {
-        return Object.values(inst._processTokens).filter( token => {
+      return next(null, insts.filter(inst => {
+        return Object.values(inst._processTokens).filter(token => {
           return token.status === 'failed';
         }).length > 0;
       }));
     });
   };
 
-  ProcessInstance.prototype.retry = function retry(tokenId, data, options, next) {
+  ProcessInstance.prototype.retry = function retry(tokenId, processVariables, options, next) {
     var self = this;
-    var { processVariables } = data;
+
     var tokens = self._processTokens;
     // backward compatibility in ci
     Object.values = function values(obj) {
-      return Object.keys(obj).map( key => {
+      return Object.keys(obj).map(key => {
         return obj[key];
       });
     };
-    var filteredTokens = Object.values(tokens).filter( t => {
+    var filteredTokens = Object.values(tokens).filter(t => {
       return t.id === tokenId;
     });
     if (filteredTokens.length !== 1) {
-      let err = new Error('TokenId is incorrect.');
-      log.error(options, err);
+      let err = new Error('invalid-token-id');
+      // log.error(options, err);
       return next(err);
     }
     var token = filteredTokens[0];
     if (token.status !== 'failed') {
-      let err = new Error('Token is not in failed status.');
+      let err = new Error('invalid-token-status');
       // status code 428 for Precondition Required
       err.statusCode = 428;
-      log.error(options, err);
+      // log.error(options, err);
       return next(err);
     }
 
@@ -882,31 +934,33 @@ module.exports = function ProcessInstance(ProcessInstance) {
         resolve(instance);
       });
     })
-    .then(process => {
-      // updated process is available with latest process variables and pending state
-      return new Promise((resolve, reject) => {
-        process.reemit(token, options, function cb(err) {
-          if (err) {
-            return reject(err);
-          }
-          return resolve({
-            'emitted': true
+      .then(process => {
+        /* Refresh and emit the the updated token */
+        token = process._processTokens[token.id];
+        // updated process is available with latest process variables and pending state
+        return new Promise((resolve, reject) => {
+          process.reemit(token, options, function cb(err) {
+            if (err) {
+              return reject(err);
+            }
+            return resolve({
+              emitted: true
+            });
           });
         });
+      })
+      .then(function done(response) {
+        return next(null, response);
+      })
+      .catch(function errCb(err) {
+        log.error(options, err);
+        return next(err);
       });
-    })
-    .then(function done(response) {
-      return next(null, response);
-    })
-    .catch(function errCb(err) {
-      log.error(options, err);
-      return next(err);
-    });
   };
 
   ProcessInstance.remoteMethod('failures', {
     accessType: 'READ',
-    accepts: {
+    accepts: [{
       arg: 'filter',
       type: 'object',
       http: {
@@ -914,6 +968,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
       },
       description: 'Filter defining fields, where, include, order, offset'
     },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
     description: 'Find all failed process instances.',
     http: {
       verb: 'get'
@@ -941,6 +1000,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
         source: 'body'
       },
       description: 'Update Process Variables'
+    },
+    {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
     }],
     description: 'Retry all failed tokens in fetched Process Instances.',
     http: {
@@ -957,6 +1021,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
   ProcessInstance.remoteMethod('failureTokens', {
     accessType: 'READ',
     description: 'Find failed tokens for a particular process instances',
+    accepts: [{
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
     http: {
       verb: 'get',
       path: '/failureTokens'
@@ -984,6 +1053,10 @@ module.exports = function ProcessInstance(ProcessInstance) {
         source: 'body'
       },
       description: 'Update Process Variables'
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
     }],
     description: 'Retry a failed Task in a failed Process Instance.',
     http: {

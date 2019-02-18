@@ -10,7 +10,7 @@
  */
 var logger = require('oe-logger');
 var log = logger('Workflow-Signal');
-var throwObject = require('./lib/throwobject.js');
+var throwObject = require('../../lib/utils/throwobject.js');
 
 module.exports = function WorkflowSignal(WorkflowSignal) {
   /*
@@ -27,6 +27,7 @@ module.exports = function WorkflowSignal(WorkflowSignal) {
         'signalRef': signalRef
       }
     }, options, function fetchRelevantProcesses(err, signalInstances) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
         return next(err);
@@ -52,7 +53,9 @@ module.exports = function WorkflowSignal(WorkflowSignal) {
         var signalInstance = signalInstances[i];
         var processId = signalInstance.processInstanceId;
         var tokenId = signalInstance.tokenId;
-        ProcessInstance.findById(processId, options, sendSignalToInstance.bind({ tokenId: tokenId }));
+        ProcessInstance.findById(processId, options, sendSignalToInstance.bind({
+          tokenId: tokenId
+        }));
       }
 
       next(null, {

@@ -6,6 +6,10 @@
   "options": {
     "validateUpsert": true
   },
+  "mixins":{
+    "VersionMixin": true,
+    "HistoryMixin": true
+  },
   "properties": {
     "versionmessage": {
       "type": "string"

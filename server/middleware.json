@@ -1,25 +1,24 @@
 {
-  "initial:before": {
-    "loopback#favicon": {}
-  },
+  "initial:before": {},
   "initial": {
-    "compression": {},
-    "cors": {
-      "params": {
-        "origin": true,
-        "credentials": true,
-        "maxAge": 86400
+      "compression": {},
+      "cors": {
+          "params": {
+              "origin": true,
+              "credentials": true,
+              "maxAge": 86400
+          }
       }
-    }
   },
+  "session:before": {},    
   "session": {},
+  "session:after": {},
   "auth": {},
+  "auth:after": {},
   "parse": {},
+  "routes:before": {},
   "routes": {},
-  "files": {
-    "loopback#static": {
-      "params": "$!../client"
-    }
-  },
-  "final": {}
+  "files": {},
+  "final": {},
+  "final:after": {}
 }

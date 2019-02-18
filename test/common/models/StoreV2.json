@@ -1,0 +1,38 @@
+{
+  "name": "StoreV2",
+  "base": "BaseEntity",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "VersionMixin": true,
+    "AuditFieldsMixin": true
+  },
+  "properties": {
+    "owner": {
+      "type": "string",
+      "required": true
+    },
+    "sequence": {
+      "type": "number",
+      "required": true
+    },
+    "comments": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "address": {
+      "type": "hasOne",
+      "model": "AddressV2"
+    },
+    "orders": {
+      "type": "hasMany",
+      "model": "OrderV2"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

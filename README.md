@@ -1,4 +1,6 @@
 # OE Workflow Engine
+[![build status](http://evgit/oec-next/oe-workflow/badges/master/build.svg)](http://evgit/oec-next/oe-workflow/commits/master)
+[![coverage report](http://evgit/oec-next/oe-workflow/badges/master/coverage.svg)](http://evgit/oec-next/oe-workflow/commits/master)
 
 _oe-workflow_ is a **BPMN 2.0** compliant workflow engine built on [oe-cloud](https://github.com/edgeverve/oe-cloud). 
 _oe-workflow_ is a production grade workflow engine written in _Node.js_. The number of implemented bpmn-elements are comparable to popular industry standard workflow engines like _jBPM, camunda, activiti_. The exhaustive list

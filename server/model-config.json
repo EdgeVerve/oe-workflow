@@ -18,10 +18,6 @@
     "dataSource": "db",
     "public": true
   },
-  "WorkflowMonitor": {
-    "dataSource": "db",
-    "public": true
-  },
   "ProcessInstance": {
     "dataSource": "db",
     "public": true

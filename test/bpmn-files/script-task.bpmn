@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="Process_1" name="ScriptNodeTests" isExecutable="false">
+    <bpmn2:startEvent id="StartEvent_1" name="Start">
+      <bpmn2:outgoing>SequenceFlow_1o1icp9</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_1o1icp9" sourceRef="StartEvent_1" targetRef="ScriptTask_1mm9fyq" />
+    <bpmn2:endEvent id="EndEvent_11lu40y" name="End">
+      <bpmn2:incoming>SequenceFlow_1cxla5d</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_1cxla5d" sourceRef="ScriptTask_1mm9fyq" targetRef="EndEvent_11lu40y" />
+    <bpmn2:scriptTask id="ScriptTask_1mm9fyq" name="ScriptTask" scriptFormat="javscript">
+      <bpmn2:incoming>SequenceFlow_1o1icp9</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_1cxla5d</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[setPV("inMsg", msg);
+var a = pv("pvVar0");
+var b = pv("pvVar1");
+var c = pv("pvVar2");
+var result = b+c;
+setPV("scriptResult", result);
+_instance.setAttribute("pvVar1", b);
+_instance.setAttributes({pvVar2:c, firstName: 'test'});
+_instance.unsetAttribute("firstName");
+_instance.unsetAttribute(["lastName"]);
+setPV("data", _instance.toObject());
+sendMsg({text: a.toUpperCase(), result: result});
+]]></bpmn2:script>
+    </bpmn2:scriptTask>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="263" y="243" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="236" y="279" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1o1icp9_di" bpmnElement="SequenceFlow_1o1icp9">
+        <di:waypoint xsi:type="dc:Point" x="299" y="261" />
+        <di:waypoint xsi:type="dc:Point" x="337" y="261" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="236" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_11lu40y_di" bpmnElement="EndEvent_11lu40y">
+        <dc:Bounds x="463" y="243" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="436" y="279" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1cxla5d_di" bpmnElement="SequenceFlow_1cxla5d">
+        <di:waypoint xsi:type="dc:Point" x="437" y="261" />
+        <di:waypoint xsi:type="dc:Point" x="463" y="261" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="405" y="236" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_1mm9fyq_di" bpmnElement="ScriptTask_1mm9fyq">
+        <dc:Bounds x="337" y="221" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

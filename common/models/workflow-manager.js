@@ -13,33 +13,34 @@ var logger = require('oe-logger');
 var log = logger('WorkflowManager');
 var async = require('async');
 var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
-var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin');
+var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin-v1');
 var applyMakerCheckerMixinV2 = require('./../mixins/maker-checker-mixin-v2');
+var workflowMixin = require('./../mixins/workflow-mixin');
 
 var loopback = require('loopback');
-var helper = require('./../mixins/lib/maker-checker-helper.js');
-var helperv2 = require('./../mixins/lib/maker-checker-helper-v2.js');
+var helper = require('../../lib/utils/maker-checker-helper.js');
+var helperv2 = require('../../lib/utils/maker-checker-helper-v2.js');
 
 var baseWorkflowCallActivity = 'BaseWorkflowTemplate';
 var relatedWorkflowCallActivity = 'RelatedWorkflowTemplate';
 
 
 module.exports = function WorkflowManager(WorkflowManager) {
-  WorkflowManager.disableRemoteMethod('create', true);
-  WorkflowManager.disableRemoteMethod('upsert', true);
-  WorkflowManager.disableRemoteMethod('updateAll', true);
-  WorkflowManager.disableRemoteMethod('updateAttributes', false);
-  WorkflowManager.disableRemoteMethod('find', true);
-  WorkflowManager.disableRemoteMethod('findById', true);
-  WorkflowManager.disableRemoteMethod('findOne', true);
-  WorkflowManager.disableRemoteMethod('deleteById', true);
-  WorkflowManager.disableRemoteMethod('deleteById', true);
-  WorkflowManager.disableRemoteMethod('count', true);
-  WorkflowManager.disableRemoteMethod('createChangeStream', true);
-  WorkflowManager.disableRemoteMethod('exists', true);
-  WorkflowManager.disableRemoteMethod('history', true);
-  WorkflowManager.disableRemoteMethod('updateById', true);
-  WorkflowManager.disableRemoteMethod('deleteWithVersion', true);
+  // WorkflowManager.disableRemoteMethod('create', true);
+  // WorkflowManager.disableRemoteMethod('upsert', true);
+  // WorkflowManager.disableRemoteMethod('updateAll', true);
+  // WorkflowManager.disableRemoteMethod('updateAttributes', false);
+  // WorkflowManager.disableRemoteMethod('find', true);
+  // WorkflowManager.disableRemoteMethod('findById', true);
+  // WorkflowManager.disableRemoteMethod('findOne', true);
+  // WorkflowManager.disableRemoteMethod('deleteById', true);
+  // WorkflowManager.disableRemoteMethod('deleteById', true);
+  // WorkflowManager.disableRemoteMethod('count', true);
+  // WorkflowManager.disableRemoteMethod('createChangeStream', true);
+  // WorkflowManager.disableRemoteMethod('exists', true);
+  // WorkflowManager.disableRemoteMethod('history', true);
+  // WorkflowManager.disableRemoteMethod('updateById', true);
+  // WorkflowManager.disableRemoteMethod('deleteWithVersion', true);
 
   WorkflowManager.attachWorkflow = function attachWorkflow(data, options, cb) {
     var app = WorkflowManager.app;
@@ -54,17 +55,24 @@ module.exports = function WorkflowManager(WorkflowManager) {
     var privilegedRoles = [];
 
     if (!data.operation) {
-      err = new Error('operation parameter is required to attachWorkflow');
-      log.error(options, err);
+      err = new Error('operation parameter is required');
+      err.code = 'INVALID_MAPPING_DATA';
+      // log.error(options, err);
       return cb(err);
     } else if (!(data.operation === 'create' || data.operation === 'update' ||
       data.operation === 'delete' || data.operation === 'save' || data.operation === 'custom')) {
       err = new Error('operation is not valid');
-      log.error(options, err);
+      err.code = 'INVALID_MAPPING_DATA';
+      // log.error(options, err);
       return cb(err);
     }
 
     if (data.operation === 'custom') {
+      if (!data.mappingName && data.version === 'v2') {
+        err = new Error('mappingName is required for custom operation');
+        err.code = 'INVALID_MAPPING_DATA';
+        return cb(err);
+      }
       if (!data.remote || !data.remote.path || !data.remote.method || !data.remote.verb) {
         err = new Error('remote parameters (path,method,verb) are required for custom operation');
         err.code = 'INVALID_MAPPING_DATA';
@@ -73,23 +81,27 @@ module.exports = function WorkflowManager(WorkflowManager) {
     }
 
     if (!data.modelName) {
-      err = new Error('modelName parameter is required to attachWorkflow');
-      log.error(options, err);
+      err = new Error('modelName parameter is required');
+      err.code = 'INVALID_MAPPING_DATA';
+      // log.error(options, err);
       return cb(err);
       // } else if (typeof app.models[data.modelName] === 'undefined') {
-    } else if (typeof loopback.getModel(data.modelName, options) === 'undefined') {
+    } else if (typeof loopback.findModel(data.modelName, options) === 'undefined') {
       err = new Error('modelName is not valid');
-      log.error(options, err);
+      err.code = 'INVALID_MAPPING_DATA';
+      // log.error(options, err);
       return cb(err);
     }
+
     // options {attachToRelatedModels: {}}
     if (typeof relatedData !== 'undefined') {
       [relatedModelNames, relationModelNameMap] = extractRelatedModelData(data.modelName);
     }
 
     if (!data.workflowBody || !data.workflowBody.workflowDefinitionName) {
-      err = new Error('workflowBody parameter is required to attachWorkflow');
-      log.error(options, err);
+      err = new Error('workflowBody parameter is required');
+      err.code = 'INVALID_MAPPING_DATA';
+      // log.error(options, err);
       return cb(err);
     }
 
@@ -117,7 +129,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
         if (err) {
           return done(err);
         } else if (wfDefns.length === 0) {
-          return done(new Error('workflow definition not found'));
+          err = new Error('workflow definition not found');
+          err.code = 'INVALID_MAPPING_DATA';
+          return done(err);
         } else if (wfDefns.length > 1) {
           return done(new Error('multiple workflow definitions found'));
         }
@@ -172,18 +186,22 @@ module.exports = function WorkflowManager(WorkflowManager) {
         'makersRecall': makersRecall,
         'actualModelName': actualModelName,
         'privilegedUsers': privilegedUsers,
-        'privilegedRoles': privilegedRoles
+        'privilegedRoles': privilegedRoles,
+        'remote': data.remote,
+        'mappingName': data.mappingName
       };
       // to make an entry in workflow mapping model for maker-checker v2
       if (data.version && data.version === 'v2') {
         instance.version = 'v2';
+      } else if (data.version && data.version === 'v0') {
+        instance.version = 'v0';
       }
       if (!workflowBody || typeof workflowBody === 'undefined' || (workflowBody && !workflowBody.workflowDefinitionName)) {
         createMappingscb();
       }
       validateWorkflowDeployment(workflowBody.workflowDefinitionName, function callback(err) {
         if (err) {
-          log.error(options, err);
+          // log.error(options, err);
           return createMappingscb(err);
         }
         var filter = {
@@ -198,12 +216,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
           }
         };
         if (instance.operation === 'custom') {
-          if (instance.version === 'v2') {
-            filter.where.and.push({ 'mappingName': instance.mappingName });
-          } else if (instance.version === 'v0') {
-            filter.where.and.push({ 'remote.path': instance.remote.path });
-            filter.where.and.push({ 'remote.verb': instance.remote.verb });
-          }
+          filter.where.and.push({ 'mappingName': instance.mappingName });
         }
         WorkflowMapping.find(filter, options, function findWM(err, mapping) {
           if (err) {
@@ -231,14 +244,14 @@ module.exports = function WorkflowManager(WorkflowManager) {
               } else {
                 workflowMixin(Model);
               }
-              log.debug(options, 'WorkflowMapping successfully created.');
+              log.debug(options, 'WorkflowMapping successfully created');
               mappingsList.push(mapping);
               errorList.push(err);
               return createMappingscb();
             });
           } else {
-            err = new Error('Workflow is already attached.');
-            log.error(options, err);
+            err = new Error('Workflow is already attached');
+            // log.error(options, err);
             errorList.push(err);
             if (index === 0) {
               createMappingscb(err);
@@ -250,7 +263,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
       });
     }, function asynccb(err) {
       if (err) {
-        log.error(options, err);
+        // log.error(options, err);
         return cb(err);
       }
       if (containsError(errorList)) {
@@ -261,6 +274,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
             detachWorkflowWithVersion(mappingId, mappingVersion, options, function detachcb(err, res) {
               if (err) {
                 var detachError = new Error('Unable to rollback, detach workflow failed');
+                log.error(options, detachError);
                 return removeMappingscb(detachError);
               }
               return removeMappingscb();
@@ -279,7 +293,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
           return cb(attachmentErr);
         });
       } else {
-        var response = { 'mappings': mappingsList };
+        var response = {
+          'mappings': mappingsList
+        };
         return cb(null, response);
       }
     });
@@ -295,19 +311,17 @@ module.exports = function WorkflowManager(WorkflowManager) {
     var app = WorkflowManager.app;
 
     if (!id) {
-      cb(new Error('id parameter is required to dettachWorkflow'));
-      return;
+      let err = new Error('id parameter is required');
+      err.code = 'INVALID_INPUT';
+      return cb(err);
     } else if (!version) {
-      cb(new Error('version parameter is required to dettachWorkflow'));
-      return;
+      let err = new Error('version parameter is required');
+      err.code = 'INVALID_INPUT';
+      return cb(err);
     }
 
     app.models.WorkflowMapping.deleteWithVersion(id, version, options, function deleteWM(err, res) {
-      if (err) {
-        log.error(err);
-        return cb(err);
-      }
-      cb(null, res);
+      cb(err, res);
     });
   }
 
@@ -327,8 +341,8 @@ module.exports = function WorkflowManager(WorkflowManager) {
 
     WorkflowMapping.find(baseQuery, options, function fetchWM(err, result) {
       if (err) {
-        var errx = new Error('Unable to fetch WorkflowMapping.');
-        log.error(options, errx);
+        var errx = new Error('Unable to fetch WorkflowMapping: ' + err.message);
+        // log.error(options, errx);
         return cb(errx);
       }
       cb(null, result);
@@ -401,7 +415,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
             processVariables.CallActivityWorkflow = relatedData.relatedModelWorkflowBody[relation].workflowBody.workflowDefinitionName;
             innerWorkflowBody.workflowDefinitionName = relatedWorkflowCallActivity;
             innerWorkflowBody.processVariables = processVariables;
-            relatedWorkflowBody[modelName] = { 'workflowBody': innerWorkflowBody };
+            relatedWorkflowBody[modelName] = {
+              'workflowBody': innerWorkflowBody
+            };
           }
         }
       }
@@ -421,7 +437,9 @@ module.exports = function WorkflowManager(WorkflowManager) {
           if (relatedData.relatedModelWorkflowBody[relation]) {
             innerWorkflowBody.workflowDefinitionName = relatedData.relatedModelWorkflowBody[relation].workflowBody.workflowDefinitionName;
             innerWorkflowBody.processVariables = relatedData.relatedModelWorkflowBody[relation].workflowBody.processVariables;
-            relatedWorkflowBody[modelName] = { 'workflowBody': innerWorkflowBody };
+            relatedWorkflowBody[modelName] = {
+              'workflowBody': innerWorkflowBody
+            };
           }
         }
       }
@@ -431,14 +449,18 @@ module.exports = function WorkflowManager(WorkflowManager) {
 
 
   WorkflowManager.remoteMethod('endAttachWfRequest', {
-    accepts: {
+    accepts: [{
       arg: 'data',
       type: 'object',
       http: {
         source: 'body'
       },
       description: 'Request Instance data'
-    },
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
     description: 'Conclude a workflow enabled transaction',
     returns: {
       type: 'object',
@@ -454,6 +476,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
       type: 'Object',
       description: 'Filter defining fields, where, include, order, offset, and limit',
       required: false
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
     }],
     http: {
       verb: 'GET',
@@ -468,7 +494,7 @@ module.exports = function WorkflowManager(WorkflowManager) {
   WorkflowManager.remoteMethod('attachWorkflow', {
     description: 'Attach OE Workflow to a Model',
     accessType: 'WRITE',
-    accepts: {
+    accepts: [{
       arg: 'data',
       type: 'object',
       http: {
@@ -481,7 +507,11 @@ module.exports = function WorkflowManager(WorkflowManager) {
         'operation': 'string',
         'wfDependent': 'boolean'
       }
-    },
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
     http: {
       verb: 'POST',
       path: '/workflows'
@@ -512,6 +542,10 @@ module.exports = function WorkflowManager(WorkflowManager) {
       http: {
         source: 'path'
       }
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
     }],
     returns: {
       arg: 'response',

@@ -24,6 +24,9 @@
       "type": "object",
       "required": false
     },
+    "status": {
+      "type": "string"
+    },
     "correlationId":{
       "type":"string"
     }

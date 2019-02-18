@@ -1,0 +1,8 @@
+{
+  "name": "OrderV1",
+  "base": "BaseEntity",
+  "properties": {
+    "quantity": { "type": "number", "required": true },
+    "buyer": { "type": "string", "required": true }
+  }
+}

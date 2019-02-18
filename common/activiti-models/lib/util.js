@@ -37,14 +37,17 @@ exports.addBeforeExecuteConnectorHooks = function addBeforeExecuteConnectorHooks
     /*
      * ctx.options is available now
      */
-    app.models.Activiti_Account.find({}, ctx.options, function fetchAccountDetails(err, account) {
+    let options = ctx.options || ctx.req.headers['x-options'];
+    delete ctx.req.headers['x-options'];
+    app.models.Activiti_Account.find({}, options, function fetchAccountDetails(err, account) {
+      /* istanbul ignore if*/
       if (err) {
-        log.error(ctx.options, err);
+        log.error(options, err);
         return next(err);
       }
       if (account.length === 0) {
         err = new Error('Please setup Activiti Account by posting details to Activiti_Account.');
-        log.error(ctx.options, err);
+        log.error(options, err);
         return next(err);
       }
 

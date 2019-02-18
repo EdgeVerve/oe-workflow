@@ -6,7 +6,9 @@
   "idInjection": false,
   "cacheable" : false,
   "mixins": {
-    "DataPersonalizationMixin": true
+    "VersionMixin": false,
+    "HistoryMixin": false,
+    "AuditFieldsMixin": false
   },
   "properties": {},
   "validations": [],

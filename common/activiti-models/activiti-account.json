@@ -17,7 +17,8 @@
     } 
   },
   "mixins" : {
-    "HistoryMixin" : false
+    "HistoryMixin" : false,
+    "AuditFieldsMixin": true
   },
   "acls": [{
     "accessType": "*",
