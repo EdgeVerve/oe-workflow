@@ -1,7 +1,7 @@
 {
   "name": "oe-workflow",
   "description": "oe-workflow engine written using oecloud.io framework",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "engines": {
     "node": ">=6"
   },
@@ -24,10 +24,10 @@
     "uuid": "3.1.0",
     "xml2js": "0.4.17",
     "loopback-connector-rest": "3.0.0",
-    "oe-cloud": "git+http://evgit/oec-next/oe-cloud.git#master",
-    "oe-common-mixins": "git+http://evgit/oec-next/oe-common-mixins.git#master",
-    "oe-master-job-executor": "git+http://evgit/oec-next/oe-master-job-executor.git#master",
-    "oe-studio-service": "git+http://evgit/oec-next/oe-studio-service.git#master"
+    "oe-cloud": "git+http://evgit/oecloud.io/oe-cloud.git#master",
+    "oe-common-mixins": "git+http://evgit/oecloud.io/oe-common-mixins.git#master",
+    "oe-master-job-executor": "git+http://evgit/oecloud.io/oe-master-job-executor.git#master",
+    "oe-studio-service": "git+http://evgit/oecloud.io/oe-studio-service.git#master"
   },
   "devDependencies": {
     "babel-eslint": "7.2.3",
@@ -50,9 +50,9 @@
     "grunt-cli": "1.3.2",
     "grunt-jsbeautifier": "0.2.13",
     "if-env": "1.0.4",
-    "oe-business-rule": "git+http://evgit/oec-next/oe-business-rule.git#master",
+    "oe-business-rule": "git+http://evgit/oecloud.io/oe-business-rule.git#master",
     "loopback-connector-mongodb": "git+http://evgit/oecloud.io/loopback-connector-mongodb.git#master",
     "oe-connector-oracle": "git+http://evgit/oecloud.io/oe-connector-oracle.git#master",
-    "oe-connector-postgresql": "git+http://evgit/oec-next/oe-connector-postgresql.git#master"
+    "oe-connector-postgresql": "git+http://evgit/oecloud.io/oe-connector-postgresql.git#master"
   }
 }

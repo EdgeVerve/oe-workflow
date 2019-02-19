@@ -15,7 +15,7 @@ variables:
   DTR_ORG: demo-org
   DTR_IMAGE: oeworkflowservice
   MAIN_PROJECT_GROUP: oecloud.io
-  COLLECTION_NAME: demo-collection 
+  COLLECTION_NAME: demo-collection
   NAMESPACE: demo-namespace
   OPENSHIFT_DOMAIN: openshift.oecloud.local
 
@@ -36,7 +36,7 @@ before_script:
   - echo "App will be pushed to registry - "$REGISTRY
   - echo "The image name in registry - "$APP_IMAGE_NAME
   - echo "$CA_FILE" > ca.pem
-  - echo "$CERT_FILE" > cert.pem 
+  - echo "$CERT_FILE" > cert.pem
   - echo "$KEY_FILE" > key.pem
   - export DOCKER_CERT_PATH=$PWD
   - echo "${KUBE_YML}" > kube.yml
@@ -104,14 +104,14 @@ postgrestest:
     - export DB_NAME=${CI_PIPELINE_ID}_pg
     - export ENABLE_DS_AUTOUPDATE=true
     #- npm config set registry http://10.188.25.62:9002/
-    - time npm install git+http://evgit/oec-next/oe-connector-postgresql.git --save
+    - time npm install git+http://evgit/oecloud.io/oe-connector-postgresql.git --save
     - time npm install --no-optional
     - npm run grunt-cover
   tags:
-    - CEP_RUNNER    
+    - CEP_RUNNER
   tags:
     - CEP_RUNNER
-    
+
 oracletest:
   stage: pre-build-test
   script:
@@ -137,7 +137,7 @@ oracletest:
     - echo "Oracle user details:"${ORACLE_USERNAME}"/"${ORACLE_PASSWORD}
     - npm run grunt-cover
   tags:
-    - CEP_RUNNER    
+    - CEP_RUNNER
 
 
 buildjob:
