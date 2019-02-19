@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "async": "2.6.1",
-    "uuid": "3.1.0",
+    "uuid": "3.3.2",
     "xml2js": "0.4.17",
     "loopback-connector-rest": "3.0.0",
     "oe-cloud": "git+http://evgit/oecloud.io/oe-cloud.git#master",
