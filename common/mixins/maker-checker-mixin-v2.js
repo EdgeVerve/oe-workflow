@@ -802,7 +802,7 @@ function addOERemoteMethods(Model) {
           if (err) {
             return log.error(options, new Error('Unable to interrupt workflow in update retrigger case'));
           }
-          return
+          return;
         });
       }
       options.isNewChangeRequest = true;
@@ -843,10 +843,10 @@ function addOERemoteMethods(Model) {
         WorkflowMapping.find({
           where: {
             'and': [
-          { 'modelName': modelName },
-          { 'engineType': 'oe-workflow' },
-          { 'version': 'v2' },
-          { 'operation': {'inq': ['create', 'save']}}
+              { 'modelName': modelName },
+              { 'engineType': 'oe-workflow' },
+              { 'version': 'v2' },
+              { 'operation': { 'inq': ['create', 'save'] } }
             ]
           }
         }, options, function fetchWM(err, res) {
@@ -1032,7 +1032,7 @@ function addOERemoteMethods(Model) {
           operation: operationFilter
         }
       }, options, function fetchMapping(err, mappings) {
-       if (err) {
+        if (err) {
           return handleError(err, options, cb);
         }
 
@@ -1092,7 +1092,7 @@ function addOERemoteMethods(Model) {
       if (instances.length === 0) {
         log.debug(ctx, 'No workflow instance attached to current Model Instance Id');
         return cb(null, []);
-      } else if ( instances.length > 1) {
+      } else if (instances.length > 1) {
         let err = new Error('multiple workflow request found with same Model Instance Id');
         log.error(ctx, err);
         return cb(err);
@@ -1146,7 +1146,7 @@ function addOERemoteMethods(Model) {
         return cb(err);
       } else if (instances.length > 1) {
         let err = new Error('multiple workflow request found with same Model Instance Id');
-        return handleError(err, options, cb);
+        return handleError(err, ctx.options, cb);
       }
 
       if (instances.length === 0) {
@@ -1164,7 +1164,7 @@ function addOERemoteMethods(Model) {
 
         workflowInstance.tasks(tfilter, ctx, function fetchProcesses(err, tasks) {
           if (err) {
-            return handleError(err, options, cb);
+            return handleError(err, ctx.options, cb);
           }
 
           cb(null, tasks);

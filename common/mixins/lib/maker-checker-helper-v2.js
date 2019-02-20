@@ -294,7 +294,6 @@ function rejectedCustomInstance(app, request, options, next) {
     remarks: options.__comments__ || '',
     _version: request._version
   };
-  populateVerifiedBy(app.models.ChangeWorkflowRequest, updates, options);
   request.updateAttributes(updates, options, function cb(err, inst) {
     if (err) {
       return handleError(err, options, next);
@@ -311,8 +310,7 @@ function approvedCustomInstance(app, request, wfupdates, options, next) {
   if (wfupdates) {
     applyWorkflowUpdates(data, wfupdates);
   }
-  populateVerifiedBy(model, data, options);
-  var args = data.map(function (item) {
+  var args = data.map(function mapingOptionsCb(item) {
     if (item === 'options') {
       return options;
     }
@@ -320,7 +318,7 @@ function approvedCustomInstance(app, request, wfupdates, options, next) {
   });
   var customMethod = model[method];
   if (customMethod) {
-    customMethod(...args, function (err) {
+    customMethod(...args, function cstMethodCb(err) {
       if (err) {
         return handleError(err, options, next);
       }
@@ -330,7 +328,6 @@ function approvedCustomInstance(app, request, wfupdates, options, next) {
         remarks: options.__comments__ || '',
         _version: request._version
       };
-      populateVerifiedBy(app.models.ChangeWorkflowRequest, updates, options);
       request.updateAttributes(updates, options, function cb(err, inst) {
         if (err) {
           return handleError(err, options, next);

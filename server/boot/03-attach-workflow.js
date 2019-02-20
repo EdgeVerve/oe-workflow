@@ -48,7 +48,6 @@ module.exports = function attachWorkFlows(app) {
     } else {
       workflowMixin(Model);
     }
-
   }
   function workflowMappingAfterSave(ctx, next) {
     let data = ctx.data || ctx.instance;
