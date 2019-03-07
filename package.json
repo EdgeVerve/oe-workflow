@@ -35,8 +35,8 @@
     "mocha": "2.3.4",
     "node-uuid": "^1.4.8",
     "supertest": "^1.1.0",
-    "oe-cloud": "git+https://github.com/EdgeVerve/oe-cloud.git#master",
-    "oe-logger": "git+https://github.com/EdgeVerve/oe-logger.git#master"
+    "oe-cloud": "git+https://github.com/EdgeVerve/oe-cloud.git#1.x",
+    "oe-logger": "git+https://github.com/EdgeVerve/oe-logger.git#1.x"
   },
   "description": "oe-workflow engine written using oecloud.io framework"
 }
