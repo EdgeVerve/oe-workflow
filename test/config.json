@@ -1,0 +1,39 @@
+{
+  "restApiRoot": "/api",
+  "host": "0.0.0.0",
+  "port": 3000,
+  "remoting": {
+    "context": false,
+    "rest": {
+      "normalizeHttpPath": false,
+      "xml": false
+    },
+    "json": {
+      "strict": false,
+      "limit": "100kb"
+    },
+    "urlencoded": {
+      "extended": true,
+      "limit": "100kb"
+    },
+    "cors": false,
+    "handleErrors": false
+  },
+  "client":{
+    "templatePath": ["test/client/templates"]
+  },
+  "workflow":{
+    "addonModule": "test/utils/addon-functions",
+    "recovery": {
+      "retryInterval": 2000
+    }
+  },
+  "masterJobExecutor": {
+    "initDelay": 1000,
+    "checkMasterInterval":2000,
+    "heartbeatInterval":1000,
+    "masterJobTolerance": 3000
+  },
+  "subPath":"appsubpath",
+  "legacyExplorer": false
+}

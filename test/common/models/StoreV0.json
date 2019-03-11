@@ -1,0 +1,28 @@
+{
+  "name": "StoreV0",
+  "base": "BaseEntity",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "VersionMixin": true,
+    "AuditFieldsMixin": true,
+    "SoftDeleteMixin": true
+  },
+  "properties": {
+    "owner": {
+      "type": "string",
+      "required": true
+    },
+    "sequence": {
+      "type": "number",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+  },
+  "acls": [],
+  "methods": {}
+}

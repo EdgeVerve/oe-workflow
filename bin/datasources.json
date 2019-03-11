@@ -1,0 +1,13 @@
+{
+"db": {
+"host": "localhost",
+"port": 27017,
+"url": "mongodb://localhost:27017/oe-workflow",
+"database": "oe-workflow",
+"password": "admin",
+"name": "db",
+"connector": "mongodb",
+"user": "admin",
+"connectionTimeout": 50000
+}
+}

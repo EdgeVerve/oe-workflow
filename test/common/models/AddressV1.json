@@ -1,0 +1,8 @@
+{
+  "name": "AddressV1",
+  "base": "BaseEntity",
+  "properties": {
+    "line1": { "type": "string", "required": true },
+    "line2": { "type": "string" }
+  }
+}

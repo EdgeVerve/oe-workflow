@@ -10,26 +10,26 @@ var log = logger('ActivitiManager');
 
 var helper = require('./lib/helper.js');
 var mergeQuery = require('loopback-datasource-juggler/lib/utils').mergeQuery;
-var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin');
-var mcHelper = require('./../mixins/lib/maker-checker-helper.js');
+var applyMakerCheckerMixin = require('./../mixins/maker-checker-mixin-v1');
+var mcHelper = require('../../lib/utils/maker-checker-helper.js');
 var loopback = require('loopback');
 
 module.exports = function ActivitiManager(ActivitiManager) {
-  ActivitiManager.disableRemoteMethod('create', true);
-  ActivitiManager.disableRemoteMethod('upsert', true);
-  ActivitiManager.disableRemoteMethod('updateAll', true);
-  ActivitiManager.disableRemoteMethod('updateAttributes', false);
-  ActivitiManager.disableRemoteMethod('find', true);
-  ActivitiManager.disableRemoteMethod('findById', true);
-  ActivitiManager.disableRemoteMethod('findOne', true);
-  ActivitiManager.disableRemoteMethod('deleteById', true);
-  ActivitiManager.disableRemoteMethod('deleteById', true);
-  ActivitiManager.disableRemoteMethod('count', true);
-  ActivitiManager.disableRemoteMethod('createChangeStream', true);
-  ActivitiManager.disableRemoteMethod('exists', true);
-  ActivitiManager.disableRemoteMethod('history', true);
-  ActivitiManager.disableRemoteMethod('updateById', true);
-  ActivitiManager.disableRemoteMethod('deleteWithVersion', true);
+  // ActivitiManager.disableRemoteMethod('create', true);
+  // ActivitiManager.disableRemoteMethod('upsert', true);
+  // ActivitiManager.disableRemoteMethod('updateAll', true);
+  // ActivitiManager.disableRemoteMethod('updateAttributes', false);
+  // ActivitiManager.disableRemoteMethod('find', true);
+  // ActivitiManager.disableRemoteMethod('findById', true);
+  // ActivitiManager.disableRemoteMethod('findOne', true);
+  // ActivitiManager.disableRemoteMethod('deleteById', true);
+  // ActivitiManager.disableRemoteMethod('deleteById', true);
+  // ActivitiManager.disableRemoteMethod('count', true);
+  // ActivitiManager.disableRemoteMethod('createChangeStream', true);
+  // ActivitiManager.disableRemoteMethod('exists', true);
+  // ActivitiManager.disableRemoteMethod('history', true);
+  // ActivitiManager.disableRemoteMethod('updateById', true);
+  // ActivitiManager.disableRemoteMethod('deleteWithVersion', true);
 
 
   ActivitiManager.enable = function enable(baseUrl, options, cb) {
@@ -41,13 +41,13 @@ module.exports = function ActivitiManager(ActivitiManager) {
     var app = ActivitiManager.app;
 
     if (!data.operation) {
-      cb(new Error('operation parameter is required to attachWorkflow'));
+      cb(new Error('operation parameter is required'));
       return;
     } else if (!data.modelName) {
-      cb(new Error('modelName parameter is required to attachWorkflow'));
+      cb(new Error('modelName parameter is required'));
       return;
     } else if (!data.workflowBody) {
-      cb(new Error('workflowBody parameter is required to attachWorkflow'));
+      cb(new Error('workflowBody parameter is required'));
       return;
     }
 
@@ -81,6 +81,7 @@ module.exports = function ActivitiManager(ActivitiManager) {
     };
 
     WorkflowMapping.findOrCreate(filter, instance, options, function fetchOrCreateWM(err, mapping) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
         return cb(err);
@@ -98,17 +99,19 @@ module.exports = function ActivitiManager(ActivitiManager) {
     var app = ActivitiManager.app;
 
     if (!id) {
-      var err = new Error('id is required to dettachWorkflow.');
+      var err = new Error('id is required');
       log.error(err);
       return cb(err);
     }
 
     app.models.WorkflowMapping.findById(id, options, function fetchWM(err, instance) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(err);
         return cb(err);
       }
       instance.destroy(options, function deleteWM(err, res) {
+        /* istanbul ignore if*/
         if (err) {
           err = new Error('Unable to dettach Workflow.');
           log.error(err);
@@ -132,6 +135,7 @@ module.exports = function ActivitiManager(ActivitiManager) {
     }
 
     app.models.WorkflowMapping.find(baseQuery, options, function fetchWM(err, result) {
+      /* istanbul ignore if*/
       if (err) {
         err = new Error('Unable to fetch WorkflowMapping.');
         log.error(err);

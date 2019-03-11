@@ -1,6 +1,6 @@
 {
   "name": "Activiti_Manager",
-  "base": "BaseEntity",
+  "base": "Model",
   "description" : "Manages interaction with Activiti Workflow engine",
   "idInjection": true,
   "options": {

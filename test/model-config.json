@@ -1,0 +1,81 @@
+﻿{
+  "_meta": {
+    "sources": [
+      "loopback/common/models",
+      "loopback/server/models",
+      "./common/models",
+      "./test/common/models",
+      "./models"
+    ],
+    "mixins": [
+      "loopback/common/mixins",
+      "loopback/server/mixins",
+      "./common/mixins",
+      "../common/mixins",
+      "./mixins"
+    ]
+  },
+  "User": {
+    "dataSource": "db"
+  },
+  "AccessToken": {
+    "dataSource": "db",
+    "public": false
+  },
+  "ACL": {
+    "dataSource": "db",
+    "public": false
+  },
+  "RoleMapping": {
+    "dataSource": "db",
+    "public": false
+  },
+  "Role": {
+    "dataSource": "db",
+    "public": false
+  },
+  "Address": {
+    "dataSource": "db",
+    "public": false
+  },
+  "Person": {
+    "dataSource": "db",
+    "public": false
+  },
+  "LuckyDraw": {
+    "dataSource": "db",
+    "public": false
+  },
+  "StoreV0": {
+    "dataSource": "db",
+    "public": false
+  },
+  "StoreV1": {
+    "dataSource": "db",
+    "public": false
+  },
+  "AddressV1": {
+    "dataSource": "db",
+    "public": false
+  },
+  "OrderV1": {
+    "dataSource": "db",
+    "public": false
+  },
+  "StoreV2": {
+    "dataSource": "db",
+    "public": false
+  },
+  "AddressV2": {
+    "dataSource": "db",
+    "public": false
+  },
+  "OrderV2": {
+    "dataSource": "db",
+    "public": false
+  },
+  "OrderV0": {
+    "dataSource": "db",
+    "public": true
+  }
+}

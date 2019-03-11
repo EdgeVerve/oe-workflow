@@ -1,3 +1,4 @@
+package-lock.json
 *.csv
 *.dat
 *.iml
@@ -32,3 +33,6 @@ dev
 /.vs/config/applicationhost.config
 /oe.njsperf
 .vimrc 
+test/bpmn-files-todo
+test/todo
+*.js1

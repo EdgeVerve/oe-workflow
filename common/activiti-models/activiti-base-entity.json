@@ -3,6 +3,11 @@
   "name": "Activiti_BaseEntity",
   "base": "Model",
   "idInjection": true,
+  "mixins":  {
+    "VersionMixin": false,
+    "HistoryMixin": false,
+    "AuditFieldsMixin": true
+  },
   "options": {
     "validateUpsert": true
   }

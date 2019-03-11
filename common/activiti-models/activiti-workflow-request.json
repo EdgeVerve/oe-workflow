@@ -2,6 +2,7 @@
     "name": "Activiti_WorkflowRequest",
     "base": "BaseEntity",
     "description": "Stores triggered workflow information for Model Instances(Activiti Workflow Engine)",
+    "strictObjectIDCoercion": true,
     "options": {
         "validateUpsert": true
     },

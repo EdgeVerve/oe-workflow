@@ -1,8 +1,8 @@
 # OE Workflow Engine
 
-_oe-workflow_ is a **BPMN 2.0** compliant workflow engine built on [oe-cloud](https://github.com/edgeverve/oe-cloud). 
+_oe-workflow_ is a **BPMN 2.0** compliant workflow engine built on [oe-cloud](https://github.com/edgeverve/oe-cloud).
 _oe-workflow_ is a production grade workflow engine written in _Node.js_. The number of implemented bpmn-elements are comparable to popular industry standard workflow engines like _jBPM, camunda, activiti_. The exhaustive list
-can be found in the wiki. Minimal coding is required from _workflow design creation_ to _deployment_. We provide various built-in connectors like _REST_, _oe-connector_ etc.  
+can be found in the wiki. Minimal coding is required from _workflow design creation_ to _deployment_. We provide various built-in connectors like _REST_, _oe-connector_ etc.
 
 ## What is BPMN 2.0 ?
 _Business Process Model and Notation_ (BPMN) is a graphical representation for specifying business processes in a business process model. It is the standard in business process modeling used widely by enterprises.
@@ -44,6 +44,6 @@ Please refer wiki documentation for more information on installation and usage.
 The project is licensed under MIT License, See [LICENSE](./LICENSE) for more details.
 
 ## Contributing
-We welcome contributions. Some of the best ways to contribute are to try things out, file bugs, and join in design conversations. 
+We welcome contributions. Some of the best ways to contribute are to try things out, file bugs, and join in design conversations.
 
 ### [How to contribute](./CONTRIBUTION.md)

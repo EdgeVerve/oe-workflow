@@ -1,0 +1,12 @@
+{
+  "name": "AddressV2",
+  "base": "BaseEntity",
+  "mixins": {
+    "VersionMixin": true,
+    "AuditFieldsMixin": true
+  },
+  "properties": {
+    "line1": { "type": "string", "required": true },
+    "line2": { "type": "string" }
+  }
+}

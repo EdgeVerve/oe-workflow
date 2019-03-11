@@ -20,13 +20,25 @@ function updateURL(operations, baseUrl) {
   }
 }
 
+function addOptions(operations) {
+  operations.forEach(op => {
+    op.template.headers = op.template.headers || {};
+    op.template.headers['x-options'] = '{options:object}';
+    Object.keys(op.functions).forEach(fName => {
+      op.functions[fName] = op.functions[fName] || [];
+      op.functions[fName].push('options');
+    });
+  });
+}
+
 exports.unPersistedConfiguration = function unPersistedConfiguration(modelName, dataSourceName, app, baseUrl) {
   var modelDefinition = require('../dynamic-models/' + modelName + '.json');
   var modelJs = require('../dynamic-models/' + modelName + '.js');
 
-  var operations = require(path.join(__dirname, '..', 'datasources', dataSourceName + '.json'));
+  // var operations = require(path.join(__dirname, '..', 'datasources', dataSourceName + '.json'));
+  var operations = require('../datasources/' + dataSourceName + '.json');
   updateURL(operations, baseUrl);
-
+  addOptions(operations);
   var dsDefinition = {
     'name': modelName,
     'connector': require('loopback-connector-rest'),

@@ -9,7 +9,7 @@
  * @author Kangan Verma(kangan06), Mandeep Gill(mandeep6ill), Nirmal Satyendra(iambns), Prem Sai(premsai-ch), Vivek Mittal(vivekmittal07)
  */
 
-var bpmnParser = require('./lib/parsing/definitions');
+var bpmnParser = require('../../lib/parsing/definitions.js');
 var async = require('async');
 
 var logger = require('oe-logger');
@@ -36,16 +36,17 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     WorkflowDefinition.find({
       'where': {'and':
       [
-          {'name': workflowDef.name},
-          {'latest': true}
+        {'name': workflowDef.name},
+        {'latest': true}
       ]
       }
     }, ctx.options, function fetchLatestWFD(err, def) {
+      /* istanbul ignore if*/
       if (err) {
         return next(err);
       }
       if (def.length === 0) {
-          // New Definition needs to be created.
+        // New Definition needs to be created.
         workflowDef.setAttribute('latest', true);
         return createWorkflowDefinition(workflowDef, ctx, next);
       }
@@ -53,10 +54,11 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
         return next(new Error('multiple Latest Workflow definitions found'));
       }
       if (def.length === 1) {
-          // Update the instance returned and make the current workflow definition as latest
+        // Update the instance returned and make the current workflow definition as latest
         workflowDef.setAttribute('latest', true);
         def[0].latest = false;
         WorkflowDefinition.upsert(def[0], ctx.options, function cb(cberr, res) {
+          /* istanbul ignore if*/
           if (cberr) {
             return next(new Error('The old defintion could not be updated'));
           }
@@ -110,14 +112,14 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
         }
 
         async.each(workflowDef.participants,
-                validateExternalDefinition.bind(null, ctx.options, processDefinitions), function participant(err) {
-                  if (err) {
-                    return next(err);
-                  }
-                  async.each(processDefinitions, createPoolDefinition.bind(null, workflowDefId, ctx.options, workflowDef), function poolDefinition(err) {
-                    return next(err);
-                  });
-                });
+          validateExternalDefinition.bind(null, ctx.options, processDefinitions), function participant(err) {
+            if (err) {
+              return next(err);
+            }
+            async.each(processDefinitions, createPoolDefinition.bind(null, workflowDefId, ctx.options, workflowDef), function poolDefinition(err) {
+              return next(err);
+            });
+          });
       });
     } else {
       var dataError = new Error('Data not present');
@@ -126,7 +128,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     }
   }
 
-    /**
+  /**
      * Validate External Process Defintion
      * @param   {Object}   options               Options
      * @param   {[Object]}   processDefinitions  Process-Definitions
@@ -145,18 +147,21 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     ProcessDefinition.find({
       'where': {'name': participant.name}
     }, options, function fetchPD(err, def) {
+      /* istanbul ignore if*/
       if (err) {
         return callback(err);
       }
       if (def.length === 0) {
-        return callback(new Error('Pool definition not deployed'));
+        let err = new Error('Pool definition not deployed');
+        err.code = 'MISSING_POOL_DEFN';
+        return callback(err);
       }
       // No multiple pool definition check because of versioning system
       callback(err);
     });
   }
 
-    /**
+  /**
      * Create Pool Definition
      * @param  {Object}   workflowDefId         Workflow-Definition Id
      * @param  {Object}   options               Options
@@ -180,7 +185,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     createProcessDefinition(workflowDef, options, name, processDefinition, messageFlowsBySrcProcess, callback);
   }
 
-    /**
+  /**
      * Create Process definition
      * @param  {Object}   workflowDef               WorkflowDef
      * @param  {Object}   options                   Options
@@ -208,7 +213,7 @@ module.exports = function WorkflowDefinition(WorkflowDefinition) {
     });
   }
 
-    /**
+  /**
      * Build Flow Index
      * @param  {Object} flows       MessageFlows
      * @param  {String} indexByRef  Reference

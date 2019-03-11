@@ -1,6 +1,6 @@
 /**
  *
- * ©2016-2017 EdgeVerve Systems Limited (a fully owned Infosys subsidiary),
+ * ©2018-2019 EdgeVerve Systems Limited (a fully owned Infosys subsidiary),
  * Bangalore, India. All Rights Reserved.
  *
  */
@@ -10,35 +10,67 @@ module.exports = function GruntConfig(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
-    eslint: {
+    mkdir: {
+      all: {
+        options: {
+          create: ['dist']
+        }
+      }
+    },
+
+    copy: {
+      main: {
+        files: [
+          // includes files within path and its sub-directories
+          {
+            expand: true,
+            src: ['**', '!node_modules/**', '!coverage/**'],
+            dest: 'dist/'
+          }
+        ]
+      }
+    },
+    lint: {
       target: [
         'common/**/*.js',
         'server/**/*.js',
         'test/**/*.js'
       ]
     },
+    mochaTest: {
+      test: {
+        options: {
+          quiet: false,
+          bail: false,
+          clearRequireCache: true,
+          timeout: 100000
+        },
+        src: ['test/bootstrap.js', 'test/scripts/*.js']
+      }
+    },
 
     clean: {
       coverage: {
         src: ['coverage/']
+      },
+      dist: {
+        src: ['dist/']
       }
     },
 
     mocha_istanbul: {
+      options: {
+        mochaOptions: ['--exit']
+      },
       coverage: {
-        src: [
-          'test/*.js',
-          'test/activiti-integeration/*.js',
-          'test/cluster-test/recovery-test.js'
-        ],
+        src: ['test/bootstrap.js', 'test/scripts/*.js'],
         options: {
-          excludes: [],
-          timeout: 60000,
+          timeout: 5000,
           check: {
-            lines: 75,
-            statements: 75,
-            branches: 65,
-            functions: 75
+            lines: 80,
+            statements: 80,
+            branches: 70,
+            functions: 80
           },
           reportFormats: ['lcov']
         }
@@ -47,15 +79,13 @@ module.exports = function GruntConfig(grunt) {
   });
 
   // Add the grunt-mocha-test tasks.
+  grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
   grunt.loadNpmTasks('grunt-contrib-clean');
-
   grunt.loadNpmTasks('grunt-eslint');
+  grunt.loadNpmTasks('grunt-mkdir');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
-  grunt.registerTask('default', ['eslint']);
-  grunt.registerTask('just-eslint', ['eslint']);
-  grunt.registerTask('just-mocha-istanbul', ['mocha_istanbul']);
+  grunt.registerTask('all', ['lint', 'clean:coverage', 'mocha_istanbul']);
   grunt.registerTask('test-with-coverage', ['clean:coverage', 'mocha_istanbul']);
-  grunt.registerTask('eslint-test-coverage', [ 'eslint', 'clean:coverage', 'mocha_istanbul']);
-  grunt.registerTask('all', ['eslint', 'clean:coverage', 'mocha_istanbul']);
 };

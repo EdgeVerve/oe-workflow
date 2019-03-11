@@ -207,7 +207,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
 
     return index;
   }
-    /**
+  /**
      * Build boundary Events by attachment Index
      * @return {object}     IndexMap
      */
@@ -216,7 +216,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
     return buildBoundaryEventsByAttachmentIndex(self);
   };
 
-    /**
+  /**
      * Fetch all boundary events
      * @return {[Object]}   FlowObject
      */
@@ -226,7 +226,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
     });
   };
 
-    /**
+  /**
      * Find Pool information for the Flow Object
      * @param  {Object} flowObject  FlowObject
      * @return {String}             LaneName
@@ -249,7 +249,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
     return null;
   };
 
-    /**
+  /**
      * Generic Flow Index generator function
      * @param  {[Object]} flows         SequenceFlows
      * @param  {String} indexBySource   SourceIndex
@@ -270,7 +270,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
     return index;
   }
 
-    /**
+  /**
      * Index builder function
      * @param  {Object} processDefinition   Process-Definition
      * @return {Object}                     IndexMap
@@ -285,7 +285,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
     return index;
   }
 
-    /**
+  /**
      * Name Map builder function
      * @param  {[Object]} objects FlowObjects
      * @return {Object}           IndexMap
@@ -303,7 +303,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
     return map;
   }
 
-    /**
+  /**
      * Catch Event Index builder function
      * @param  {[Object]} flowObjects FlowObjects
      * @return {Object}               IndexMap

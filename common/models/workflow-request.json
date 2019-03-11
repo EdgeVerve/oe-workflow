@@ -2,11 +2,11 @@
     "name": "WorkflowRequest",
     "base": "WorkflowBaseEntity",
     "description": "Stores triggered workflow information for Model Instances(oe-workflow engine)",
+    "strictObjectIDCoercion": true,
     "idInjection" : true,
     "options": {
         "validateUpsert": true
     },
-    "idInjection" : true,
     "mixins": {
         "SoftDeleteMixin": false
     },

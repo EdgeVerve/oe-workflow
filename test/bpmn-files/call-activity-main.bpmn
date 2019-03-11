@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="Process_1" isExecutable="false">
+    <bpmn2:startEvent id="StartEvent_1" name="Start">
+      <bpmn2:outgoing>SequenceFlow_0qo0j5e</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_0qo0j5e" sourceRef="StartEvent_1" targetRef="ScriptTask_07pzgyw" />
+    <bpmn2:sequenceFlow id="SequenceFlow_08mv6dw" sourceRef="ScriptTask_07pzgyw" targetRef="CallActivity_08v8g2t" />
+    <bpmn2:endEvent id="EndEvent_130e1q4" name="End">
+      <bpmn2:incoming>SequenceFlow_14sesmt</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_14sesmt" sourceRef="CallActivity_08v8g2t" targetRef="EndEvent_130e1q4" />
+    <bpmn2:scriptTask id="ScriptTask_07pzgyw" name="MainScript" scriptFormat="javscript">
+      <bpmn2:incoming>SequenceFlow_0qo0j5e</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_08mv6dw</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[let newValue = 'mainPrefix'+pv('inputPV1');
+setPV('toChild',newValue);]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:callActivity id="CallActivity_08v8g2t" name="ChildAct" calledElement="call-activity-child">
+      <bpmn2:extensionElements>
+        <camunda:in source="toChild" target="fromParent" />
+        <camunda:in source="failTest" target="failTest" />
+        <camunda:out source="toParent" target="fromChild" />
+        <camunda:inputOutput>
+          <camunda:inputParameter name="Input1">Awesome</camunda:inputParameter>
+          <camunda:outputParameter name="output">Double Awesome</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_08mv6dw</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_14sesmt</bpmn2:outgoing>
+    </bpmn2:callActivity>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="123" y="257" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="96" y="293" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0qo0j5e_di" bpmnElement="SequenceFlow_0qo0j5e">
+        <di:waypoint xsi:type="dc:Point" x="159" y="275" />
+        <di:waypoint xsi:type="dc:Point" x="209" y="275" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="139.5" y="250" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08mv6dw_di" bpmnElement="SequenceFlow_08mv6dw">
+        <di:waypoint xsi:type="dc:Point" x="309" y="275" />
+        <di:waypoint xsi:type="dc:Point" x="372" y="275" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="296" y="250" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_130e1q4_di" bpmnElement="EndEvent_130e1q4">
+        <dc:Bounds x="522" y="257" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="495" y="293" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_14sesmt_di" bpmnElement="SequenceFlow_14sesmt">
+        <di:waypoint xsi:type="dc:Point" x="472" y="275" />
+        <di:waypoint xsi:type="dc:Point" x="522" y="275" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="452" y="250" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_07pzgyw_di" bpmnElement="ScriptTask_07pzgyw">
+        <dc:Bounds x="209" y="235" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_08v8g2t_di" bpmnElement="CallActivity_08v8g2t">
+        <dc:Bounds x="372" y="235" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

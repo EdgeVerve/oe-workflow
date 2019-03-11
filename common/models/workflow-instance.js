@@ -16,6 +16,14 @@ var log = logger('WorkflowInstance');
 var loopback = require('loopback');
 
 module.exports = function WorkflowInstance(WorkflowInstance) {
+  function handleError(err, options, onlyMessage, callback) {
+    if (!callback && typeof onlyMessage === 'function') {
+      callback = onlyMessage;
+      onlyMessage = false;
+    }
+    log.error(options, onlyMessage ? err.message : err);
+    return callback(err);
+  }
   /**
    * Before Save hook Workflow Instance
    */
@@ -25,23 +33,23 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       var WorkflowDefinition = loopback.getModel('WorkflowDefinition', ctx.options);
 
       WorkflowDefinition.find({
-        'where': {'and': [
-        {'name': workflowDefinitionName},
-        {'latest': true}
-        ]
+        'where': {
+          'and': [{
+            'name': workflowDefinitionName
+          },
+          {
+            'latest': true
+          }
+          ]
         }
       }, ctx.options, function fetchWD(err, wdefns) {
+        /* istanbul ignore if*/
         if (err) {
-          log.error(ctx.options, err);
-          return next(err);
+          return handleError(err, ctx.options, next);
         } else if (wdefns.length === 0) {
-          var errx = new Error('No latest workflow definition found.');
-          log.error(ctx.options, errx);
-          return next(errx);
+          return handleError(new Error(workflowDefinitionName + ': No latest workflow definition found'), ctx.options, next);
         } else if (wdefns.length > 1) {
-          var errxx = new Error('Multiple latest workflow definitions found with the same name.');
-          log.error(ctx.options, errxx);
-          return next(errxx);
+          return handleError(new Error('Multiple latest workflow definitions found with the same name'), ctx.options, next);
         }
         var inst = wdefns[0];
         var id = inst.id;
@@ -60,15 +68,15 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     if (ctx.isNewInstance) {
       var instance = ctx.instance;
       instance.workflowDefinition({}, ctx.options, function fetchWD(err, workflowDefinition) {
+        /* istanbul ignore if*/
         if (err) {
-          log.error(ctx.options, err.message);
-          return next(err);
+          return handleError(err, ctx.options, true, next);
         }
         if (!workflowDefinition) {
           return next(new Error('Process definition not present'));
         }
         if (workflowDefinition.isCollaborationDefinition) {
-          instance.createCollaborationProcesses(workflowDefinition.participants, ctx.options,  next);
+          instance.createCollaborationProcesses(workflowDefinition.participants, ctx.options, next);
         } else {
           instance.createProcess(workflowDefinition.name, ctx.options, next);
         }
@@ -78,12 +86,12 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     }
   });
 
-   /**
-    * Create Collaboration Process
-    * @param  {[Object]} participants   Participants
-    * @param  {Object}   options        Options
-    * @param  {Function} next           Callback
-    */
+  /**
+   * Create Collaboration Process
+   * @param  {[Object]} participants   Participants
+   * @param  {Object}   options        Options
+   * @param  {Function} next           Callback
+   */
   WorkflowInstance.prototype.createCollaborationProcesses = function createCollaborationProcesses(participants, options, next) {
     var self = this;
     async.each(participants, function iterateParticipants(participant, done) {
@@ -97,13 +105,13 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     });
   };
 
-   /**
-    * Create Process Instance
-    * @param  {String}   name     Process-Definition Name
-    * @param  {Object}   options  Options
-    * @param  {Function} next     Callback
-    * @returns {void}
-    */
+  /**
+   * Create Process Instance
+   * @param  {String}   name     Process-Definition Name
+   * @param  {Object}   options  Options
+   * @param  {Function} next     Callback
+   * @returns {void}
+   */
   WorkflowInstance.prototype.createProcess = function createProcess(name, options, next) {
     var self = this;
     var processVariables = {};
@@ -111,8 +119,7 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       try {
         processVariables = JSON.parse(JSON.stringify(self.processVariables));
       } catch (e) {
-        log.error(options, e);
-        return next(e);
+        return handleError(e, options, next);
       }
     }
 
@@ -135,21 +142,23 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     var processDefinitionName = postData.processDefinitionName;
     var ProcessDefinition = loopback.getModel('ProcessDefinition', options);
 
-    var filter = {'and': [{'name': processDefinitionName}, {'workflowDefinitionId': self.workflowDefinitionId}]};
+    var filter = {
+      'and': [{
+        'name': processDefinitionName
+      }, {
+        'workflowDefinitionId': self.workflowDefinitionId
+      }]
+    };
     ProcessDefinition.find({
       'where': filter
     }, options, function fetchWD(err, pdefns) {
+      /* istanbul ignore if*/
       if (err) {
-        log.error(options, err);
-        return next(err);
+        return handleError(err, options, next);
       } else if (pdefns.length === 0) {
-        var errx = new Error('No Latest process definition found.');
-        log.error(options, errx);
-        return next(errx);
+        return handleError(new Error(processDefinitionName + ': No Latest process definition found'), options, next);
       } else if (pdefns.length > 1) {
-        var errxx = new Error('Multiple Latest process definitions found with the same name.');
-        log.error(options, errxx);
-        return next(errxx);
+        return handleError(new Error('Multiple Latest process definitions found with the same name'), options, next);
       }
       var inst = pdefns[0];
       var id = inst.id;
@@ -159,13 +168,13 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     });
   };
 
-/**
-    * Create Process Instance
-    * @param  {String}   name     Process-Definition Name
-    * @param  {Object}   options  Options
-    * @param  {Function} next     Callback
-    * @returns {void}
-    */
+  /**
+   * Create Process Instance
+   * @param  {String}   name     Process-Definition Name
+   * @param  {Object}   options  Options
+   * @param  {Function} next     Callback
+   * @returns {void}
+   */
   WorkflowInstance.prototype.createParticipantProcess = function createParticipantProcess(name, options, next) {
     var self = this;
     var processVariables = {};
@@ -173,8 +182,7 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       try {
         processVariables = JSON.parse(JSON.stringify(self.processVariables));
       } catch (e) {
-        log.error(options, e);
-        return next(e);
+        return handleError(e, options, next);
       }
     }
 
@@ -192,37 +200,40 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     var WorkflowDefinition = loopback.getModel('WorkflowDefinition', options);
 
     WorkflowDefinition.find({
-      'where': {'and': [
-        {'name': processDefinitionName},
-        {'latest': true}
-      ]
+      'where': {
+        'and': [{
+          'name': processDefinitionName
+        },
+        {
+          'latest': true
+        }
+        ]
       }
     }, options, function fetchWD(err, wdefns) {
+      /* istanbul ignore if*/
       if (err) {
-        log.error(options, err);
-        return next(err);
+        return handleError(err, options, next);
       } else if (wdefns.length === 0) {
-        var errx = new Error('No latest workflow definition found.');
-        log.error(options, errx);
-        return next(errx);
+        return handleError(new Error(processDefinitionName + ': No latest workflow definition found'), options, next);
       }
       ProcessDefinition.find({
-        'where': {'and': [
-            {'name': processDefinitionName},
-            {'workflowDefinitionId': wdefns[0].id}
-        ]}
+        'where': {
+          'and': [{
+            'name': processDefinitionName
+          },
+          {
+            'workflowDefinitionId': wdefns[0].id
+          }
+          ]
+        }
       }, options, function fetchWD(err, pdefns) {
+        /* istanbul ignore if*/
         if (err) {
-          log.error(options, err);
-          return next(err);
+          return handleError(err, options, next);
         } else if (pdefns.length === 0) {
-          var errx = new Error('No Latest process definition found.');
-          log.error(options, errx);
-          return next(errx);
+          return handleError(new Error(processDefinitionName + ': No Latest process definition found'), options, next);
         } else if (pdefns.length > 1) {
-          var errxx = new Error('Multiple Latest process definitions found with the same name.');
-          log.error(options, errxx);
-          return next(errxx);
+          return handleError(new Error('Multiple Latest process definitions found with the same name'), options, next);
         }
         var inst = pdefns[0];
         var id = inst.id;
@@ -234,24 +245,25 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
   };
 
 
-   /*
-    * Pass a message to an execution that is waiting for a matching message
-    * and can be correlated according using the Message Reference and the ParticipantName of the Collaboration process
-    */
+  /*
+   * Pass a message to an execution that is waiting for a matching message
+   * and can be correlated according using the Message Reference and the ParticipantName of the Collaboration process
+   */
   WorkflowInstance.prototype.passInternalMessageByRef = function passInternalMessageByRef(participantName, messageRef, message) {
 
   };
 
-   /**
-    * Pass a message to an execution that is waiting for a mataching message and
-    * and can be correlated directly with BPMN Id present in the message flow
-    * @param  {Object} processDefId   Process-Definition Name
-    * @param  {String} flowObjectId   FlowObject Name
-    * @param  {Object} options        Options
-    * @param  {Object} message        Message
-    */
+  /**
+   * Pass a message to an execution that is waiting for a mataching message and
+   * and can be correlated directly with BPMN Id present in the message flow
+   * @param  {Object} processDefId   Process-Definition Name
+   * @param  {String} flowObjectId   FlowObject Name
+   * @param  {Object} options        Options
+   * @param  {Object} message        Message
+   */
   WorkflowInstance.prototype.passInternalMessage = function passInternalMessage(processDefId, flowObjectId, options, message) {
     this.processes({}, options, function fetchProcesses(err, processes) {
+      /* istanbul ignore if*/
       if (err) {
         log.error(options, err);
       }
@@ -271,59 +283,64 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     });
   };
 
-   /*
-    * Pass a message to an execution that is waiting for a mataching message and
-    * and can be correlated according to the businessKey that is basically the WorkflowInstance Identifier
-    * and messageRef to look for the corresponding Recieve Task/Message Event
-    */
+  /*
+   * Pass a message to an execution that is waiting for a mataching message and
+   * and can be correlated according to the businessKey that is basically the WorkflowInstance Identifier
+   * and messageRef to look for the corresponding Recieve Task/Message Event
+   */
   WorkflowInstance.prototype.passExternalMessage = function passExternalMessage(businessKey, messageRef, message) {
-      // this will be exposed as a remote method
+    // this will be exposed as a remote method
   };
 
   WorkflowInstance.remoteMethod('terminate', {
-    accepts: [  {arg: 'workflowId', type: 'string'} ],
-    returns: {arg: 'ack', type: 'string'}
+    accepts: [{
+      arg: 'workflowId',
+      type: 'string'
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
+    returns: {
+      arg: 'ack',
+      type: 'string'
+    }
   });
 
-  WorkflowInstance.terminate = function terminate(workflowId, options, cb) {
+  WorkflowInstance.terminate = function terminate(workflowId, options, callback) {
     var app = WorkflowInstance.app;
     var ProcessInstance = app.models.ProcessInstance;
 
     WorkflowInstance.findById(workflowId, options, function fetchWI(err, workflowInstance) {
+      /* istanbul ignore if*/
       if (err) {
-        log.error(options, err);
-        return cb(err);
+        return handleError(err, options, callback);
       }
 
       workflowInstance.processes({}, options, function fetchProcesses(err, Processes) {
+        /* istanbul ignore if*/
         if (err) {
-          log.error(options, err);
-        } else {
-          for (var i in Processes) {
-            if (Object.prototype.hasOwnProperty.call(Processes, i)) {
-              ProcessInstance.emit('PROCESS_TERMINATE', options, ProcessInstance, Processes[i]);
-            }
+          return handleError(err, options, callback);
+        }
+        for (var i in Processes) {
+          if (Object.prototype.hasOwnProperty.call(Processes, i)) {
+            ProcessInstance.emit('PROCESS_TERMINATE', options, ProcessInstance, Processes[i]);
           }
         }
-      });
-    });
 
-    WorkflowInstance.findById(workflowId, options, function fetchWI(err, workflowInstance) {
-      if (err) {
-        log.error(options, err);
-        return cb(err);
-      }
-      let updates = {
-        _version: workflowInstance._version,
-        status: 'terminated'
-      };
-      // workflowInstance.setAttribute('status', 'terminated');
-      workflowInstance.updateAttributes(updates, options, function saveWI(err, res) {
-        if (err) {
-          log.error(options, 'Unable to update status to terminate');
-          return cb(err);
-        }
-        cb(null, 'Request for workflowInstance Termination sent');
+        let updates = {
+          _version: workflowInstance._version,
+          status: 'terminated'
+        };
+        workflowInstance.updateAttributes(updates, options, function saveWI(err, res) {
+          /* istanbul ignore if*/
+          if (err) {
+            return handleError('Unable to update status to terminate', options, callback);
+          }
+          // console.log('Triggering ', res.workflowDefinitionName+'-terminated');
+          WorkflowInstance.emit(res.workflowDefinitionName + '-terminated', res);
+          callback(null, 'Request for workflowInstance Termination sent');
+        });
       });
     });
   };

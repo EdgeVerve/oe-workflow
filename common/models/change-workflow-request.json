@@ -3,6 +3,11 @@
   "base": "BaseEntity",
   "description" : "Manages change request created during maker-checker",
   "idInjection": true,
+  "strictObjectIDCoercion": true,
+  "mixins":{
+    "VersionMixin": true,
+    "HistoryMixin": true
+  },
   "properties": {
     "data": {
       "type": "object",
@@ -33,10 +38,6 @@
     "remarks": {
       "type": "string"
     },
-    "workflowInstanceId": {
-      "type": "string",
-      "required": true
-    },
     "_verifiedBy": {
       "type": "string" ,
       "required": false
@@ -48,6 +49,11 @@
   },
   "validations": [],
   "relations": {
+    "workflowInstance": {
+      "type": "belongsTo",
+      "model": "WorkflowInstance",
+      "foreignKey": "workflowInstanceId"
+    }
   },
   "acls": []
 }

@@ -5,15 +5,15 @@
  *
  */
 /**
- * Boot Script for attaching workflow on boot for version 2
+ * Boot Script for attaching workflow on boot for version 1&2
  * @author Mandeep Gill(mandeep6ill), Prem Sai(premsai-ch)
  */
 var logger = require('oe-logger');
 var log = logger('attach-workflow.boot');
-var applyMakerCheckerMixin1 = require('../../common/mixins/maker-checker-mixin.js');
-
+var applyMakerCheckerMixin1 = require('../../common/mixins/maker-checker-mixin-v1.js');
 var applyMakerCheckerMixin2 = require('../../common/mixins/maker-checker-mixin-v2.js');
-var globalMessaging = require('oe-cloud/lib/common/global-messaging');
+var workflowMixin = require('../../common/mixins/workflow-mixin.js');
+
 module.exports = function attachWorkFlows(app) {
   var WorkflowMapping = app.models.WorkflowMapping;
   var options = {
@@ -24,35 +24,28 @@ module.exports = function attachWorkFlows(app) {
 
   WorkflowMapping.find({
     where: {
-      'engineType': 'oe-workflow'
+      and: [{
+        engineType: 'oe-workflow'
+      }, {
+        version: {inq: ['v0', 'v1', 'v2']}
+      }]
     }
   }, options, function fetchWM(err, result) {
+    /* istanbul ignore if*/
     if (err) {
       log.error(options, err);
     } else {
       var WorkflowMaps = result;
-      WorkflowMaps.forEach(function iterateWM(mapping) {
-        newMappingHandler(mapping, options);
+      WorkflowMaps.forEach(mapping => {
+        var Model = app.models[mapping.actualModelName];
+        if (mapping.version === 'v1') {
+          applyMakerCheckerMixin1(Model);
+        } else if (mapping.version === 'v2') {
+          applyMakerCheckerMixin2(Model);
+        } else {
+          workflowMixin(Model);
+        }
       });
     }
   });
-
-
-  function newMappingHandler(mapping, options) {
-    var actualModelName = mapping.actualModelName;
-    var Model = app.models[actualModelName];
-    if (mapping.version === 'v1') {
-      applyMakerCheckerMixin1(Model);
-    } else {
-      applyMakerCheckerMixin2(Model);
-    }
-  }
-  function workflowMappingAfterSave(ctx, next) {
-    let data = ctx.data || ctx.instance;
-    globalMessaging.publish('workflowMappingAfterSave', {version: data.version, actualModelName: data.actualModelName, modelName: data.modelName}, ctx.options);
-    next();
-  }
-
-  WorkflowMapping.observe('after save', workflowMappingAfterSave);
-  globalMessaging.subscribe('workflowMappingAfterSave', newMappingHandler);
 };

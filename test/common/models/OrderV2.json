@@ -1,0 +1,12 @@
+{
+  "name": "OrderV2",
+  "base": "BaseEntity",
+  "mixins": {
+    "VersionMixin": true,
+    "AuditFieldsMixin": true
+  },
+  "properties": {
+    "quantity": { "type": "number", "required": true },
+    "buyer": { "type": "string", "required": true }
+  }
+}

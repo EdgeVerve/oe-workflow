@@ -9,24 +9,25 @@ var logger = require('oe-logger');
 var log = logger('ActivitiAccount');
 
 module.exports = function ActivitiAccount(ActivitiAccount) {
-  ActivitiAccount.disableRemoteMethod('create', false);
-  ActivitiAccount.disableRemoteMethod('upsert', false);
-  ActivitiAccount.disableRemoteMethod('updateAll', true);
+  ActivitiAccount.disableRemoteMethodByName('create', false);
+  ActivitiAccount.disableRemoteMethodByName('upsert', false);
+  ActivitiAccount.disableRemoteMethodByName('updateAll', true);
   // ActivitiAccount.disableRemoteMethod('updateAttributes', false);
-  ActivitiAccount.disableRemoteMethod('find', false);
-  ActivitiAccount.disableRemoteMethod('findById', true);
-  ActivitiAccount.disableRemoteMethod('findOne', true);
-  ActivitiAccount.disableRemoteMethod('deleteById', true);
-  ActivitiAccount.disableRemoteMethod('count', true);
-  ActivitiAccount.disableRemoteMethod('createChangeStream', true);
-  ActivitiAccount.disableRemoteMethod('exists', true);
-  ActivitiAccount.disableRemoteMethod('history', true);
-  ActivitiAccount.disableRemoteMethod('updateById', true);
-  ActivitiAccount.disableRemoteMethod('deleteWithVersion', false);
+  ActivitiAccount.disableRemoteMethodByName('find', false);
+  ActivitiAccount.disableRemoteMethodByName('findById', true);
+  ActivitiAccount.disableRemoteMethodByName('findOne', true);
+  ActivitiAccount.disableRemoteMethodByName('deleteById', true);
+  ActivitiAccount.disableRemoteMethodByName('count', true);
+  ActivitiAccount.disableRemoteMethodByName('createChangeStream', true);
+  ActivitiAccount.disableRemoteMethodByName('exists', true);
+  ActivitiAccount.disableRemoteMethodByName('history', true);
+  ActivitiAccount.disableRemoteMethodByName('updateById', true);
+  ActivitiAccount.disableRemoteMethodByName('deleteWithVersion', false);
 
   ActivitiAccount.observe('before save', function beforeSaveAA(ctx, next) {
     if (ctx.instance && ctx.isNewInstance) {
       ActivitiAccount.find({}, ctx.options, function fetchExistingActivitAccount(err, instance) {
+        /* istanbul ignore if*/
         if (err) {
           log.error(ctx.options, err);
           return next(err);
@@ -35,8 +36,8 @@ module.exports = function ActivitiAccount(ActivitiAccount) {
           // no existing account so create
           return next();
         }
-        err = new Error('Only one activiti account per user allowed.');
-        log.error(ctx.options, err);
+        err = new Error('Activiti account already exists');
+        log.error(ctx.options, err.message);
         return next(err);
       });
     } else {
@@ -44,36 +45,18 @@ module.exports = function ActivitiAccount(ActivitiAccount) {
     }
   });
 
-  ActivitiAccount.observe('after accesss', function afterAccessAA(ctx, next) {
-    if (ctx && ctx.options && ctx.options.fetchAllScopes === true) {
-      // don't filter
-      return next();
+  ActivitiAccount.observe('access', function limitToUser(ctx, next) {
+    let userName;
+    if (ctx && ctx.options && ctx.options.ctx) {
+      userName = ctx.options.ctx.username;
     }
-
-    var instances = ctx.accdata;
-    var resultData = [];
-
-    try {
-      var currUser = ctx.options.ctx.username;
-    } catch (ex) {
-      var err = new Error('Unable to resolve username in afterAccessHook.');
-      log.error(ctx.options, err);
+    if (!userName) {
+      var err = new Error('Unauthorized');
+      err.status = 401;
       return next(err);
     }
-
-
-    for (var i = 0; i < instances.length; i++) {
-      var instance = instances[i];
-
-      if (instance._createdBy === currUser) {
-        // logic equivalent to putting $owner in model acls - $owner was not working
-        resultData.push(instance);
-      } else {
-        // do nothing
-      }
-    }
-
-    ctx.accdata = resultData;
+    ctx.query.where = ctx.query.where || {};
+    ctx.query.where._createdBy = userName;
     next();
   });
 };
