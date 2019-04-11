@@ -126,7 +126,7 @@ oracletest:
     - export DB_NAME=${CI_PIPELINE_ID}_pg
     - export ENABLE_DS_AUTOUPDATE=true
     #- npm config set registry http://10.188.25.62:9002/
-    - time npm install git+http://evgit/kvsrohit/oe-connector-oracle.git --no-optional
+    - time npm install git+http://evgit/oecloud.io/oe-connector-oracle.git --no-optional
     - time npm install --no-optional
     - mv /oracledb node_modules/
     - export CI_PROJECT_NAMESPACE=${group}
