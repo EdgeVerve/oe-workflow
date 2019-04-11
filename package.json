@@ -52,7 +52,7 @@
     "if-env": "1.0.4",
     "oe-business-rule": "git+http://evgit/oecloud.io/oe-business-rule.git#master",
     "loopback-connector-mongodb": "git+http://evgit/oecloud.io/loopback-connector-mongodb.git#master",
-    "oe-connector-oracle": "git+http://evgit/oecloud.io/oe-connector-oracle.git#master",
+    "oe-connector-oracle": "git+http://evgit/kvsrohit/oe-connector-oracle.git#master",
     "oe-connector-postgresql": "git+http://evgit/oecloud.io/oe-connector-postgresql.git#master"
   }
 }
