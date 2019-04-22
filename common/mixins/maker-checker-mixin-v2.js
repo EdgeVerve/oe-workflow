@@ -485,7 +485,6 @@ function addOERemoteMethods(Model) {
     var inputPV = data.pv;
     delete data.pv;
     var correlationId = inputPV && inputPV.correlationId;
-    
     Model.findById(id, options, function fetchInstance(err, cinst) {
       /* istanbul ignore if*/
       if (err) {
@@ -616,8 +615,7 @@ function addOERemoteMethods(Model) {
                 }
                 mData.workflowInstanceId = winst.id;
                 // TODO : make this check better
-                if (crinsts.length > 0) 
-                {
+                if (crinsts.length > 0) {
                   delete mData.data._changeRequestId;
                   mData._version = crinst._version;
                   crinst.updateAttributes(mData, options, function createChangeModel(err, inst) {

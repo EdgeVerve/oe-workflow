@@ -5,7 +5,7 @@
  *
  */
 
-let bootstrap = require("../bootstrap.js");
+let bootstrap = require('../bootstrap.js');
 let chai = bootstrap.chai;
 let expect = chai.expect;
 let models = bootstrap.app.models;
@@ -20,7 +20,7 @@ describe('correlationid property should exists on models', function testfunction
     done();
   });
 
-  it('correlationid should exist on task model', function (done) {
+  it('correlationid should exist on task model', function testfunction(done) {
     var task = models.Task;
     expect(task.definition.properties.correlationId).to.exist;
     done();
@@ -37,7 +37,6 @@ describe('correlationid property should exists on models', function testfunction
     expect(changeWorkflowRequest.definition.properties.correlationId).to.exist;
     done();
   });
-
 });
 
 describe('correlationid should be populated on instances', function testFunction() {
@@ -56,15 +55,14 @@ describe('correlationid should be populated on instances', function testFunction
         done(err);
       });
     });
-
   });
 
   after(function testFunction(done) {
-      bootstrap.cleanUp(workflowName, done);
-      processInstance = null;
-      userTask = null;
-      bootstrap.removeCompleteListener(workflowName);
-      bootstrap.removeUserTaskListener(workflowName, 'UserTask');
+    bootstrap.cleanUp(workflowName, done);
+    processInstance = null;
+    userTask = null;
+    bootstrap.removeCompleteListener(workflowName);
+    bootstrap.removeUserTaskListener(workflowName, 'UserTask');
   });
 
   it('correlationid should be populated on workflowInstance', function testFunction(done) {
@@ -86,5 +84,4 @@ describe('correlationid should be populated on instances', function testFunction
     expect(userTask.correlationId).to.equal(workflowInstance.correlationId);
     done();
   });
-
 });

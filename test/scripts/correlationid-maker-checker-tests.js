@@ -63,7 +63,7 @@ describe('correlationId maker checker v2 tests', function CB() {
     });
 
     after('cleanup', function testFunction(done) {
-      setTimeout(function () {
+      setTimeout(function timeout() {
         Stock.tasks(ticket.instanceId, {}, bootstrap.defaultContext, function testFunction(err, tasks) {
           expect(err).to.not.exist;
           expect(tasks[0].status).to.equal(Status.PENDING);
@@ -130,7 +130,7 @@ describe('correlationId maker checker v2 tests', function CB() {
     });
 
     it('correlationId should be populated on Task', function CB(done) {
-      setTimeout(function () {
+      setTimeout(function timeout() {
         Task.find({
           where: {
             processInstanceId: ticket.processInstanceId
@@ -140,17 +140,15 @@ describe('correlationId maker checker v2 tests', function CB() {
           expect(task[0].correlationId).to.exist;
           done();
         });
-
       }, 4000);
     });
-
   });
 
   describe('correlationId should be populated on changeworkflowRequest updateX', function testFunction(done) {
     let correlationid = 'abc123';
     let stockRecord = {
       name: 'parkavenue',
-      quantityAvailable: 1000,
+      quantityAvailable: 1000
     };
     let ticket = {};
     let workflowMapping;
@@ -190,7 +188,7 @@ describe('correlationId maker checker v2 tests', function CB() {
     });
 
     after('cleanup', function testFunction(done) {
-      setTimeout(function () {
+      setTimeout(function timeout() {
         Stock.tasks(ticket.instanceId, {}, bootstrap.defaultContext, function testFunction(err, tasks) {
           expect(err).to.not.exist;
           expect(tasks[0].status).to.equal(Status.PENDING);
@@ -224,7 +222,6 @@ describe('correlationId maker checker v2 tests', function CB() {
           });
         });
       }, 2000);
-     
     });
 
     it('correlationId should be populated on ChangeWorkflowRequest', function CB(done) {
@@ -258,7 +255,7 @@ describe('correlationId maker checker v2 tests', function CB() {
     });
 
     it('correlationId should be populated on Task', function CB(done) {
-      setTimeout(function () {
+      setTimeout(function timeout() {
         Task.find({
           where: {
             processInstanceId: ticket.processInstanceId
@@ -268,16 +265,14 @@ describe('correlationId maker checker v2 tests', function CB() {
           expect(task[0].correlationId).to.exist;
           done();
         });
-
       }, 4000);
     });
-
   });
 
   describe('correlationid should be populated on changeworkflowRequest deleteX', function testFunction(done) {
     let stockRecord = {
       name: 'nivea',
-      quantityAvailable: 100,
+      quantityAvailable: 100
     };
     let ticket = {};
     let workflowMapping;
@@ -304,7 +299,7 @@ describe('correlationId maker checker v2 tests', function CB() {
         workflowMapping = mappings.mappings[0];
         Stock.deleteX(ticket.id, ticket.version, {
           headers: {
-            "correlation-id": "xyz123"
+            'correlation-id': 'xyz123'
           }
         }, bootstrap.getContext('usr2'), function testFunction(err, instance) {
           expect(err).to.not.exist;
@@ -317,7 +312,7 @@ describe('correlationId maker checker v2 tests', function CB() {
     });
 
     after('cleanup', function testFunction(done) {
-      setTimeout(function () {
+      setTimeout(function timeout() {
         Stock.tasks(ticket.instanceId, {}, bootstrap.defaultContext, function testFunction(err, tasks) {
           expect(err).to.not.exist;
           expect(tasks[0].status).to.equal(Status.PENDING);
@@ -351,7 +346,6 @@ describe('correlationId maker checker v2 tests', function CB() {
           });
         });
       }, 2000);
-     
     });
 
     it('correlationId should be populated on ChangeWorkflowRequest', function CB(done) {
@@ -385,7 +379,7 @@ describe('correlationId maker checker v2 tests', function CB() {
     });
 
     it('correlationId should be populated on Task', function CB(done) {
-      setTimeout(function () {
+      setTimeout(function timeout() {
         Task.find({
           where: {
             processInstanceId: ticket.processInstanceId
@@ -395,10 +389,7 @@ describe('correlationId maker checker v2 tests', function CB() {
           expect(task[0].correlationId).to.exist;
           done();
         });
-
       }, 4000);
     });
-
   });
-
-}); 
+});
