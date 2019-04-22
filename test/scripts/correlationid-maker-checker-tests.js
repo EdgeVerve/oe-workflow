@@ -1,19 +1,14 @@
-/**
- *
- * ©2016-2017 EdgeVerve Systems Limited (a fully owned Infosys subsidiary),
- * Bangalore, India. All Rights Reserved.
- *
- */
-
 let bootstrap = require('../bootstrap.js');
 let chai = bootstrap.chai;
 let expect = chai.expect;
-let Status = bootstrap.Status;
 let Stock = bootstrap.app.models.Stock;
 let WorkflowManager = bootstrap.app.models.WorkflowManager;
 let ChangeWorkflowRequest = bootstrap.app.models.ChangeWorkflowRequest;
-let models = bootstrap.app.models;
+let WorkflowInstance = bootstrap.app.models.WorkflowInstance;
+let ProcessInstance = bootstrap.app.models.ProcessInstance;
+let Task = bootstrap.app.models.Task;
 let async = require('async');
+let Status = bootstrap.Status;
 
 describe('correlationId maker checker v2 tests', function CB() {
   let workflowName = 'correlationid-maker-checker';
@@ -26,20 +21,23 @@ describe('correlationId maker checker v2 tests', function CB() {
       done();
     });
   });
+
   after('cleanup', function testFunction(done) {
     bootstrap.cleanUp(workflowName, done);
   });
 
   describe('correlationId should be populated on changeworkflowRequest createX', function testFunction(done) {
+    let correlationid = 'abcdef';
     let stockRecord = {
       name: 'fog',
-      quantityAvailable: 500
+      quantityAvailable: 500,
+      pv: {
+        'correlationId': correlationid
+      }
     };
-    let ticket;
+    let ticket = {};
     let workflowMapping;
-    let changeRequest;
-    let workflowInstance;
-    let approverTask;
+
     before('attach workflow', function testFunction(done) {
       WorkflowManager.attachWorkflow({
         operation: 'create',
@@ -54,95 +52,109 @@ describe('correlationId maker checker v2 tests', function CB() {
         expect(mappings).to.exist;
         expect(mappings.mappings).to.exist.and.be.an('array').of.length(1);
         workflowMapping = mappings.mappings[0];
-        done();
-      });
-    });
-    after('cleanup', function testFunction(done) {
-      WorkflowManager.detachWorkflowWithVersion(workflowMapping.id, workflowMapping._version, bootstrap.defaultContext, function testFunction(err) {
-        expect(err).to.not.exist;
-        Stock.destroyAll({}, done);
+        Stock.createX(stockRecord, bootstrap.getContext('usr1'), function cb(err, instance) {
+          expect(err).to.not.exist;
+          expect(instance).to.exist;
+          ticket.instanceId = instance.id;
+          ticket.changeRequestId = instance._changeRequestId;
+          done();
+        });
       });
     });
 
-    beforeEach(function testFunction(done) {
-      async.parallel([
-        function f1(cb) {
-          bootstrap.onUserTask(workflowName, 'Approver', function testFunction(err, task, instance) {
+    after('cleanup', function testFunction(done) {
+      setTimeout(function () {
+        Stock.tasks(ticket.instanceId, {}, bootstrap.defaultContext, function testFunction(err, tasks) {
+          expect(err).to.not.exist;
+          expect(tasks[0].status).to.equal(Status.PENDING);
+          tasks[0].complete({
+            __action__: Status.APPROVED
+          }, bootstrap.getContext('usr2'), function CB(err, task) {
             expect(err).to.not.exist;
-            approverTask = task;
-            cb();
-          });
-        },
-        function f2(cb) {
-          Stock.createX(stockRecord, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
-            expect(err).to.not.exist;
-            expect(tkt).to.exist;
-            ticket = tkt;
-            ChangeWorkflowRequest.find({
-              modelName: 'Stock',
-              modelId: ticket.id
-            }, bootstrap.defaultContext, function testFunction(err, changeRequests) {
+            expect(task.status).to.equal(Status.COMPLETE);
+            WorkflowManager.detachWorkflowWithVersion(workflowMapping.id, workflowMapping._version, bootstrap.defaultContext, function testFunction(err) {
               expect(err).to.not.exist;
-              expect(changeRequests).to.exist.and.be.an('array').of.length(1);
-              changeRequest = changeRequests[0];
-              models.WorkflowInstance.findById(changeRequest.workflowInstanceId, bootstrap.defaultContext, function testFunction(err, wfInst) {
-                expect(err).to.not.exist;
-                workflowInstance = wfInst;
-                cb();
+              async.series([
+                function testFunction(callback) {
+                  WorkflowInstance.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  ProcessInstance.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  ChangeWorkflowRequest.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  Task.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  Stock.destroyAll({}, callback);
+                }
+              ], function testFunction(err) {
+                done(err);
               });
             });
           });
-        }
-      ], function asyncCb(err, results) {
-        done(err);
-      });
+        });
+      }, 2000);
     });
-    afterEach(function testFunction(done) {
-      async.series([
-        function testFunction(callback) {
-          models.WorkflowInstance.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.ProcessInstance.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.ChangeWorkflowRequest.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.Task.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.Stock.destroyAll({}, callback);
-        }
-      ], function testFunction(err, results) {
-        done(err);
+
+    it('correlationId should be populated on ChangeWorkflowRequest', function CB(done) {
+      ChangeWorkflowRequest.findById(ticket.changeRequestId, bootstrap.defaultContext, function cb(err, changeRequest) {
+        expect(err).to.not.exist;
+        expect(changeRequest.correlationId).to.exist;
+        ticket.workflowInstanceId = changeRequest.workflowInstanceId;
+        done();
       });
     });
 
-    it('correlationId should exists on changeRequest', function testFunction(done) {
-      expect(changeRequest).to.exist;
-      expect(changeRequest.correlationId).to.exist;
-      expect(changeRequest.status).to.equal(Status.PENDING);
-      done();
+    it('correlationId should be populated on WorkflowInstance', function CB(done) {
+      WorkflowInstance.findById(ticket.workflowInstanceId, bootstrap.defaultContext, function cb(err, wfInst) {
+        expect(err).to.not.exist;
+        expect(wfInst.correlationId).to.exist;
+        done();
+      });
     });
 
-    it('correlationId should exists on workflowinstance', function testFunction(done) {
-      expect(workflowInstance).to.exist;
-      expect(workflowInstance.correlationId).to.exist;
-      done();
+    it('correlationId should be populated on ProcessInstance', function CB(done) {
+      ProcessInstance.find({
+        where: {
+          workflowInstanceId: ticket.workflowInstanceId
+        }
+      }, bootstrap.defaultContext, function cb(err, procInst) {
+        expect(err).to.not.exist;
+        expect(procInst[0].correlationId).to.exist;
+        ticket.processIntanceId = procInst[0].id;
+        done();
+      });
     });
+
+    it('correlationId should be populated on Task', function CB(done) {
+      setTimeout(function () {
+        Task.find({
+          where: {
+            processInstanceId: ticket.processInstanceId
+          }
+        }, bootstrap.defaultContext, function cb(err, task) {
+          expect(err).to.not.exist;
+          expect(task[0].correlationId).to.exist;
+          done();
+        });
+
+      }, 4000);
+    });
+
   });
 
-  describe('correlationId should be populated on changeworkflowRequest UpdateX', function testFunction(done) {
+  describe('correlationId should be populated on changeworkflowRequest updateX', function testFunction(done) {
+    let correlationid = 'abc123';
     let stockRecord = {
-      name: 'parkAvenue',
-      quantityAvailable: 500
+      name: 'parkavenue',
+      quantityAvailable: 1000,
     };
-    let ticket;
+    let ticket = {};
     let workflowMapping;
-    let changeRequest;
-    let workflowInstance;
-    let approverTask;
+
     before('attach workflow', function testFunction(done) {
       WorkflowManager.attachWorkflow({
         operation: 'update',
@@ -157,96 +169,126 @@ describe('correlationId maker checker v2 tests', function CB() {
         expect(mappings).to.exist;
         expect(mappings.mappings).to.exist.and.be.an('array').of.length(1);
         workflowMapping = mappings.mappings[0];
-        done();
-      });
-    });
-    after('cleanup', function testFunction(done) {
-      WorkflowManager.detachWorkflowWithVersion(workflowMapping.id, workflowMapping._version, bootstrap.defaultContext, function testFunction(err) {
-        expect(err).to.not.exist;
-        Stock.destroyAll({}, done);
-      });
-    });
-
-    beforeEach(function testFunction(done) {
-      bootstrap.onUserTask(workflowName, 'Approver', function testFunction(err, task, instance) {
-        expect(err).to.not.exist;
-        approverTask = task;
-        done();
-      });
-
-      Stock.create(stockRecord, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
-        expect(err).to.not.exist;
-        expect(tkt).to.exist;
-        expect(tkt.sequence).to.equal(stockRecord.sequence);
-        tkt.quantityAvailable = 250;
-        Stock.updateX(tkt.id, tkt.toObject(), bootstrap.getContext('usr2'), function testFunction(err, tkt) {
+        Stock.create(stockRecord, bootstrap.getContext('usr1'), function cb(err, instance) {
           expect(err).to.not.exist;
-          expect(tkt).to.exist;
-          ticket = tkt;
-          ChangeWorkflowRequest.find({
-            modelName: 'Stock',
-            modelId: ticket.id
-          }, bootstrap.defaultContext, function testFunction(err, changeRequests) {
+          expect(instance).to.exist;
+          expect(instance.quantityAvailable).to.equal(stockRecord.quantityAvailable);
+          instance.quantityAvailable = 600;
+          instance = JSON.parse(JSON.stringify(instance));
+          instance.pv = {
+            'correlationId': correlationid
+          };
+          Stock.updateX(instance.id, instance, bootstrap.getContext('usr2'), function testFunction(err, instance) {
             expect(err).to.not.exist;
-            expect(changeRequests).to.exist.and.be.an('array').of.length(1);
-            changeRequest = changeRequests[0];
-            models.WorkflowInstance.findById(changeRequest.workflowInstanceId, bootstrap.defaultContext, function testFunction(err, wfInst) {
-              expect(err).to.not.exist;
-              workflowInstance = wfInst;
-            });
+            expect(instance).to.exist;
+            ticket.instanceId = instance.id;
+            ticket.changeRequestId = instance._changeRequestId;
+            done();
           });
         });
       });
     });
 
-    afterEach(function testFunction(done) {
-      async.series([
-        function testFunction(callback) {
-          models.WorkflowInstance.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.ProcessInstance.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.ChangeWorkflowRequest.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.Task.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.Stock.destroyAll({}, callback);
-        }
-      ], function testFunction(err, results) {
-        done(err);
+    after('cleanup', function testFunction(done) {
+      setTimeout(function () {
+        Stock.tasks(ticket.instanceId, {}, bootstrap.defaultContext, function testFunction(err, tasks) {
+          expect(err).to.not.exist;
+          expect(tasks[0].status).to.equal(Status.PENDING);
+          tasks[0].complete({
+            __action__: Status.APPROVED
+          }, bootstrap.getContext('usr2'), function CB(err, task) {
+            expect(err).to.not.exist;
+            expect(task.status).to.equal(Status.COMPLETE);
+            WorkflowManager.detachWorkflowWithVersion(workflowMapping.id, workflowMapping._version, bootstrap.defaultContext, function testFunction(err) {
+              expect(err).to.not.exist;
+              async.series([
+                function testFunction(callback) {
+                  WorkflowInstance.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  ProcessInstance.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  ChangeWorkflowRequest.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  Task.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  Stock.destroyAll({}, callback);
+                }
+              ], function testFunction(err, results) {
+                done(err);
+              });
+            });
+          });
+        });
+      }, 2000);
+     
+    });
+
+    it('correlationId should be populated on ChangeWorkflowRequest', function CB(done) {
+      ChangeWorkflowRequest.findById(ticket.changeRequestId, bootstrap.defaultContext, function cb(err, changeRequest) {
+        expect(err).to.not.exist;
+        expect(changeRequest.correlationId).to.exist;
+        ticket.workflowInstanceId = changeRequest.workflowInstanceId;
+        done();
       });
     });
 
-    it('correlationId should exists on changeRequest', function testFunction(done) {
-      expect(changeRequest).to.exist;
-      expect(changeRequest.correlationId).to.exist;
-      expect(changeRequest.status).to.equal(Status.PENDING);
-      done();
+    it('correlationId should be populated on WorkflowInstance', function CB(done) {
+      WorkflowInstance.findById(ticket.workflowInstanceId, bootstrap.defaultContext, function cb(err, wfInst) {
+        expect(err).to.not.exist;
+        expect(wfInst.correlationId).to.exist;
+        done();
+      });
     });
 
-    it('correlationId should exists on workflowinstance', function testFunction(done) {
-      expect(workflowInstance).to.exist;
-      expect(workflowInstance.correlationId).to.exist;
-      done();
+    it('correlationId should be populated on ProcessInstance', function CB(done) {
+      ProcessInstance.find({
+        where: {
+          workflowInstanceId: ticket.workflowInstanceId
+        }
+      }, bootstrap.defaultContext, function cb(err, procInst) {
+        expect(err).to.not.exist;
+        expect(procInst[0].correlationId).to.exist;
+        ticket.processIntanceId = procInst[0].id;
+        done();
+      });
+    });
+
+    it('correlationId should be populated on Task', function CB(done) {
+      setTimeout(function () {
+        Task.find({
+          where: {
+            processInstanceId: ticket.processInstanceId
+          }
+        }, bootstrap.defaultContext, function cb(err, task) {
+          expect(err).to.not.exist;
+          expect(task[0].correlationId).to.exist;
+          done();
+        });
+
+      }, 4000);
     });
 
   });
 
-  describe('correlationId should be populated on changeworkflowRequest DeleteX', function testFunction(done){
+  describe('correlationid should be populated on changeworkflowRequest deleteX', function testFunction(done) {
     let stockRecord = {
       name: 'nivea',
-      quantityAvailable: 1000
+      quantityAvailable: 100,
     };
-    let ticket;
+    let ticket = {};
     let workflowMapping;
-    let changeRequest;
-    let workflowInstance;
-    let approverTask;
+
     before('attach workflow', function testFunction(done) {
+      Stock.create(stockRecord, bootstrap.getContext('usr1'), function cb(err, instance) {
+        expect(err).to.not.exist;
+        expect(instance).to.exist;
+        ticket.id = instance.id;
+        ticket.version = instance._version;
+      });
       WorkflowManager.attachWorkflow({
         operation: 'delete',
         modelName: 'Stock',
@@ -260,77 +302,103 @@ describe('correlationId maker checker v2 tests', function CB() {
         expect(mappings).to.exist;
         expect(mappings.mappings).to.exist.and.be.an('array').of.length(1);
         workflowMapping = mappings.mappings[0];
-        done();
-      });
-    });
-    after('cleanup', function testFunction(done) {
-      WorkflowManager.detachWorkflowWithVersion(workflowMapping.id, workflowMapping._version, bootstrap.defaultContext, function testFunction(err) {
-        expect(err).to.not.exist;
-        Stock.destroyAll({}, done);
-      });   
-    });
-    beforeEach(function testFunction(done) {
-      bootstrap.onUserTask(workflowName, 'Approver', function testFunction(err, task, instance) {
-        expect(err).to.not.exist;
-        approverTask = task;
-        done();
-      });
-
-      Stock.create(stockRecord, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
-        expect(err).to.not.exist;
-        expect(tkt).to.exist;
-        Stock.deleteX(tkt.id, tkt._version, bootstrap.getContext('usr2'), function testFunction(err, tkt) {
+        Stock.deleteX(ticket.id, ticket.version, {
+          headers: {
+            "correlation-id": "xyz123"
+          }
+        }, bootstrap.getContext('usr2'), function testFunction(err, instance) {
           expect(err).to.not.exist;
-          expect(tkt).to.exist;
-          ticket = tkt;
-          ChangeWorkflowRequest.find({
-            modelName: 'Stock',
-            modelId: ticket.id
-          }, bootstrap.defaultContext, function testFunction(err, changeRequests) {
-            expect(err).to.not.exist;
-            expect(changeRequests).to.exist.and.be.an('array').of.length(1);
-            changeRequest = changeRequests[0];
-            models.WorkflowInstance.findById(changeRequest.workflowInstanceId, bootstrap.defaultContext, function testFunction(err, wfInst) {
-              expect(err).to.not.exist;
-              workflowInstance = wfInst;
-            });
-          });
+          expect(instance).to.exist;
+          ticket.instanceId = instance.id;
+          ticket.changeRequestId = instance._changeRequestId;
+          done();
         });
       });
     });
-    afterEach(function testFunction(done) {
-      async.series([
-        function testFunction(callback) {
-          models.WorkflowInstance.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.ProcessInstance.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.ChangeWorkflowRequest.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.Task.destroyAll({}, callback);
-        },
-        function testFunction(callback) {
-          models.Stock.destroyAll({}, callback);
-        }
-      ], function testFunction(err, results) {
-        done(err);
+
+    after('cleanup', function testFunction(done) {
+      setTimeout(function () {
+        Stock.tasks(ticket.instanceId, {}, bootstrap.defaultContext, function testFunction(err, tasks) {
+          expect(err).to.not.exist;
+          expect(tasks[0].status).to.equal(Status.PENDING);
+          tasks[0].complete({
+            __action__: Status.APPROVED
+          }, bootstrap.getContext('usr2'), function CB(err, task) {
+            expect(err).to.not.exist;
+            expect(task.status).to.equal(Status.COMPLETE);
+            WorkflowManager.detachWorkflowWithVersion(workflowMapping.id, workflowMapping._version, bootstrap.defaultContext, function testFunction(err) {
+              expect(err).to.not.exist;
+              async.series([
+                function testFunction(callback) {
+                  WorkflowInstance.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  ProcessInstance.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  ChangeWorkflowRequest.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  Task.destroyAll({}, callback);
+                },
+                function testFunction(callback) {
+                  Stock.destroyAll({}, callback);
+                }
+              ], function testFunction(err, results) {
+                done(err);
+              });
+            });
+          });
+        });
+      }, 2000);
+     
+    });
+
+    it('correlationId should be populated on ChangeWorkflowRequest', function CB(done) {
+      ChangeWorkflowRequest.findById(ticket.changeRequestId, bootstrap.defaultContext, function cb(err, changeRequest) {
+        expect(err).to.not.exist;
+        expect(changeRequest.correlationId).to.exist;
+        ticket.workflowInstanceId = changeRequest.workflowInstanceId;
+        done();
       });
     });
 
-    it('correlationId should exists on changeRequest', function testFunction(done) {
-      expect(changeRequest).to.exist;
-      expect(changeRequest.correlationId).to.exist;
-      expect(changeRequest.status).to.equal(Status.PENDING);
-      done();
+    it('correlationId should be populated on WorkflowInstance', function CB(done) {
+      WorkflowInstance.findById(ticket.workflowInstanceId, bootstrap.defaultContext, function cb(err, wfInst) {
+        expect(err).to.not.exist;
+        expect(wfInst.correlationId).to.exist;
+        done();
+      });
     });
 
-    it('correlationId should exists on workflowinstance', function testFunction(done) {
-      expect(workflowInstance).to.exist;
-      expect(workflowInstance.correlationId).to.exist;
-      done();
+    it('correlationId should be populated on ProcessInstance', function CB(done) {
+      ProcessInstance.find({
+        where: {
+          workflowInstanceId: ticket.workflowInstanceId
+        }
+      }, bootstrap.defaultContext, function cb(err, procInst) {
+        expect(err).to.not.exist;
+        expect(procInst[0].correlationId).to.exist;
+        ticket.processIntanceId = procInst[0].id;
+        done();
+      });
     });
+
+    it('correlationId should be populated on Task', function CB(done) {
+      setTimeout(function () {
+        Task.find({
+          where: {
+            processInstanceId: ticket.processInstanceId
+          }
+        }, bootstrap.defaultContext, function cb(err, task) {
+          expect(err).to.not.exist;
+          expect(task[0].correlationId).to.exist;
+          done();
+        });
+
+      }, 4000);
+    });
+
   });
-});
+
+}); 

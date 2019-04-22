@@ -864,7 +864,7 @@ describe('Maker Checker V2 Tests', function CB() {
     });
 
     it('deleteX errors if update change-request is already pending', function testFunction(done) {
-      StoreV2.deleteX(ticket.id, ticket._version, bootstrap.defaultContext, function testFunction(err, tkt) {
+      StoreV2.deleteX(ticket.id, ticket._version,{}, bootstrap.defaultContext, function testFunction(err, tkt) {
         expect(err).to.exist;
         expect(err.message).to.include('Can not delete, update request pending');
         expect(tkt).to.not.exist;
@@ -935,7 +935,7 @@ describe('Maker Checker V2 Tests', function CB() {
       StoreV2.create(storeRecord, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.not.exist;
         expect(tkt).to.exist;
-        StoreV2.deleteX(tkt.id, tkt._version, bootstrap.getContext('usr2'), function testFunction(err, tkt) {
+        StoreV2.deleteX(tkt.id, tkt._version,{},bootstrap.getContext('usr2'), function testFunction(err, tkt) {
           expect(err).to.not.exist;
           expect(tkt).to.exist;
           ticket = tkt;
@@ -1148,7 +1148,7 @@ describe('Maker Checker V2 Tests', function CB() {
 
 
     it('deleting without id causes error', function testFunction(done) {
-      StoreV2.deleteX(null, 'invalid-version-string', bootstrap.getContext('usr1'), function testFunction(err, tkt) {
+      StoreV2.deleteX(null, 'invalid-version-string',{}, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.exist;
         expect(err.message).to.include('please provide id');
         expect(tkt).to.not.exist;
@@ -1157,7 +1157,7 @@ describe('Maker Checker V2 Tests', function CB() {
     });
 
     it('deleting without version causes error', function testFunction(done) {
-      StoreV2.deleteX('invalid-id-string', null, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
+      StoreV2.deleteX('invalid-id-string', null,{}, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.exist;
         expect(err.message).to.include('please provide version');
         expect(tkt).to.not.exist;
@@ -1166,7 +1166,7 @@ describe('Maker Checker V2 Tests', function CB() {
     });
 
     it('deleting with invalid-id causes error', function testFunction(done) {
-      StoreV2.deleteX('invalid-id-string', 'invalid-version-string', bootstrap.getContext('usr1'), function testFunction(err, tkt) {
+      StoreV2.deleteX('invalid-id-string', 'invalid-version-string',{}, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.exist;
         expect(err.message).to.include('Model id is not valid');
         expect(tkt).to.not.exist;
@@ -1175,7 +1175,7 @@ describe('Maker Checker V2 Tests', function CB() {
     });
 
     it('deleting same model again causes error', function testFunction(done) {
-      StoreV2.deleteX(ticket.id, ticket._version, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
+      StoreV2.deleteX(ticket.id, ticket._version, {},bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.exist;
         expect(err.message).to.include('Delete request already pending');
         expect(tkt).to.not.exist;
@@ -1510,7 +1510,7 @@ describe('Maker Checker V2 Tests', function CB() {
     });
 
     it('deleteX errors as there is no delete mapping specified', function testFunction(done) {
-      StoreV2.deleteX(ticket1.id, ticket1._version, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
+      StoreV2.deleteX(ticket1.id, ticket1._version, {},bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.exist;
         expect(err.message).to.include('no delete maker checker mapping found');
         expect(tkt).to.not.exist;
