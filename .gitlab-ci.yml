@@ -165,7 +165,7 @@ buildjob:
     - docker push ${REGISTRY}/${APP_IMAGE_NAME}:${TAG}
     - echo "Image ($REGISTRY/$APP_IMAGE_NAME:${TAG}) built and pushed to registry"
   tags:
-    - CEP_RUNNER_EE
+    - CEP_RUNNER
 
 deployjob-swarm:
   stage: deploy
