@@ -61,7 +61,7 @@ setPV('complimentaryAddons', value+pv('_iteration')+'.'+pv('loopVariable')+' ');
       <bpmn2:startEvent id="StartEvent_01jdrpl" name="start sub">
         <bpmn2:outgoing>SequenceFlow_0hsg9cx</bpmn2:outgoing>
       </bpmn2:startEvent>
-      <bpmn2:serviceTask id="ServiceTask_0r781y1" name="create account instacne using REST connector">
+      <bpmn2:serviceTask id="ServiceTask_0r781y1" name="create account instance using REST connector">
         <bpmn2:extensionElements>
           <camunda:connector>
             <camunda:ctype>rest</camunda:ctype>
@@ -82,11 +82,11 @@ setPV('complimentaryAddons', value+pv('_iteration')+'.'+pv('loopVariable')+' ');
       <bpmn2:sequenceFlow id="SequenceFlow_1scaskm" sourceRef="ParallelGateway_12058tt" targetRef="ServiceTask_0d1o6ri" />
       <bpmn2:sequenceFlow id="SequenceFlow_0hsg9cx" sourceRef="StartEvent_01jdrpl" targetRef="ParallelGateway_12058tt" />
       <bpmn2:sequenceFlow id="SequenceFlow_0hjd900" sourceRef="ServiceTask_0d1o6ri" targetRef="ParallelGateway_0lryfby" />
-      <bpmn2:serviceTask id="ServiceTask_0d1o6ri" name="get workflowInstances using OE-connector">
+      <bpmn2:serviceTask id="ServiceTask_0d1o6ri" name="count workflowRequests using OE-connector">
         <bpmn2:extensionElements>
           <camunda:oeConnector>
-            <camunda:model>WorkflowInstance</camunda:model>
-            <camunda:method>find</camunda:method>
+            <camunda:model>WorkflowRequest</camunda:model>
+            <camunda:method>count</camunda:method>
           </camunda:oeConnector>
         </bpmn2:extensionElements>
         <bpmn2:incoming>SequenceFlow_1scaskm</bpmn2:incoming>
@@ -138,11 +138,11 @@ setPV('complimentaryAddons', value+pv('_iteration')+'.'+pv('loopVariable')+' ');
       <bpmn2:incoming>SequenceFlow_0oncvij</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_0oncvij" sourceRef="ServiceTask_0zpgrg8" targetRef="EndEvent_0l8kks6" />
-    <bpmn2:serviceTask id="ServiceTask_0zpgrg8" name="get process instance">
+    <bpmn2:serviceTask id="ServiceTask_0zpgrg8" name="count process instance">
       <bpmn2:extensionElements>
         <camunda:oeConnector>
           <camunda:model>ProcessInstance</camunda:model>
-          <camunda:method>find</camunda:method>
+          <camunda:method>count</camunda:method>
         </camunda:oeConnector>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_0ilmn2e</bpmn2:incoming>
