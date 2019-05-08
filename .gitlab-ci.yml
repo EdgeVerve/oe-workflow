@@ -152,7 +152,8 @@ oracletest:
 
 buildjob:
   stage: build
-  image: dtr.oecloud.local/library/oecloud-executor:k6
+  #image: dtr.oecloud.local/library/oecloud-executor:k6
+  image: $REGISTRY/oecloud-executor:k6
   script:
     - echo $http_proxy
     - echo $https_proxy
