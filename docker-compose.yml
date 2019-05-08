@@ -35,7 +35,7 @@ services:
         gelf-address: "udp://0.0.0.0:12201"  
     
   mongo:
-    image: ${TRUSTED_REGISTRY}/library/alpine-mongo:latest
+    image: ${REGISTRY}/alpine-mongo:latest
     networks:
       - ${NETWORK_NAME}
 

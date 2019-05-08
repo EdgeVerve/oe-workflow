@@ -162,7 +162,7 @@ buildjob:
     - npm install --no-optional & NPM_PID=$!
     - wait ${NPM_PID}
     #- envsubst < Dockerfile  | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -;
-    - sed 's/\${TRUSTED_REGISTRY}/'"${TRUSTED_REGISTRY}"'/g' Dockerfile | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -
+    - sed 's/\${REGISTRY}/'"${REGISTRY}"'/g' Dockerfile | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -
     - docker push ${REGISTRY}/${APP_IMAGE_NAME}:${TAG}
     - echo "Image ($REGISTRY/$APP_IMAGE_NAME:${TAG}) built and pushed to registry"
   tags:
@@ -178,7 +178,7 @@ deployjob-swarm:
     - sleep 15
     - echo "$HAPROXY ${APP_IMAGE_NAME}.${DOMAIN_NAME}" >> /etc/hosts
     - sed 's/\${NETWORK_NAME}/'"${NETWORK_NAME}"'/g' docker-compose.yml > docker-compose2.yml
-    - sed 's/\$TRUSTED_REGISTRY/'"$TRUSTED_REGISTRY"'/g' docker-compose2.yml > docker-compose.yml
+    - sed 's/\$REGISTRY/'"$REGISTRY"'/g' docker-compose2.yml > docker-compose.yml
     - export VIRTUAL_HOST="https://${APP_IMAGE_NAME}.${DOMAIN_NAME},${APP_IMAGE_NAME}.${DOMAIN_NAME},https://$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME-${CI_BUILD_REF_NAME}.$DOMAIN_NAME,http://$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME-${CI_BUILD_REF_NAME}.$DOMAIN_NAME"
     - echo $VIRTUAL_HOST
     - cat docker-compose.yml
