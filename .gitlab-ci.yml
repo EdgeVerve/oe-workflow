@@ -215,6 +215,17 @@ performancejob:
     APP_PORT: "443"
     PERF_USERS: "1"
     PERF_LOOPCOUNT: "50000"
+  before script:
+    - export project=${CI_PROJECT_NAME//[^[:alnum:]]/}
+    - export group=${CI_PROJECT_NAMESPACE//[^[:alnum:]]/}
+    - export branch=${CI_BUILD_REF_NAME//[^[:alnum:]]/}
+    - export pipelineId=${CI_PIPELINE_ID//[^[:alnum:]]/}
+    - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$project; else export APP_IMAGE_NAME=$branch"-"$project; fi
+    - if [ $group == "oecloudio" ]; then export APP_IMAGE_NAME=$APP_IMAGE_NAME; else export APP_IMAGE_NAME=$group"-"$APP_IMAGE_NAME; fi
+    - if [ $branch == "master" ]; then export TAG=latest; else export TAG=${CI_BUILD_REF_NAME}; fi
+    - APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
+    - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$group"-"$project; else export APP_IMAGE_NAME=$group"-"$branch"-"$project; fi
+    - export APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
   script:
     - npm set progress=false
     - npm config set registry http://10.188.25.62:9002/
