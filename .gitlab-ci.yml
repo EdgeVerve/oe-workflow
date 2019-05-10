@@ -226,6 +226,7 @@ performancejob:
     - APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
     - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$group"-"$project; else export APP_IMAGE_NAME=$group"-"$branch"-"$project; fi
     - export APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
+    - export APP_TAG=latest
   script:
     - npm set progress=false
     - npm config set registry http://10.188.25.62:9002/
