@@ -9,6 +9,7 @@ let bootstrap = require('../bootstrap.js');
 let chai = bootstrap.chai;
 let expect = chai.expect;
 let Status = bootstrap.Status;
+let async = require('async');
 let stateVerifier = require('../utils/state-verifier');
 
 describe('Sub Process Tests', function CB() {
@@ -22,6 +23,20 @@ describe('Sub Process Tests', function CB() {
     bootstrap.cleanUp(workflowName, done);
   });
 
+  function loadProcessInstances(workflowInstance, callback) {
+    expect(workflowInstance).to.exist;
+    workflowInstance.processes({}, bootstrap.defaultContext, function CB(err, instances) {
+      expect(err).to.not.exist;
+      expect(instances).to.exist.and.be.an('array').of.length(2);
+      let mainPI = instances.find(v => {
+        return v.processDefinitionName === 'sub-process';
+      });
+      let subPI = instances.find(v => {
+        return v.processDefinitionName === 'sub-process$Sub';
+      });
+      callback(mainPI, subPI);
+    });
+  }
 
   describe('Simple Tests', function CB() {
     let workflowInstance;
@@ -36,24 +51,10 @@ describe('Sub Process Tests', function CB() {
       message: {}
     };
 
-    function loadProcessInstances(callback) {
-      expect(workflowInstance).to.exist;
-      workflowInstance.processes({}, bootstrap.defaultContext, function CB(err, instances) {
-        expect(err).to.not.exist;
-        expect(instances).to.exist.and.be.an('array').of.length(2);
-        let mainPI = instances.find(v => {
-          return v.processDefinitionName === 'sub-process';
-        });
-        let subPI = instances.find(v => {
-          return v.processDefinitionName === 'sub-process$Sub';
-        });
-        callback(mainPI, subPI);
-      });
-    }
     before('trigger workflow and wait for sub-process task', function testFunction(done) {
       bootstrap.onUserTask(workflowName + '$Sub', 'TaskA', function testFunction(err, task) {
         expect(err).to.not.exist;
-        loadProcessInstances(function testFunction(mainPI, subPI) {
+        loadProcessInstances(workflowInstance, function testFunction(mainPI, subPI) {
           mainProcess = mainPI;
           subProcess = subPI;
           done();
@@ -225,7 +226,7 @@ describe('Sub Process Tests', function CB() {
         }, bootstrap.defaultContext, function testFunction(err, data) {
           expect(err).to.not.exist;
           expect(data).to.exist.and.have.property('status').that.equals(Status.COMPLETE);
-          loadProcessInstances(function testFunction(mainPI, subPI) {
+          loadProcessInstances(workflowInstance, function testFunction(mainPI, subPI) {
             mainProcess = mainPI;
             subProcess = subPI;
             stateVerifier.isRunning(mainProcess);
@@ -241,7 +242,7 @@ describe('Sub Process Tests', function CB() {
             }, bootstrap.defaultContext, function testFunction(err, data) {
               expect(err).to.not.exist;
               expect(data).to.exist.and.have.property('status').that.equals(Status.COMPLETE);
-              loadProcessInstances(function testFunction(mainPI, subPI) {
+              loadProcessInstances(workflowInstance, function testFunction(mainPI, subPI) {
                 mainProcess = mainPI;
                 subProcess = subPI;
                 subProcessExpectedTokens.find(v => {
@@ -254,6 +255,71 @@ describe('Sub Process Tests', function CB() {
             });
           });
         });
+      });
+    });
+  });
+
+  describe('Terminate tests', function CB() {
+    let workflowInstance;
+    // let mainProcess;
+    // let subProcess;
+
+    let workflowPayload = {
+      processVariables: {
+        mainProcessV: 'testValue',
+        mainProcessV2: 2
+      },
+      message: {}
+    };
+
+    before('trigger workflow and wait for sub-process task', function testFunction(done) {
+      bootstrap.onUserTask(workflowName + '$Sub', 'TaskA', function testFunction(err, task) {
+        expect(err).to.not.exist;
+        loadProcessInstances(workflowInstance, function testFunction(mainPI, subPI) {
+          // mainProcess = mainPI;
+          // subProcess = subPI;
+          done();
+        });
+      });
+      bootstrap.triggerWorkflow(workflowName, workflowPayload, function testFunction(err, wfInstance) {
+        expect(err).to.not.exist;
+        expect(wfInstance).to.exist;
+        workflowInstance = wfInstance;
+      });
+    });
+
+    after('remove listeners', function testFunction(done) {
+      bootstrap.removeUserTaskListener(workflowName + '$Sub', 'TaskA');
+      bootstrap.removeCompleteListener(workflowName);
+      bootstrap.removeCompleteListener(workflowName + '$Sub');
+      done();
+    });
+
+    it('terminating the workflow, terminates main as well as subprocess', function terminateTest(done) {
+      this.timeout(5000);
+      expect(workflowInstance).to.exist;
+      var WorkflowInstance = bootstrap.app.models.WorkflowInstance;
+
+
+      async.parallel([function testFunction(cb) {
+        bootstrap.onInterrupted(workflowName + '$Sub', cb);
+      }, function testFunction(cb) {
+        bootstrap.onInterrupted(workflowName, cb);
+      }], function testFunction(err, results) {
+        expect(err).to.not.exist;
+        expect(results).to.be.an('array').of.length(2);
+        var procInstanceChild = results[0];
+        var procInstanceMain = results[1];
+
+        stateVerifier.isInterrupted(procInstanceChild);
+        stateVerifier.isInterrupted(procInstanceMain);
+
+        done(err);
+      });
+
+      WorkflowInstance.terminate(workflowInstance.id, bootstrap.defaultContext, function terminateCb(err, message) {
+        expect(err).to.not.exist;
+        expect(message).to.equal('Request for workflowInstance Termination sent');
       });
     });
   });
