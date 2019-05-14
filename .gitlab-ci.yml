@@ -35,11 +35,11 @@ before_script:
   - echo "Domain name - "$DOMAIN_NAME
   - echo "App will be pushed to registry - "$REGISTRY
   - echo "The image name in registry - "$APP_IMAGE_NAME
-  - echo "$CA_FILE" > ca.pem
-  - echo "$CERT_FILE" > cert.pem
-  - echo "$KEY_FILE" > key.pem
-  - export DOCKER_CERT_PATH=$PWD
-  - echo "${KUBE_YML}" > kube.yml
+  # - echo "$CA_FILE" > ca.pem
+  # - echo "$CERT_FILE" > cert.pem
+  # - echo "$KEY_FILE" > key.pem
+  # - export DOCKER_CERT_PATH=$PWD
+  # - echo "${KUBE_YML}" > kube.yml
 
 
 npminstall:
@@ -142,7 +142,8 @@ oracletest:
 
 buildjob:
   stage: build
-  image: dtr.oecloud.local/library/oecloud-executor:k6
+  # image: dtr.oecloud.local/library/oecloud-executor:k6
+  image: ${REGISTRY}/oecloud-executor:k6
   script:
     - echo $http_proxy
     - echo $https_proxy
@@ -151,15 +152,16 @@ buildjob:
     - npm install --no-optional & NPM_PID=$!
     - wait ${NPM_PID}
     #- envsubst < Dockerfile  | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -;
-    - sed 's/\${TRUSTED_REGISTRY}/'"${TRUSTED_REGISTRY}"'/g' Dockerfile | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -
+    - sed 's/\${REGISTRY}/'"${REGISTRY}"'/g' Dockerfile | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -
     - docker push ${REGISTRY}/${APP_IMAGE_NAME}:${TAG}
     - echo "Image ($REGISTRY/$APP_IMAGE_NAME:${TAG}) built and pushed to registry"
   tags:
-    - CEP_RUNNER_EE
+    - CEP_RUNNER
 
 deployjob-swarm:
   stage: deploy
-  image: dtr.oecloud.local/library/oecloud-executor:k6
+  # image: dtr.oecloud.local/library/oecloud-executor:k6
+  image: ${REGISTRY}/oecloud-executor:k6
   script:
     - export networkAvailable=$(docker network ls -q --filter name=${NETWORK_NAME} | wc -l)
     - if [ $networkAvailable -eq 0 ]; then docker network create --driver overlay ${NETWORK_NAME}; fi
@@ -167,7 +169,7 @@ deployjob-swarm:
     - sleep 15
     - echo "$HAPROXY ${APP_IMAGE_NAME}.${DOMAIN_NAME}" >> /etc/hosts
     - sed 's/\${NETWORK_NAME}/'"${NETWORK_NAME}"'/g' docker-compose.yml > docker-compose2.yml
-    - sed 's/\$TRUSTED_REGISTRY/'"$TRUSTED_REGISTRY"'/g' docker-compose2.yml > docker-compose.yml
+    - sed 's/\${REGISTRY}/'"${REGISTRY}"'/g' docker-compose2.yml > docker-compose.yml
     - export VIRTUAL_HOST="https://${APP_IMAGE_NAME}.${DOMAIN_NAME},${APP_IMAGE_NAME}.${DOMAIN_NAME},https://$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME-${CI_BUILD_REF_NAME}.$DOMAIN_NAME,http://$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME-${CI_BUILD_REF_NAME}.$DOMAIN_NAME"
     - echo $VIRTUAL_HOST
     - cat docker-compose.yml
@@ -182,7 +184,7 @@ deployjob-swarm:
   except:
     - tags
   tags:
-    - CEP_RUNNER_EE
+    - CEP_RUNNER
 
 lastcleanup:
   stage: cleanup
