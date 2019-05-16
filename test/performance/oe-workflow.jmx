@@ -40,7 +40,7 @@
           </elementProp>
           <elementProp name="loopcount" elementType="Argument">
             <stringProp name="Argument.name">loopcount</stringProp>
-            <stringProp name="Argument.value">${__P(loopcount,50)}</stringProp>
+            <stringProp name="Argument.value">${__P(loopcount,5)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="relatedmodel" elementType="Argument">
@@ -724,8 +724,8 @@ vars.put(&quot;response&quot;,str);
             <stringProp name="HTTPSampler.response_timeout"></stringProp>
           </HTTPSamplerProxy>
           <hashTree/>
-          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-            <stringProp name="ConstantTimer.delay">500</stringProp>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="false">
+            <stringProp name="ConstantTimer.delay">0</stringProp>
           </ConstantTimer>
           <hashTree/>
           <DebugPostProcessor guiclass="TestBeanGUI" testclass="DebugPostProcessor" testname="Debug PostProcessor" enabled="true">
