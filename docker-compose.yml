@@ -29,11 +29,11 @@ services:
     networks:
       - ${NETWORK_NAME}
       - router_network
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://0.0.0.0:12201"  
-    
+    # logging:
+    #   driver: gelf
+    #   options:
+    #     gelf-address: "udp://0.0.0.0:12201"
+
   mongo:
     image: ${REGISTRY}/alpine-mongo:latest
     networks:
