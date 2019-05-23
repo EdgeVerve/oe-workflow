@@ -1,10 +1,10 @@
 {
   "name": "ProcessInstance",
   "base": "WorkflowBaseEntity",
-  "description" : "Stores Process level instance data of workflows in oe-workflow engine",
+  "description": "Stores Process level instance data of workflows in oe-workflow engine",
   "idInjection": true,
-  "cacheable" : false,
-  "mixins":{
+  "cacheable": false,
+  "mixins": {
     "VersionMixin": true,
     "HistoryMixin": true
   },
@@ -12,29 +12,29 @@
     "validateUpsert": true
   },
   "properties": {
-    "processDefinitionName" : {
-      "type" : "string",
-      "required" : true
+    "processDefinitionName": {
+      "type": "string",
+      "required": true
     },
-    "processDefinitionBpmnId" : {
-      "type" : "string",
-      "required" : false
+    "processDefinitionBpmnId": {
+      "type": "string",
+      "required": false
     },
-    "_processTokens" : {
-      "type" : "object",
-      "required" : false
+    "_processTokens": {
+      "type": "object",
+      "required": false
     },
-    "parentToken" : {
-      "type" : "object",
-      "required" : false
+    "parentToken": {
+      "type": "object",
+      "required": false
     },
     "processVariables": {
       "type": "object",
       "required": false
     },
-    "_processVariables" : {
-      "type" : "object",
-      "required" : false
+    "_processVariables": {
+      "type": "object",
+      "required": false
     },
     "_parentProcessVariables": {
       "type": "object",
@@ -44,36 +44,37 @@
       "type": "object",
       "required": false
     },
-    "_processTimerEvents" :{ 
-      "type" : "object",
-      "required" : false
+    "_processTimerEvents": {
+      "type": "object",
+      "required": false
     },
-    "_synchronizeFlow" :{ 
-      "type" : "object",
-      "required" : false
+    "_synchronizeFlow": {
+      "type": "object",
+      "required": false
     },
-    "_poolInfo" : {
-      "type" : "string",
-      "required" : false
+    "_poolInfo": {
+      "type": "string",
+      "required": false
     },
-    "_workflowCtx" : {
-      "type" : "object",
-      "hidden" : true,
-      "required" : false
+    "_workflowCtx": {
+      "type": "object",
+      "hidden": true,
+      "required": false
     },
-    "passiveWait" : {
-      "type" : "boolean",
-      "default" : false,
-      "required" : false
+    "passiveWait": {
+      "type": "boolean",
+      "default": false,
+      "required": false
     },
-    "_status" : {
-      "type" : "string",
-      "required" : false
+    "_status": {
+      "type": "string",
+      "required": false
     },
-    "correlationId":{
-      "type":"string"
+    "correlationId": {
+      "type": "string",
+      "index": true
     }
-},
+  },
   "validations": [],
   "relations": {
     "processDefinition": {

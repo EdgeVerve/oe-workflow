@@ -136,7 +136,8 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       'processDefinitionName': name,
       'processVariables': processVariables,
       'message': self.message,
-      'workflowInstanceId': self.id
+      'workflowInstanceId': self.id,
+      'correlationId': self.correlationId
     };
 
     var processDefinitionName = postData.processDefinitionName;
@@ -192,7 +193,8 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       'processDefinitionName': name,
       'processVariables': processVariables,
       'message': self.message,
-      'workflowInstanceId': self.id
+      'workflowInstanceId': self.id,
+      'correlationId': self.correlationId
     };
 
     var processDefinitionName = postData.processDefinitionName;

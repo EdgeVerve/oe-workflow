@@ -116,8 +116,13 @@ function addOERemoteMethods(Model) {
         source: 'path'
       },
       description: 'Model version'
-    },
-    {
+    }, {
+      arg: 'req',
+      type: 'object',
+      http: {
+        source: 'req'
+      }
+    }, {
       arg: 'options',
       type: 'object',
       http: 'optionsFromRequest'
@@ -317,7 +322,7 @@ function addOERemoteMethods(Model) {
     }
   });
 
-  Model.deleteX = function deleteX(id, version, options, next) {
+  Model.deleteX = function deleteX(id, version, req, options, next) {
     if (!id) {
       let err = new Error('please provide id');
       // log.error(options, err);
@@ -333,6 +338,7 @@ function addOERemoteMethods(Model) {
     var app = Model.app;
     var modelName = Model.definition.name;
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
+    var correlationId = req && req.headers && req.headers['correlation-id'];
 
     Model.findById(id, options, function fetchInstance(err, sinst) {
       /* istanbul ignore if*/
@@ -395,7 +401,8 @@ function addOERemoteMethods(Model) {
             verificationStatus: 'pending',
             _modifiers: [
               options.ctx.username
-            ]
+            ],
+            correlationId: correlationId
           };
 
           var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
@@ -438,6 +445,7 @@ function addOERemoteMethods(Model) {
               workflowBody.processVariables._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
+              workflowBody.correlationId = correlationId;
               WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
                 if (err) {
                   return handleError(err, options, next);
@@ -476,7 +484,7 @@ function addOERemoteMethods(Model) {
     var ChangeWorkflowRequest = app.models.ChangeWorkflowRequest;
     var inputPV = data.pv;
     delete data.pv;
-
+    var correlationId = inputPV && inputPV.correlationId;
     Model.findById(id, options, function fetchInstance(err, cinst) {
       /* istanbul ignore if*/
       if (err) {
@@ -555,7 +563,8 @@ function addOERemoteMethods(Model) {
             verificationStatus: data.__verificationStatus__,
             _modifiers: [
               options.ctx.username
-            ]
+            ],
+            correlationId: correlationId
           };
 
           var WorkflowMapping = loopback.getModel('WorkflowMapping', options);
@@ -599,6 +608,7 @@ function addOERemoteMethods(Model) {
               workflowBody.processVariables._modelId = id;
               // this is to identify while executing Finalize Transaction to follow which implementation
               workflowBody.processVariables._maker_checker_impl = 'v2';
+              workflowBody.correlationId = correlationId;
               WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
                 if (err) {
                   return handleError(err, options, next);
@@ -873,6 +883,7 @@ function addOERemoteMethods(Model) {
 
     let inputPV = data.pv;
     delete data.pv;
+    var correlationId = inputPV && inputPV.correlationId;
 
     var idName = Model.definition.idName();
     var id = data[idName] || 'this_id_wont_exist';
@@ -935,7 +946,8 @@ function addOERemoteMethods(Model) {
           verificationStatus: data.__verificationStatus__,
           _modifiers: [
             options.ctx.username
-          ]
+          ],
+          correlationId: correlationId
         };
         log.debug(options, 'Instance has been validated during maker checker creation');
 
@@ -980,6 +992,7 @@ function addOERemoteMethods(Model) {
             workflowBody.processVariables._modelId = id;
             // this is to identify while executing Finalize Transaction to follow which implementation
             workflowBody.processVariables._maker_checker_impl = 'v2';
+            workflowBody.correlationId = correlationId;
             WorkflowInstance.create(workflowBody, options, function triggerWorkflow(err, winst) {
               if (err) {
                 return handleError(err, options, next);

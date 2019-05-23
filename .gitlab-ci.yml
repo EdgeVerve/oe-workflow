@@ -3,11 +3,14 @@ stages:
   - pre-build-test
   - build
   - deploy
+  - push-artifacts
+  - performance
   - cleanup
 
 image: $REGISTRY/debian-node-oracle-docker
-
 variables:
+  DOMAIN_NAME: oecloud.local
+  PERF_DOMAIN_NAME: oecloud.perf
   REGISTRY: registry.${DOMAIN_NAME}
   TRUSTED_REGISTRY: dtr.${DOMAIN_NAME}
   NETWORK_NAME: $CI_PROJECT_NAME
@@ -35,12 +38,14 @@ before_script:
   - echo "Domain name - "$DOMAIN_NAME
   - echo "App will be pushed to registry - "$REGISTRY
   - echo "The image name in registry - "$APP_IMAGE_NAME
-  # - echo "$CA_FILE" > ca.pem
-  # - echo "$CERT_FILE" > cert.pem
-  # - echo "$KEY_FILE" > key.pem
-  # - export DOCKER_CERT_PATH=$PWD
-  # - echo "${KUBE_YML}" > kube.yml
-
+  - echo "$CA_FILE" > ca.pem
+  - echo "$CERT_FILE" > cert.pem
+  - echo "$KEY_FILE" > key.pem
+  - export DOCKER_CERT_PATH=$PWD
+  - echo "${KUBE_YML}" > kube.yml
+  - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$group"-"$project; else export APP_IMAGE_NAME=$group"-"$branch"-"$project; fi
+  - export APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
+  - export APP_TAG=latest
 
 npminstall:
   stage: pre-build
@@ -58,8 +63,9 @@ npminstall:
     - echo "Code style check done successfully"
     - time npm install --no-optional
     - echo "Node Modules Installed"
-    - npm audit --json >vulnerabilities.json
-    - status_vulnerabilities=`echo $?`
+    - mkdir -p ./artifacts/${CI_PROJECT_NAME}/
+    - npm audit --json > ./artifacts/${CI_PROJECT_NAME}/vulnerabilities.json
+    - status_vulnerabilities='echo $?'
     - npm audit
     - if [ $status_vulnerabilities == 1 ]; then exit_status=1 && echo "Dependency vulnerabilities exist"; fi
     - if [ $exit_status == 1 ]; then exit $exit_status; fi
@@ -68,6 +74,7 @@ npminstall:
     expire_in: 2h
     paths:
       - node_modules/
+       - artifacts/
   tags:
     - CEP_RUNNER
 
@@ -84,11 +91,14 @@ mongotest:
     #- npm config set registry http://10.188.25.62:9002/
     - time npm install --no-optional
     - npm run grunt-cover
+    - mkdir -p ./artifacts/${CI_PROJECT_NAME}/
+    - cp -r coverage ./artifacts/${CI_PROJECT_NAME}/
   artifacts:
     untracked: true
     expire_in: 2h
     paths:
       - coverage/
+      - artifacts/
     when: on_failure
   tags:
     - CEP_RUNNER
@@ -142,8 +152,8 @@ oracletest:
 
 buildjob:
   stage: build
-  # image: dtr.oecloud.local/library/oecloud-executor:k6
-  image: ${REGISTRY}/oecloud-executor:k6
+  #image: dtr.oecloud.local/library/oecloud-executor:k6
+  image: $REGISTRY/oecloud-executor:k6
   script:
     - echo $http_proxy
     - echo $https_proxy
@@ -160,8 +170,7 @@ buildjob:
 
 deployjob-swarm:
   stage: deploy
-  # image: dtr.oecloud.local/library/oecloud-executor:k6
-  image: ${REGISTRY}/oecloud-executor:k6
+  image: $REGISTRY/oecloud-executor:k6
   script:
     - export networkAvailable=$(docker network ls -q --filter name=${NETWORK_NAME} | wc -l)
     - if [ $networkAvailable -eq 0 ]; then docker network create --driver overlay ${NETWORK_NAME}; fi
@@ -169,7 +178,7 @@ deployjob-swarm:
     - sleep 15
     - echo "$HAPROXY ${APP_IMAGE_NAME}.${DOMAIN_NAME}" >> /etc/hosts
     - sed 's/\${NETWORK_NAME}/'"${NETWORK_NAME}"'/g' docker-compose.yml > docker-compose2.yml
-    - sed 's/\${REGISTRY}/'"${REGISTRY}"'/g' docker-compose2.yml > docker-compose.yml
+    - sed 's/\$REGISTRY/'"$REGISTRY"'/g' docker-compose2.yml > docker-compose.yml
     - export VIRTUAL_HOST="https://${APP_IMAGE_NAME}.${DOMAIN_NAME},${APP_IMAGE_NAME}.${DOMAIN_NAME},https://$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME-${CI_BUILD_REF_NAME}.$DOMAIN_NAME,http://$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME-${CI_BUILD_REF_NAME}.$DOMAIN_NAME"
     - echo $VIRTUAL_HOST
     - cat docker-compose.yml
@@ -185,6 +194,71 @@ deployjob-swarm:
     - tags
   tags:
     - CEP_RUNNER
+
+pushartifacts:
+  stage: push-artifacts
+  script:
+    - echo "Copying all artifacts"
+    - git clone http://10.73.97.24/oecloud.io/build-tools.git
+    - sh ./build-tools/push_artifacts.sh
+  tags:
+    - CEP_RUNNER
+
+performancejob:
+  image: $REGISTRY/jmeter:docker
+  stage: performance
+  variables:
+    NODE_ENV: "mongo"
+    MONGO_HOST: "10.73.97.17"
+    DB_NAME: "${CI_JOB_ID}_mongo"
+    APP_PROTOCOL: "https"
+    APP_PORT: "443"
+    PERF_USERS: "1"
+    PERF_LOOPCOUNT: "50000"
+  before_script:
+    - export project=${CI_PROJECT_NAME//[^[:alnum:]]/}
+    - export group=${CI_PROJECT_NAMESPACE//[^[:alnum:]]/}
+    - export branch=${CI_BUILD_REF_NAME//[^[:alnum:]]/}
+    - export pipelineId=${CI_PIPELINE_ID//[^[:alnum:]]/}
+    - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$project; else export APP_IMAGE_NAME=$branch"-"$project; fi
+    - if [ $group == "oecloudio" ]; then export APP_IMAGE_NAME=$APP_IMAGE_NAME; else export APP_IMAGE_NAME=$group"-"$APP_IMAGE_NAME; fi
+    - if [ $branch == "master" ]; then export TAG=latest; else export TAG=${CI_BUILD_REF_NAME}; fi
+    - APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
+    - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$group"-"$project; else export APP_IMAGE_NAME=$group"-"$branch"-"$project; fi
+    - export APP_IMAGE_NAME=$(echo $APP_IMAGE_NAME | tr '[:upper:]' '[:lower:]')
+    - export APP_TAG=latest
+  script:
+    - npm set progress=false
+    - npm config set registry http://10.188.25.62:9002/
+    #- npm config set registry https://registry.npmjs.org/
+    - if docker stack rm ${APP_IMAGE_NAME}; then echo "stack removed"; else echo "nothing found in stack"; fi
+    - time npm install --no-optional
+    - export APP_URL=${APP_IMAGE_NAME}.${PERF_DOMAIN_NAME}
+    - git clone http://10.73.97.24/oecloud.io/build-tools.git
+    - sed 's/\$REGISTRY/'"$REGISTRY"'/g' ./build-tools/performance/Dockerfile > Dockerfile
+    - echo "Building ${APP_IMAGE_NAME} image and pushing to registry..."
+    - time docker image build -t ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG} --no-cache --pull .
+    - time docker image push ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG}
+    - echo "Image (${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG}) built and pushed to registry"
+    - docker stack deploy --compose-file ./build-tools/performance/docker-compose.yml ${APP_IMAGE_NAME}
+    - export HTTP_RESPONSE_CODE=200
+    - export countElapsed=0
+    - export app_exit_status=0
+    - export no_proxy=$no_proxy,${APP_IMAGE_NAME}.${PERF_DOMAIN_NAME}
+    - export NO_PROXY=$no_proxy
+    - echo "${DOCKER_ROUTER_HOST} ${APP_IMAGE_NAME}.${PERF_DOMAIN_NAME}" >> /etc/hosts
+    - export isStarted=$(curl -k --write-out %{http_code} --output curl.out --silent https://${APP_IMAGE_NAME}.${PERF_DOMAIN_NAME}/explorer/)
+    - while [ ${isStarted} -ne ${HTTP_RESPONSE_CODE} ]; do let countElapsed=countElapsed+1; echo ""; sleep 10; export isStarted=$(curl -k --write-out %{http_code} --output curl.out --silent https://${APP_IMAGE_NAME}.${PERF_DOMAIN_NAME}/explorer/); echo -n "Waiting till the URL is up..."; echo ${isStarted}; if [ $countElapsed -eq 18 ] ; then export app_exit_status=1; export isStarted=${HTTP_RESPONSE_CODE}; fi; done
+    - if [ $app_exit_status -eq 1 ]; then echo "App failed to start....."; docker stack ps ${APP_IMAGE_NAME}; docker service logs ${APP_IMAGE_NAME}_web; docker stack rm ${APP_IMAGE_NAME}; exit $app_exit_status; else echo "Your application URL is accessible @ https://${APP_IMAGE_NAME}.${PERF_DOMAIN_NAME}/"; fi
+    - mkdir -p ./artifacts/${CI_PROJECT_NAME}/performance
+    - export BPMN_PATH=$CI_PROJECT_DIR/test/performance/oe-workflow-performance-test.bpmn
+    - sh ./build-tools/performance/performance.sh
+    - sh ./build-tools/push_artifacts.sh
+    - if docker stack rm ${APP_IMAGE_NAME}; then echo "stack removed"; else echo "nothing found in stack"; fi
+  when: manual
+  tags:
+    - PERF_RUNNER
+
 
 lastcleanup:
   stage: cleanup
