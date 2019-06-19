@@ -59,8 +59,8 @@ describe('Parallel IntermediateTimer Tests for Dynamic and Default Timers', func
         expect(err).to.not.exist;
         stateVerifier.isComplete(procInstance);
         var expectedFlow = ['Start', 'PG1', 'ITimer2', 'ITimer1', 'PG2', 'PG2', 'End'];
-        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer1', 0);
-        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 0);
+        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer1', 0, 200);
+        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 0, 200);
         stateVerifier.verifyCompletionFlow(procInstance, expectedFlow);
         done();
       });
