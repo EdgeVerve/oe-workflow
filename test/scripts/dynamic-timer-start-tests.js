@@ -53,7 +53,7 @@ describe('Start Timer Tests for Dynamic and Default Timers', function CB() {
 
     it('DynamicTimer - StartTimer waits for specified time', function testFunction(done) {
       expect(processInstance).to.exist;
-      stateVerifier.verifyTimerCompletion(processInstance, 'StartTimer', 600);
+      stateVerifier.verifyTimerCompletion(processInstance, 'StartTimer', 600, 200);
       done();
     });
   });
@@ -89,7 +89,7 @@ describe('Start Timer Tests for Dynamic and Default Timers', function CB() {
 
     it('DefaultTimer - StartTimer waits for specified time', function testFunction(done) {
       expect(processInstance).to.exist;
-      stateVerifier.verifyTimerCompletion(processInstance, 'StartTimer', 0);
+      stateVerifier.verifyTimerCompletion(processInstance, 'StartTimer', 0, 200);
       done();
     });
   });
