@@ -185,6 +185,12 @@ Delta.prototype.apply = function apply(zInstance, options) {
     }
   }
 
+  for (i in this.processVariables) {
+    if (Object.prototype.hasOwnProperty.call(this.processVariables, i)) {
+      processVariables[i] = this.processVariables[i];
+    }
+  }
+
   /**
    * In case completion condition was defined, we also have to evaluate completion condition
    * And in case we complete the token, we have to make sure in case of user task, we should interrupt task
@@ -224,11 +230,6 @@ Delta.prototype.apply = function apply(zInstance, options) {
     }
   }
   var status = '_status';
-  for (i in this.processVariables) {
-    if (Object.prototype.hasOwnProperty.call(this.processVariables, i)) {
-      processVariables[i] = this.processVariables[i];
-    }
-  }
 
   if (this.pgSeqsToExpect && typeof synchronizeFlow[this.pgSeqsToExpect.gwId] === 'undefined') {
     var sfObj = {};

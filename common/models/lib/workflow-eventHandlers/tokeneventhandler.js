@@ -136,7 +136,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           }
         }
         var userInfo;
-        // additionaly add to the includede pool info
+        // additionaly add to the included pool info
         if (poolInfo) {
           if (poolInfo.startsWith('Role:')) {
             userInfo = poolInfo.split(':');
@@ -169,7 +169,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
         if (currentFlowObject.formType) {
           taskObj.formType = currentFlowObject.formType;
           if (currentFlowObject.formKey) {
-            taskObj.formKey = currentFlowObject.formKey;
+            taskObj.formKey = sandbox.evaluate$Expression(options, currentFlowObject.formKey, token.message, currentProcess, token);
           }
         }
 
@@ -214,7 +214,7 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
           Object.assign(variables, variableObj);
         } else {
           // give a copy of all Process Variables - possible risk
-          Object.assign(variables, currentProcess._processVariables);
+          Object.assign(variables, currentProcess._processVariables, token.inVariables || {});
         }
         taskObj.formVariables = variables;
         taskObj.processInstanceId = currentProcess.id;
@@ -239,10 +239,34 @@ exports._tokenArrivedEventHandler = function _tokenArrivedEventHandler(options, 
             taskObj.priority = evaluatedList[0];
           }
         }
-        ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
-          if (err) {
-            return log.error(options, err);
+
+        let preCreateFunction = function preCreateFunction(taskDef, taskData, cb) {
+          /* default do-nothing */
+          return cb(null, taskData);
+        };
+
+        let workflowAddons = ProcessInstance.app.workflowAddons || {};
+        if (currentFlowObject.creationHook) {
+          if (workflowAddons[currentFlowObject.creationHook]) {
+            preCreateFunction =  workflowAddons[currentFlowObject.creationHook];
+          } else {
+            log.error('Pre Complete function ' + currentFlowObject.creationHook + ' not defined');
           }
+        } else if (workflowAddons.defaultTaskCreationHook) {
+          preCreateFunction = workflowAddons.defaultTaskCreationHook;
+        }
+
+        /* Invoke with process-instance as 'this' */
+        preCreateFunction.call(currentProcess, currentFlowObject, taskObj, function preCreateCallback(err, modifiedTaskObj) {
+          /* istanbul ignore if*/
+          if (err) {
+            log.error(options, err);
+          }
+          ProcessInstance.app.models.Task.create(taskObj, options, function createTask(err, task) {
+            if (err) {
+              return log.error(options, err);
+            }
+          });
         });
       } else if (currentFlowObject.isSubProcess || currentFlowObject.isCallActivity) {
         var processVariablesToPass = {};
