@@ -23,6 +23,9 @@
     "message": {
       "type": "object",
       "required": false
+    },
+    "correlationId":{
+      "type":"string"
     }
   },
   "validations": [],

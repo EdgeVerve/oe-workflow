@@ -50,6 +50,13 @@
     "privilegedRoles": {
       "type": "array",
       "required": false
+    },
+    "remote":{
+      "type":"object",
+      "required": false
+    },
+    "mappingName":{
+      "type":"string"
     }
   },
   "relations": {
