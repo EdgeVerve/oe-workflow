@@ -54,5 +54,10 @@
     "loopback-connector-mongodb": "git+http://evgit/oecloud.io/loopback-connector-mongodb.git#master",
     "oe-connector-oracle": "git+http://evgit/oecloud.io/oe-connector-oracle.git#2.0.1",
     "oe-connector-postgresql": "git+http://evgit/oecloud.io/oe-connector-postgresql.git#2.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EdgeVerve/oe-workflow.git"
   }
 }
