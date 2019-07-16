@@ -216,7 +216,7 @@ module.exports = function Task(Task) {
         var workflowInstanceId;
         var WorkflowManager;
         let taskObj = processDef.getFlowObjectByName(tname);
-        let preCompleteFunction = function preCompleteFunction(payload, taskInstance, taskDef, cb) {
+        let preCompleteFunction = function preCompleteFunction(options, payload, taskInstance, taskDef, cb) {
           /* default do-nothing */
           return cb();
         };
@@ -233,7 +233,7 @@ module.exports = function Task(Task) {
 
         try {
           /* Invoke with process-instance as 'this' */
-          preCompleteFunction.call(process, data, self, taskObj, function preCompleteCallback(err) {
+          preCompleteFunction.call(process, options, data, self, taskObj, function preCompleteCallback(err) {
             if (err) {
               return next(err);
             }
