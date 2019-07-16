@@ -73,7 +73,7 @@ npminstall:
     expire_in: 2h
     paths:
       - node_modules/
-       - artifacts/
+      - artifacts/
   tags:
     - CEP_RUNNER
 
