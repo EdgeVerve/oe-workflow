@@ -5,7 +5,7 @@
       <bpmn2:outgoing>SequenceFlow_0jjmebf</bpmn2:outgoing>
     </bpmn2:startEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_0jjmebf" sourceRef="StartEvent_1" targetRef="InclusiveGateway_1w0c5au" />
-    <bpmn2:inclusiveGateway id="InclusiveGateway_1w0c5au" name="IGIn" default="SequenceFlow_1pln1c3">
+    <bpmn2:inclusiveGateway id="InclusiveGateway_1w0c5au" name="IGIncoming" default="SequenceFlow_1pln1c3">
       <bpmn2:incoming>SequenceFlow_0jjmebf</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_10s74r4</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_1pln1c3</bpmn2:outgoing>
@@ -26,7 +26,7 @@ sendMsg({"status":100})]]></bpmn2:script>
       <bpmn2:outgoing>SequenceFlow_0zh54bt</bpmn2:outgoing>
       <bpmn2:script><![CDATA[setPV('ScriptDefault', true);]]></bpmn2:script>
     </bpmn2:scriptTask>
-    <bpmn2:inclusiveGateway id="InclusiveGateway_15xu8uy" name="IGOut">
+    <bpmn2:inclusiveGateway id="InclusiveGateway_15xu8uy" name="IGOutgoing">
       <bpmn2:incoming>SequenceFlow_0f4b0v8</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_0fzluqo</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_0kac7ky</bpmn2:incoming>

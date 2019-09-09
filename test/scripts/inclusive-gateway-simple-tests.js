@@ -9,10 +9,9 @@ let bootstrap = require('../bootstrap.js');
 let chai = bootstrap.chai;
 let expect = chai.expect;
 let stateVerifier = require('../utils/state-verifier');
-var Status = bootstrap.Status;
 
-describe('Inclusive Gateway Tests', function callback() {
-  var workflowName = 'inclusive-demo-13';
+describe('Inclusive Gateway Simple Tests', function callback() {
+  var workflowName = 'inclusive-gateway-simple';
   let initialMessage = { status: 'started' };
   before('define workflow', function testFunction(done) {
     /* Observed with Oracle sometimes that Upload and Execution takes around 50 seconds */
@@ -22,9 +21,9 @@ describe('Inclusive Gateway Tests', function callback() {
     });
   });
 
-  // after('cleanup data', function testFunction(done) {
-  //   bootstrap.cleanUp(workflowName, done);
-  // });
+  after('cleanup data', function testFunction(done) {
+    bootstrap.cleanUp(workflowName, done);
+  });
 
   afterEach(function testFunction(done) {
     bootstrap.removeCompleteListener(workflowName);
@@ -134,5 +133,4 @@ describe('Inclusive Gateway Tests', function callback() {
       done();
     });
   });
-  
 });

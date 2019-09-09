@@ -253,7 +253,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
               type: 'ParallelGateway',
               gwId: obj.bpmnId
             };
-          } else if (obj.isInclusiveGateway){
+          } else if (obj.isInclusiveGateway) {
             meta = {
               from: currentFlowObjectName,
               type: 'InclusiveGateway',
@@ -273,7 +273,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
             delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
           }
 
-          if(obj.isInclusiveGateway){
+          if (obj.isInclusiveGateway) {
             delta.setIGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
             delta.setIGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
           }
@@ -605,10 +605,14 @@ module.exports = function ProcessInstance(ProcessInstance) {
    * Throws an error if there are no changes to apply.
    * @param  {Object}   options Options
    * @param  {Object}   delta   Process-State-Delta
+   * @param  {Object}   processDefinitionInstance processDefinitionInstance
    * @param  {Function} next    Callback
    * @returns {void}
    */
   ProcessInstance.prototype.commit = function commitFunction(options, delta, processDefinitionInstance, next) {
+    if (typeof processDefinitionInstance === 'function') {
+      next = processDefinitionInstance;
+    }
     var self = this;
     var changes = delta.apply(self, processDefinitionInstance, options);
     // console.log(delta);
