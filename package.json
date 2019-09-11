@@ -1,7 +1,7 @@
 {
   "name": "oe-workflow",
   "description": "oe-workflow engine written using oecloud.io framework",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "engines": {
     "node": ">=6"
   },
@@ -54,5 +54,10 @@
     "loopback-connector-mongodb": "git+http://evgit/oecloud.io/loopback-connector-mongodb.git#master",
     "oe-connector-oracle": "git+http://evgit/oecloud.io/oe-connector-oracle.git#master",
     "oe-connector-postgresql": "git+http://evgit/oecloud.io/oe-connector-postgresql.git#master"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EdgeVerve/oe-workflow.git"
   }
 }
