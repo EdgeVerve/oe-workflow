@@ -15,6 +15,8 @@ let stateVerifier = require('../utils/state-verifier');
 describe('OEConnector Task Tests', function CB() {
   let workflowName = 'service-task-oe-connector';
   before('define workflow', function testFunction(done) {
+    /* Observed with Oracle sometimes that Upload and Execution takes around 50 seconds */
+    this.timeout(60000);
     bootstrap.loadBpmnDataAndFile(workflowName, function testFunction(err) {
       done(err);
     });

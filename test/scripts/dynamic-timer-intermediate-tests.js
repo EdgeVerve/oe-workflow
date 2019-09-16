@@ -85,7 +85,7 @@ describe('IntermediateTimer Tests for Dynamic and Default Timers', function CB()
           name: 'End',
           status: Status.COMPLETE
         }]);
-        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer', 0, 200);
+        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer', 200, 400);
         done();
       });
     });

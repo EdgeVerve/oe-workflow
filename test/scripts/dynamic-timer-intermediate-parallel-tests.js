@@ -58,8 +58,8 @@ describe('Parallel IntermediateTimer Tests for Dynamic and Default Timers', func
       bootstrap.triggerAndComplete(workflowName, workflowPayload, function testFunction(err, wfInstance, procInstance) {
         expect(err).to.not.exist;
         stateVerifier.isComplete(procInstance);
-        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer1', 0, 300);
-        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 0, 300);
+        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer1', 200, 400);
+        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 200, 400);
         done();
       });
     });
