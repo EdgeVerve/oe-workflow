@@ -126,7 +126,7 @@ describe('BoundaryTimer Tests for Dynamic and Default Timers', function CB() {
           status: Status.COMPLETE
         }]);
 
-        stateVerifier.verifyTimerCompletion(procInstance, 'BoundaryTimer', 0, 200);
+        stateVerifier.verifyTimerCompletion(procInstance, 'BoundaryTimer', 200, 400);
         done();
       });
     });

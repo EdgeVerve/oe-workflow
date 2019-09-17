@@ -36,6 +36,8 @@ describe('Nested subprocess boundary interrupting Tests', function callback() {
       done();
     });
 
+    /* Observed with Oracle sometimes that Upload and Execution takes around 50 seconds */
+    this.timeout(60000);
     bootstrap.loadBpmnFile(childWorkflowName, function testFunction(err) {
       expect(err).to.not.exist;
       bootstrap.loadAndTrigger(workflowName, {}, function testFunction(err) {

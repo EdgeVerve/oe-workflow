@@ -245,12 +245,18 @@ module.exports = function ProcessInstance(ProcessInstance) {
       for (var i in nextFlowObjects) {
         if (Object.prototype.hasOwnProperty.call(nextFlowObjects, i)) {
           var obj = nextFlowObjects[i];
-          var meta;
+          let meta;
 
           if (obj.isParallelGateway) {
             meta = {
               from: currentFlowObjectName,
               type: 'ParallelGateway',
+              gwId: obj.bpmnId
+            };
+          } else if (obj.isInclusiveGateway) {
+            meta = {
+              from: currentFlowObjectName,
+              type: 'InclusiveGateway',
               gwId: obj.bpmnId
             };
           } else if (obj.isAttachedToEventGateway) {
@@ -265,6 +271,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (obj.isParallelGateway) {
             delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
             delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
+          }
+
+          if (obj.isInclusiveGateway) {
+            delta.setIGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
+            delta.setIGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
           }
 
           if (obj.isMultiInstanceLoop) {
@@ -330,7 +341,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       }
     }
 
-    self.commit(options, delta, function commitCb(err, instance) {
+    self.commit(options, delta, processDefinitionInstance, function commitCb(err, instance) {
       if (err) {
         // If there are no changes to apply then we don't have to emit further events.
         log.error(options, err.message);
@@ -594,12 +605,16 @@ module.exports = function ProcessInstance(ProcessInstance) {
    * Throws an error if there are no changes to apply.
    * @param  {Object}   options Options
    * @param  {Object}   delta   Process-State-Delta
+   * @param  {Object}   processDefinitionInstance processDefinitionInstance
    * @param  {Function} next    Callback
    * @returns {void}
    */
-  ProcessInstance.prototype.commit = function commitFunction(options, delta, next) {
+  ProcessInstance.prototype.commit = function commitFunction(options, delta, processDefinitionInstance, next) {
+    if (typeof processDefinitionInstance === 'function') {
+      next = processDefinitionInstance;
+    }
     var self = this;
-    var changes = delta.apply(self, options);
+    var changes = delta.apply(self, processDefinitionInstance, options);
     // console.log(delta);
     if (changes === null) {
       var err = new Error('trying to make invalid state change');
@@ -648,7 +663,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
           log.error(options, err);
           return next(err);
         }
-        instance.commit(options, delta, next);
+        instance.commit(options, delta, processDefinitionInstance, next);
       });
     }
   };

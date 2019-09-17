@@ -155,7 +155,7 @@ buildjob:
     - echo $http_proxy
     - echo $https_proxy
     - echo "Building ${APP_IMAGE_NAME} image..."
-    #- npm config set registry ${NPM_REGISTRY}
+    - npm config set registry ${NPM_REGISTRY}
     - npm install --no-optional & NPM_PID=$!
     - wait ${NPM_PID}
     #- envsubst < Dockerfile  | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -;
