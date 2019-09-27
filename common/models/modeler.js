@@ -1,4 +1,3 @@
-
 /**
  *
  * ©2016-2017 EdgeVerve Systems Limited (a fully owned Infosys subsidiary),
@@ -7,18 +6,22 @@
  */
 
 module.exports = function Modeler(Modeler) {
-
-  Modeler.flows = function(options, next){
-    var filter = { where: { 'latest': true }, fields: ['name'] };
-    Modeler.app.models.WorkflowDefinition.find(filter, options, 
+  Modeler.flows = function flows(options, next) {
+    var filter = {
+      where: {
+        'latest': true
+      },
+      fields: ['name']
+    };
+    Modeler.app.models.WorkflowDefinition.find(filter, options,
       function fetchWD(err, wfDefns) {
-      if (err) {
-        return next(err);
-      } else {
+        if (err) {
+          return next(err);
+        }
+
         return next(null, wfDefns.map(item => item.name));
-      }
-    });
-  }
+      });
+  };
 
   Modeler.remoteMethod('flows', {
     description: 'Get flow list',
