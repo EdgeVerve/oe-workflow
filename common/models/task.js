@@ -529,7 +529,8 @@ module.exports = function Task(Task) {
         var updates = {
           status: status,
           comments: data.__comments__,
-          _version: self._version
+          _version: self._version,
+          message: self.message
         };
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {

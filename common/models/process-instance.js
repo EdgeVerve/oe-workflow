@@ -25,6 +25,7 @@ var timerEvents = require('../../lib/utils/timeouts.js');
 var processTokens = require('../../lib/utils/process-tokens.js');
 var StateDelta = require('../../lib/utils/process-state-delta.js');
 var sandbox = require('../../lib/workflow-nodes/sandbox.js');
+var recrevaluatePayload = require('../../lib/workflow-nodes/businessruletask-node.js').evaluatePayload;
 
 var subprocessEventHandler = require('../../lib/workflow-eventHandlers/subprocesshandlers.js');
 var catchEventHandler = require('../../lib/workflow-eventHandlers/catcheventhandler.js');
@@ -202,6 +203,16 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
     self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
       /* istanbul ignore if*/
+      var currentFlowObject = processDefinitionInstance.getFlowObjectByName(token.name);
+      if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.outputParameters) {
+        var outputParameters = currentFlowObject.inputOutputParameters.outputParameters;
+        var evalOutput = recrevaluatePayload(outputParameters, task.message, self);
+        var outputVariables = {};
+        Object.assign(outputVariables, evalOutput);
+      }
+      if (outputVariables && task.message && typeof task.message === 'object' && typeof outputVariables === 'object') {
+        Object.assign(task.message, outputVariables);
+      }
       if (err) {
         log.error(options, err);
         return next(err);
