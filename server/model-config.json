@@ -14,6 +14,9 @@
       "./mixins"
     ]
   },
+  "Modeler":{
+    "public": true
+  },
   "ProcessDefinition": {
     "dataSource": "db",
     "public": true

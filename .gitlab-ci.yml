@@ -7,26 +7,28 @@ stages:
   - performance
   - cleanup
 
-image: $REGISTRY/debian-node-oracle-docker
 variables:
   DOMAIN_NAME: oecloud.local
   PERF_DOMAIN_NAME: oecloud.perf
   REGISTRY: registry.${DOMAIN_NAME}
-  TRUSTED_REGISTRY: dtr.${DOMAIN_NAME}
-  NETWORK_NAME: $CI_PROJECT_NAME
-  #Below values need to change for projects
-  DTR_ORG: demo-org
-  DTR_IMAGE: oeworkflowservice
-  MAIN_PROJECT_GROUP: oecloud.io
-  COLLECTION_NAME: demo-collection
-  NAMESPACE: demo-namespace
-  OPENSHIFT_DOMAIN: openshift.oecloud.local
+  EXECUTOR_IMAGE: oecloud-executor:10.x
+  EXECUTOR_IMAGE_ORACLE: debian-node-oracle-docker:10.x
+  # TRUSTED_REGISTRY: dtr.${DOMAIN_NAME}
+  # NETWORK_NAME: $CI_PROJECT_NAME
+  # #Below values need to change for projects
+  # DTR_ORG: demo-org
+  # DTR_IMAGE: oeworkflowservice
+  # MAIN_PROJECT_GROUP: oecloud.io
+  # COLLECTION_NAME: demo-collection
+  # NAMESPACE: demo-namespace
+  # OPENSHIFT_DOMAIN: openshift.oecloud.local
+
+image: ${REGISTRY}/${EXECUTOR_IMAGE}
 
 before_script:
   - export project=${CI_PROJECT_NAME//[^[:alnum:]]/}
   - export group=${CI_PROJECT_NAMESPACE//[^[:alnum:]]/}
   - export branch=${CI_BUILD_REF_NAME//[^[:alnum:]]/}
-  - export pipelineId=${CI_PIPELINE_ID//[^[:alnum:]]/}
   - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$project; else export APP_IMAGE_NAME=$branch"-"$project; fi
   - if [ $group == "oecloudio" ]; then export APP_IMAGE_NAME=$APP_IMAGE_NAME; else export APP_IMAGE_NAME=$group"-"$APP_IMAGE_NAME; fi
   - if [ $branch == "master" ]; then export TAG=latest; else export TAG=${CI_BUILD_REF_NAME}; fi
@@ -120,6 +122,7 @@ postgrestest:
     - CEP_RUNNER
 
 oracletest:
+  image: ${REGISTRY}/${EXECUTOR_IMAGE_ORACLE}
   stage: pre-build-test
   script:
     - echo 'Performing Oracle Test'
@@ -216,7 +219,6 @@ performancejob:
     - export project=${CI_PROJECT_NAME//[^[:alnum:]]/}
     - export group=${CI_PROJECT_NAMESPACE//[^[:alnum:]]/}
     - export branch=${CI_BUILD_REF_NAME//[^[:alnum:]]/}
-    - export pipelineId=${CI_PIPELINE_ID//[^[:alnum:]]/}
     - if [ $branch == "master" ]; then export APP_IMAGE_NAME=$project; else export APP_IMAGE_NAME=$branch"-"$project; fi
     - if [ $group == "oecloudio" ]; then export APP_IMAGE_NAME=$APP_IMAGE_NAME; else export APP_IMAGE_NAME=$group"-"$APP_IMAGE_NAME; fi
     - if [ $branch == "master" ]; then export TAG=latest; else export TAG=${CI_BUILD_REF_NAME}; fi

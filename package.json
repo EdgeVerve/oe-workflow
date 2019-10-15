@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "fix-lint": "eslint --fix .",
     "grunt-cover": "grunt test-with-coverage",
-    "checks": "eslint . && npm run clean && grunt test-with-coverage"
+    "checks": "eslint . && npm run clean && grunt test-with-coverage",
+    "app": "node bin/app.js"
   },
   "dependencies": {
     "async": "2.6.1",
