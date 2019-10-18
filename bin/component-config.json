@@ -1,2 +1,6 @@
 {
+  "oe-workflow-modeler/component": {
+    "mountPath": "/wfmodeler",
+    "extensionsPath": "../../bin/pallet-entries.json"
+  }
 }
