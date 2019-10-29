@@ -20,47 +20,47 @@ describe('Timeout calculator tests', function callback() {
   let undefVal = undefined;
   /* eslint-enable */
   it('should return now+milliseconds when input is number ', function cb(done) {
-    let results = timeoutCalculator(5000, baseDate);
+    let results = timeoutCalculator.getSchedule(5000, baseDate);
     assert.deepEqual(results.items, [new Date(baseDate.getTime() + 5000)]);
     done();
   });
 
   it('should return now+milliseconds when input is number as string', function cb(done) {
-    let results = timeoutCalculator('5000', baseDate);
+    let results = timeoutCalculator.getSchedule('5000', baseDate);
     assert.deepEqual(results.items, [new Date(baseDate.getTime() + 5000)]);
     done();
   });
 
   it('should return date when input is date', function cb(done) {
     let defDate = new Date(baseDate.getTime() + 594583);
-    let results = timeoutCalculator(defDate, baseDate);
+    let results = timeoutCalculator.getSchedule(defDate, baseDate);
     assert.deepEqual(results.items, [defDate]);
     done();
   });
 
   it('should return date when input is date as string', function cb(done) {
     let defDate = new Date(baseDate.getTime() + 594583);
-    let results = timeoutCalculator(defDate.toISOString(), baseDate);
+    let results = timeoutCalculator.getSchedule(defDate.toISOString(), baseDate);
     assert.deepEqual(results.items, [defDate]);
     done();
   });
 
   it('calculates period relative to given date', function cb(done) {
-    let results = timeoutCalculator('P1Y2M3DT3H6M9S', baseDate);
+    let results = timeoutCalculator.getSchedule('P1Y2M3DT3H6M9S', baseDate);
     let expected = new Date(baseDate.getFullYear() + 1, baseDate.getMonth() + 2, baseDate.getDate() + 3, baseDate.getHours() + 3, baseDate.getMinutes() + 6, baseDate.getSeconds() + 9, baseDate.getMilliseconds());
     assert.deepEqual(results.items, [expected]);
     done();
   });
 
   it('calculates # separated periods as array', function cb(done) {
-    let results = timeoutCalculator('P5D#P7D#P9D', baseDate);
+    let results = timeoutCalculator.getSchedule('P5D#P7D#P9D', baseDate);
     assert.equal(results.items.length, 3);
     assert.deepEqual(results.items, [5, 7, 9].map(item => new Date(baseDate.getTime() + (item * 24 * 3600 * 1000))));
     done();
   });
 
   it('calculates intervals relative to base', function cb(done) {
-    let results = timeoutCalculator('R4/P7D', baseDate);
+    let results = timeoutCalculator.getSchedule('R4/P7D', baseDate);
     assert.equal(results.items.length, 4);
     assert.deepEqual(results.items, [7, 14, 21, 28].map(item => new Date(baseDate.getTime() + (item * 24 * 3600 * 1000))));
     done();
@@ -69,14 +69,14 @@ describe('Timeout calculator tests', function callback() {
   it('calculates intervals relative to specified start date', function cb(done) {
     let refDate = new Date(baseDate.getTime() + 48344983);
 
-    let results = timeoutCalculator(`R3/${refDate.toISOString()}/P4D`, baseDate);
+    let results = timeoutCalculator.getSchedule(`R3/${refDate.toISOString()}/P4D`, baseDate);
     assert.equal(results.items.length, 3);
     assert.deepEqual(results.items, [0, 4, 8].map(item => new Date(refDate.getTime() + (item * 24 * 3600 * 1000))));
     done();
   });
 
   it('calculates intervals relative to specified start period', function cb(done) {
-    let results = timeoutCalculator('R3/P8D/P1D', baseDate);
+    let results = timeoutCalculator.getSchedule('R3/P8D/P1D', baseDate);
     assert.equal(results.items.length, 3);
     assert.deepEqual(results.items, [8, 9, 10].map(item => new Date(baseDate.getTime() + (item * 24 * 3600 * 1000))));
     done();

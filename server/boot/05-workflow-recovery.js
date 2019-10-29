@@ -11,6 +11,7 @@
 var logger = require('oe-logger');
 var log = logger('workflow-recovery.boot');
 var MasterJobExecutor = require('oe-master-job-executor')();
+const timeoutCalculator = require('../../lib/utils/timeout-calculator.js');
 let async = require('async');
 module.exports = function recoverWorkflows(app) {
   let intervalInstance;
@@ -60,8 +61,56 @@ module.exports = function recoverWorkflows(app) {
         if (err) {
           log.error(options, err);
         }
-        intervalInstance = setTimeout(runRecovery, recoveryConfig.retryInterval, recoveryConfig, ProcessInstance);
-        check.a = intervalInstance;
+
+        /* Resumed Stale Processes, Check for Timeouts now */
+        app.models.DurableTimeout.find({where: {
+          status: 'pending',
+          nextExecution: {lt: Date.now()}
+        }}, function timeoutFindCb(err, timeouts) {
+          if (err) {
+            return log.error(options, err);
+          }
+          async.eachLimit(timeouts, recoveryConfig.batchSize, function resumeTimerTask(timeout, cb) {
+            ProcessInstance.findById(timeout.processInstanceId, options, function fetchPI(err, procT2) {
+              /* istanbul ignore if*/
+              if (err || !procT2) {
+                log.error(options, err);
+                log.error(options, 'Could not find process-instance for pending timer');
+                timeout.updateAttributes({status: 'error'}, cb);
+              } else if (procT2) {
+                var timerToken = procT2._processTokens[timeout.tokenId];
+
+                var timeoutUpdate = {};
+                if (timerToken.status === 'pending') {
+                  timeoutUpdate.counter = timeout.counter + 1;
+
+                  if (timeout.schedule && timeout.schedule[timeout.counter + 1]) {
+                    timeoutUpdate.nextExecution = timeout.schedule[timeout.counter + 1];
+                    timeoutUpdate.status = 'pending';
+                  } else if (timeout.perpetual) {
+                    timeoutUpdate.nextExecution = timeoutCalculator.getDate(timeout.definition, timeout.nextExecution);
+                    timeoutUpdate.status = 'pending';
+                  } else {
+                    timeoutUpdate.status = 'completed';
+                  }
+
+                  timerToken.keepActive = (timeoutUpdate.status === 'pending');
+                  procT2.reemit(timerToken, options, null);
+                } else {
+                  /* Timer Token is already completed or interrupted */
+                  timeoutUpdate.status = 'completed';
+                }
+                timeout.updateAttributes(timeoutUpdate, cb);
+              }
+            });
+          }, function allDone(err) {
+            if (err) {
+              log.error(options, err);
+            }
+            intervalInstance = setTimeout(runRecovery, recoveryConfig.retryInterval, recoveryConfig, ProcessInstance);
+            check.a = intervalInstance;
+          });
+        });
       });
     });
   }
