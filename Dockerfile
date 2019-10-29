@@ -1,4 +1,4 @@
-FROM ${REGISTRY}/alpine-node:8.11.4
+FROM ${REGISTRY}/alpine-node:10-alpine
 
 RUN mkdir -p /home/src
 
