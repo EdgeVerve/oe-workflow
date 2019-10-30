@@ -183,10 +183,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
    * @param  {Object}   task             Task
    * @param  {Object}   message          Message
    * @param  {Object}   processVariables ProcessVariables
+   * @param  {Object}   processDefinition Process Definition
    * @param  {Function} next             Callback
    * @returns {void}
    */
-  ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, next) {
+  ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, processDefinition, next) {
     var self = this;
     var token = this._processTokens[task.processTokenId];
 
@@ -200,17 +201,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var delta = new StateDelta();
     delta.setProcessVariables(processVariables);
 
-    self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
-      /* istanbul ignore if*/
-      if (err) {
-        log.error(options, err);
-        return next(err);
-      }
-
-      // to disable boundary timer event if task is completed beforehand
-      self._clearBoundaryTimerEvents(delta, options, processDefinitionInstance.getFlowObjectByName(token.name));
-      self._endFlowObject(options, token, processDefinitionInstance, delta, message, next);
-    });
+    // to disable boundary timer event if task is completed beforehand
+    self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
+    self._endFlowObject(options, token, processDefinition, delta, message, next);
   };
 
   /**
