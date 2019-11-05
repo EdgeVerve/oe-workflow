@@ -1,0 +1,48 @@
+
+{
+  "name": "DurableTimeout",
+  "base": "WorkflowBaseEntity",
+  "description" : "Manages timer event execution in oe-workflow engine",
+  "idInjection": true,
+  "properties": {
+    "definition": {
+      "type": "string",
+      "required": true
+    },
+    "nextExecution": {
+      "type": "date",
+      "index": true,
+      "required": true
+    },
+    "schedule": {
+      "type": ["date"]
+    },
+    "counter": {
+      "type": "number",
+      "default": 0
+    },
+    "perpetual": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "index": true,
+      "required": true,
+      "default": "pending"
+    },
+    "tokenId": {
+      "type" : "string",
+      "required" : true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "processInstance": {
+      "type": "belongsTo",
+      "model": "ProcessInstance",
+      "foreignKey": "processInstanceId"
+    }
+  },
+  "acls": []
+}

@@ -184,10 +184,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
    * @param  {Object}   task             Task
    * @param  {Object}   message          Message
    * @param  {Object}   processVariables ProcessVariables
+   * @param  {Object}   processDefinition Process Definition
    * @param  {Function} next             Callback
    * @returns {void}
    */
-  ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, next) {
+  ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, processDefinition, next) {
     var self = this;
     var token = this._processTokens[task.processTokenId];
 
@@ -222,6 +223,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
       self._clearBoundaryTimerEvents(delta, options, processDefinitionInstance.getFlowObjectByName(token.name));
       self._endFlowObject(options, token, processDefinitionInstance, delta, message, next);
     });
+    // to disable boundary timer event if task is completed beforehand
+    self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
+    self._endFlowObject(options, token, processDefinition, delta, message, next);
   };
 
   /**
@@ -279,6 +283,14 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
           var token = processTokens.createToken(obj.name, obj.bpmnId, message, meta);
 
+          /* Mark token to be durable */
+          if (obj.isTimerEvent && obj.timeDate) {
+            token.isDurableTimeout = true;
+          }
+
+          if (obj.isUserTask) {
+            token.isUserTask = true;
+          }
           if (obj.isParallelGateway) {
             delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
             delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
@@ -337,7 +349,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
           delta.addToken(token);
         }
       }
-      delta.setTokenToRemove(flowObjectToken.id);
+
+      /** Mark the token complete
+       * Recurring timers would send flowObjectToken.keepActive=true
+      */
+      if (!flowObjectToken.keepActive) {
+        delta.setTokenToRemove(flowObjectToken.id);
+      }
     }
 
     // add boundary event tokens to interrupt for the currentFlowObject that we are completing, if any
@@ -500,7 +518,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var tokens = self._processTokens;
     var options = self._workflowCtx || {};
     Object.keys(tokens).filter(function filterPendingTokens(tokenId) {
-      return tokens[tokenId].status === 'pending';
+      /** Emit any pending token.
+       * Do not emit durableTimeout tokens as they will be emitted by periodic checks separately */
+      return tokens[tokenId].status === 'pending' && !tokens[tokenId].isDurableTimeout;
     }).forEach(function continueWorkflow(tokenId) {
       self.reemit(tokens[tokenId], options, null);
     });
@@ -570,20 +590,30 @@ module.exports = function ProcessInstance(ProcessInstance) {
             // wait, sub process on its own will complete the token
           }
         });
-      } else if (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration) {
-        var at = token.startTime;
-        if (typeof at === 'string') {
-          at = new Date(at);
-        }
-        var now = Date.now();
-        // calculating again to handle pending timeout
-        var diff = now - at;
-        var recoveryPayload = {
-          _diff: diff,
-          applicableTo: function applicableTo(flowObject) {
-            return (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration);
+      } else if (currentFlowObject.isTimerEvent) {
+        var recoveryPayload;
+        if (currentFlowObject.timeDuration) {
+          var at = token.startTime;
+          if (typeof at === 'string') {
+            at = new Date(at);
           }
-        };
+          var now = Date.now();
+          // calculating again to handle pending timeout
+          var diff = now - at;
+          recoveryPayload = {
+            _diff: diff,
+            applicableTo: function applicableTo(flowObject) {
+              return (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration);
+            }
+          };
+        } else if (currentFlowObject.timeDate) {
+          recoveryPayload = {
+            keepActive: token.keepActive,
+            applicableTo: function applicableTo(flowObject) {
+              return (currentFlowObject.isTimerEvent && currentFlowObject.timeDate);
+            }
+          };
+        }
         ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token, null, recoveryPayload);
       } else if (currentFlowObject.isUserTask) {
         instance.tasks({
@@ -719,26 +749,24 @@ module.exports = function ProcessInstance(ProcessInstance) {
   /**
    * register timer events
    * @param  {Object} options          Options
-   * @param  {String} type             Type
-   * @param  {Object} currentActivity  CurrentActivity
-   * @param  {String} tokenId          Token ID
+   * @param  {Object} currentFlowObject  currentFlowObject
    */
-  ProcessInstance.prototype._registerTimerEvents = function _registerTimerEvents(options, type, currentActivity, tokenId) {
+  ProcessInstance.prototype._registerTimerEvents = function _registerTimerEvents(options, currentFlowObject) {
     var self = this;
     var delta = new StateDelta();
 
-    if (type === 'START') {
-      var startEvent = currentActivity;
+    if (currentFlowObject.isStartEvent) {
+      var startEvent = currentFlowObject;
       log.debug(options, 'Token was put on \'' + startEvent.name);
-      timerEvents.addStartTimerEvent(delta, options, ProcessInstance, self, startEvent, tokenId);
-    } else if (type === 'INTERMEDIATE') {
-      var intermediateEvent = currentActivity;
+      timerEvents.addStartTimerEvent(delta, options, ProcessInstance, self, startEvent);
+    } else if (currentFlowObject.isIntermediateCatchEvent) {
+      var intermediateEvent = currentFlowObject;
       log.debug(options, 'Token was put on \'' + intermediateEvent.name);
-      timerEvents.addIntermediateTimerEvent(delta, options, ProcessInstance, self, intermediateEvent, tokenId);
-    } else if (type === 'BOUNDARY') {
-      var boundaryEvent = currentActivity;
+      timerEvents.addIntermediateTimerEvent(delta, options, ProcessInstance, self, intermediateEvent);
+    } else if (currentFlowObject.isBoundaryEvent) {
+      var boundaryEvent = currentFlowObject;
       log.debug(options, 'Token was put on \'' + boundaryEvent.name);
-      timerEvents.addBoundaryTimerEvent(delta, options, ProcessInstance, self, boundaryEvent, tokenId);
+      timerEvents.addBoundaryTimerEvent(delta, options, ProcessInstance, self, boundaryEvent);
     } else {
       log.error(options, 'Unknown type of Timer Event being requested.');
     }

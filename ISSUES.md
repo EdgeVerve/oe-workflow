@@ -10,15 +10,6 @@
   `trying to make invalid state change` error message **4 times**. It looks like,
   end-token is being added 5 times and only 1 would succeed (?).
 
-* User-Task Complete 
-  Code appears to be selecting process-instance and process-definition in 
-  Task.complete(Task.complete_) functions. This (atleast the process-definition)
-  need not be selected again in ProcessInstance.completeTask.
-
-* Designer Issue
-  In an exclusive-gateway, the default path need not have any condition-expression.
-  But when such bpmn file is loaded, the property panel shows error for script-format field `must provide a value`
-
 # WorkflowSignal.broadcast
   Selects all `WorkflowSignal` instance by name and selects (`findById`) all corresponding `ProcessInstance`. If the instance is running it sends an `INTERMEDIATE_CATCH_EVENT` event to it.
   The (potential) issue is, `WorkflowSignal` records are never removed. So the broadcast function selecting signals by name will select all old signals and for each old signal it will select the process-instance and ignore it as this may have completed. There by making the engine slowly sluggish.
