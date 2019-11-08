@@ -29,7 +29,7 @@ describe('Parallel IntermediateTimer Tests for Dynamic and Default Timers', func
     let workflowPayload = {
       processVariables: {
         tduration1: 200,
-        tduration2: 400
+        tduration2: 800
       }
     };
 
@@ -39,7 +39,7 @@ describe('Parallel IntermediateTimer Tests for Dynamic and Default Timers', func
         stateVerifier.isComplete(procInstance);
         var expectedFlow = ['Start', 'PG1', 'ITimer1', 'ITimer2', 'PG2', 'PG2', 'End'];
         stateVerifier.verifyTimerCompletion(procInstance, 'ITimer1', 200, 200);
-        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 400, 200);
+        stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 800, 200);
         stateVerifier.verifyCompletionFlow(procInstance, expectedFlow);
         done();
       });

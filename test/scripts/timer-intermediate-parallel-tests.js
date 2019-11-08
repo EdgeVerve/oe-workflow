@@ -29,7 +29,7 @@ describe('Parallel Intermediate Timer Tests', function CB() {
       stateVerifier.isComplete(procInstance);
       var expectedFlow = ['Start', 'PG1', 'ITimer1', 'ITimer2', 'PG2', 'PG2', 'End'];
       stateVerifier.verifyTimerCompletion(procInstance, 'ITimer1', 200);
-      stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 400);
+      stateVerifier.verifyTimerCompletion(procInstance, 'ITimer2', 800);
       stateVerifier.verifyCompletionFlow(procInstance, expectedFlow);
       done();
     });
