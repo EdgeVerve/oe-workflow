@@ -17,12 +17,25 @@ const log = logger('workflow-mixin');
 const uuidv4 = require('uuid/v4');
 
 module.exports = function WorkflowMixin(Model) {
+  // Skip this mixin whereever not applicable.
+  if (skipThisMixinIfNotApplicable(Model)) {
+    return;
+  }
+
   if (!Model.settings._workflowMixinEnabled) {
     addOERemoteMethods(Model);
     addRemoteHooks(Model);
     Model.settings._workflowMixinEnabled = true;
   }
 };
+
+function skipThisMixinIfNotApplicable(Model) {
+  if (Model.definition.name === 'BaseEntity') {
+    log.debug(log.defaultContext(), 'skipping mixin for - ', Model.definition.name);
+    return true;
+  }
+  return false;
+}
 
 function addOERemoteMethods(Model) {
   Model.remoteMethod('workflow', {
@@ -149,8 +162,10 @@ function addOERemoteMethods(Model) {
     };
   };
 
-  // to refresh swagger json
-  Model.app.emit('modelRemoted', Model.sharedClass);
+  if (Model.app) {
+    // to refresh swagger json
+    Model.app.emit('modelRemoted', Model.sharedClass);
+  }
 }
 
 function addRemoteHooks(Model) {
