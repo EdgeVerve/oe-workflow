@@ -285,6 +285,31 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
     });
   };
 
+  /**
+   * Pass a thrown message one process to an execution that is waiting for a mataching message in other process and
+   * and can be correlated using payload
+   * @param  {String} processDefId   Process-Definition Name
+   * @param  {Object} options        Options
+   * @param  {Object} message        Message
+   * @param  {Object} payload        payload
+   */
+  WorkflowInstance.prototype.passThrownMessage = function passThrownMessage(processDefId, options, message, payload) {
+    this.processes({}, options, function fetchProcesses(err, processes) {
+      /* istanbul ignore if*/
+      if (err) {
+        log.error(options, err);
+      }
+
+      /* Find the matching process and send the thrown message to it */
+      let targetProcess = processes.find(process => process.processDefinitionBpmnId === processDefId);
+      if (targetProcess) {
+        targetProcess._receiveThrownMessage(options, message, payload);
+      } else {
+        log.error(options, 'No process instance with Process Definition Id ' + processDefId + ' found.');
+      }
+    });
+  };
+
   /*
    * Pass a message to an execution that is waiting for a mataching message and
    * and can be correlated according to the businessKey that is basically the WorkflowInstance Identifier
