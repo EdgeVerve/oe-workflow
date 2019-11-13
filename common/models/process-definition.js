@@ -139,20 +139,20 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
    * Get start events
    * @return {Object}     Event
    */
-  ProcessDefinition.prototype.getStartEvent = function getStartEvent() {
-    var startEvents =  this.processDefinition.flowObjects.filter(function iterateFlowObjects(flowObject) {
-      if (!flowObject) {
-        log.error(log.defaultContext(), 'No flowObject found.');
+  ProcessDefinition.prototype.getStartEvents = function getStartEvents() {
+    var startEvents = this.processDefinition.flowObjects.filter(flowObject => flowObject && flowObject.isStartEvent);
+    if (startEvents.length === 0) {
+      log.error(log.defaultContext(), 'No start events found');
+      return null;
+    } else if (startEvents.length !== 1) {
+      /* If more than one start events are found, all should be message-start-event */
+      let messageStartEvents = startEvents.filter(item => item.isMessageEvent);
+      if (messageStartEvents.length !== startEvents.length) {
+        log.error(log.defaultContext(), 'process should have one start event startEvent, to be checked in validation');
         return null;
       }
-      return (flowObject.isStartEvent);
-    });
-
-    if (startEvents.length !== 1) {
-      log.error(log.defaultContext(), 'process should have one start event startEvent, to be checked in validation');
-      return null;
     }
-    return startEvents[0];
+    return startEvents;
   };
 
   /**
@@ -201,7 +201,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
         }
       } else {
         log.error(log.defaultContext(), "Cannot find the activity the boundary event '" + boundaryEvent.name +
-                    "' is attached to activity BPMN ID: '" + boundaryEvent.attachedToRef + "'.");
+          "' is attached to activity BPMN ID: '" + boundaryEvent.attachedToRef + "'.");
       }
     });
 

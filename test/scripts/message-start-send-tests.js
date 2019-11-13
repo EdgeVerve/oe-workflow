@@ -11,8 +11,8 @@ let expect = chai.expect;
 let stateVerifier = require('../utils/state-verifier');
 let async = require('async');
 
-describe.skip('Message Start Event Tests', function CB() {
-  let workflowName = 'message-start';
+describe('Message Start Event Tests Using Send Task as Source of Message Flow', function CB() {
+  let workflowName = 'message-start-send';
   before('define workflow', function testFunction(done) {
     bootstrap.loadAndTrigger(workflowName, {}, function testFunction(err, wfDefn, wfInstance) {
       expect(err).to.not.exist;
@@ -26,8 +26,6 @@ describe.skip('Message Start Event Tests', function CB() {
     bootstrap.cleanUp(workflowName, done);
   });
 
-  /* MessageStart Task resumes even before receiving the Message */
-  /* Also puzzles me the message task [ ] box rather then circle  */
   it('TIMING FAILURE: Receiver resumes and completes when message is received from sender', function testFunction(done) {
     async.parallel([function sendCompletion(callback) {
       bootstrap.onComplete(workflowName + '$SendMessage', function testFunction(err, instance) {
