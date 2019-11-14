@@ -28,7 +28,8 @@
       "type": "string"
     },
     "correlationId":{
-      "type":"string"
+      "type":"string",
+      "index":true
     }
   },
   "validations": [],

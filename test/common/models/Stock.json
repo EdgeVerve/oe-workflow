@@ -1,0 +1,29 @@
+{
+  "name": "Stock",
+  "base": "BaseEntity",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "VersionMixin": true,
+    "AuditFieldsMixin": true
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "quantityAvailable": {
+      "type": "number",
+      "required": true
+    },
+    "instock": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "validations": [],
+  "acls": [],
+  "methods": {}
+}

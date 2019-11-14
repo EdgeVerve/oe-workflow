@@ -249,6 +249,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
           if (obj.isParallelGateway) {
             meta = {
+              from: currentFlowObjectName,
               type: 'ParallelGateway',
               gwId: obj.bpmnId
             };

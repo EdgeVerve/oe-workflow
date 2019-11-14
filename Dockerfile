@@ -1,4 +1,4 @@
-FROM ${TRUSTED_REGISTRY}/library/alpine-node:8.11.4
+FROM ${REGISTRY}/alpine-node:8.11.4
 
 RUN mkdir -p /home/src
 

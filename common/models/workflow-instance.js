@@ -136,7 +136,8 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       'processDefinitionName': name,
       'processVariables': processVariables,
       'message': self.message,
-      'workflowInstanceId': self.id
+      'workflowInstanceId': self.id,
+      'correlationId': self.correlationId
     };
 
     var processDefinitionName = postData.processDefinitionName;
@@ -192,7 +193,8 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
       'processDefinitionName': name,
       'processVariables': processVariables,
       'message': self.message,
-      'workflowInstanceId': self.id
+      'workflowInstanceId': self.id,
+      'correlationId': self.correlationId
     };
 
     var processDefinitionName = postData.processDefinitionName;
@@ -317,13 +319,22 @@ module.exports = function WorkflowInstance(WorkflowInstance) {
         return handleError(err, options, callback);
       }
 
+      /** Terminate only top-level processes and send terminate signal to them
+       * Each process' terminate takes care of terminating corresponding
+       * sub-processes and tasks.
+       * If we select all associated processes and terminate all of them them, two things happen
+       * 1. We may violate termination order and try killing a sub-sub-process
+       * 2. Also, when a processes tries killing their subprocesses, that may already be killed.
+       *    raising "Error: trying to make invalid state change".
+      */
       workflowInstance.processes({}, options, function fetchProcesses(err, Processes) {
         /* istanbul ignore if*/
         if (err) {
           return handleError(err, options, callback);
         }
         for (var i in Processes) {
-          if (Object.prototype.hasOwnProperty.call(Processes, i)) {
+          /** Select only records where parentProcessInstanceId is empty */
+          if (Object.prototype.hasOwnProperty.call(Processes, i) && !Processes[i].parentProcessInstanceId) {
             ProcessInstance.emit('PROCESS_TERMINATE', options, ProcessInstance, Processes[i]);
           }
         }

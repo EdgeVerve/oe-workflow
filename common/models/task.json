@@ -82,6 +82,10 @@
     "comments" : {
       "type" : "string",
       "required" : false
+    },
+    "correlationId": {
+      "type": "string",
+      "index": true
     }
   },
   "validations": [],
