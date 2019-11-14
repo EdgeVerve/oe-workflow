@@ -154,20 +154,22 @@ describe('Maker Checker V1 Tests', function CB() {
           bootstrap.onUserTask(workflowName, 'Approval', function testFunction(err, task, instance) {
             expect(err).to.not.exist;
             approverTask = task;
-            models.WorkflowRequest.find({where: {
-              modelName: 'StoreV1',
-              modelInstanceId: instance._processVariables.id
-            }}, bootstrap.defaultContext, function testFunction(err, changeRequests) {
-              expect(err).to.not.exist;
-              expect(changeRequests).to.exist.and.be.an('array').of.length(1);
-              changeRequest = changeRequests[0];
-              models.WorkflowInstance.findById(changeRequest.processId, bootstrap.defaultContext, function testFunction(err, wfInst) {
+            setTimeout(function allowWFRCreate() {
+              models.WorkflowRequest.find({where: {
+                modelName: 'StoreV1',
+                modelInstanceId: instance._processVariables.id
+              }}, bootstrap.defaultContext, function testFunction(err, changeRequests) {
                 expect(err).to.not.exist;
-                expect(wfInst).to.exist;
-                workflowInstance = wfInst;
-                cb();
+                expect(changeRequests).to.exist.and.be.an('array').of.length(1);
+                changeRequest = changeRequests[0];
+                models.WorkflowInstance.findById(changeRequest.processId, bootstrap.defaultContext, function testFunction(err, wfInst) {
+                  expect(err).to.not.exist;
+                  expect(wfInst).to.exist;
+                  workflowInstance = wfInst;
+                  cb();
+                });
               });
-            });
+            }, 1000);
           });
         },
         function f2(cb) {
