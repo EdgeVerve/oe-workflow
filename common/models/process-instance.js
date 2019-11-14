@@ -25,6 +25,7 @@ var timerEvents = require('../../lib/utils/timeouts.js');
 var processTokens = require('../../lib/utils/process-tokens.js');
 var StateDelta = require('../../lib/utils/process-state-delta.js');
 var sandbox = require('../../lib/workflow-nodes/sandbox.js');
+var recrevaluatePayload = require('../../lib/workflow-nodes/businessruletask-node.js').evaluatePayload;
 
 var subprocessEventHandler = require('../../lib/workflow-eventHandlers/subprocesshandlers.js');
 var catchEventHandler = require('../../lib/workflow-eventHandlers/catcheventhandler.js');
@@ -59,7 +60,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         if (!processDefinitionInstance) {
           return next(new Error('Process definition not present'));
         }
-        var startFlowObject = processDefinitionInstance.getStartEvent();
+        var startFlowObjects = processDefinitionInstance.getStartEvents();
 
         if (!ctx.options) {
           var ctxerr = new Error('Workflow context init failed.');
@@ -69,9 +70,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
         var options = ctx.options;
         instance.init(options);
 
-        var token = processTokens.createToken(startFlowObject.name, startFlowObject.bpmnId, instance.message);
-        instance._processTokens[token.id] = token;
-
+        startFlowObjects && startFlowObjects.forEach(startFlowObject => {
+          let token = processTokens.createToken(startFlowObject.name, startFlowObject.bpmnId, instance.message);
+          if (startFlowObject.isMessageEvent) {
+            token.isMessageStartEvent = true;
+          }
+          instance._processTokens[token.id] = token;
+        });
         instance.processDefinitionBpmnId = processDefinitionInstance.processDefinition.bpmnId;
         instance.unsetAttribute('message');
         instance.unsetAttribute('processVariables');
@@ -91,11 +96,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
       var options = instance._workflowCtx || ctx.options;
 
       var tokenIds = Object.keys(instance._processTokens);
-      if (tokenIds.length === 1) {
-        ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, instance._processTokens[tokenIds[0]]);
+      if (tokenIds && tokenIds.length > 0) {
+        tokenIds.forEach(tokenId => {
+          ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, instance._processTokens[tokenId]);
+        });
       } else {
-        // multiple start events found, or no start event found
-        var err = new Error('multiple start events found, or no start event found');
+        // no start event found
+        var err = new Error('no start event found');
         log.error(ctx.options, err);
         return next(err);
       }
@@ -177,6 +184,44 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
+  ProcessInstance.prototype._receiveThrownMessage = function _receiveThrownMessage(options, message, payload, next) {
+    next = next || function empty() { };
+    var self = this;
+    this.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
+      /* istanbul ignore if*/
+      if (err) {
+        return next(err);
+      }
+      var token = null;
+      var delta = new StateDelta();
+      var processDefinition = processDefinitionInstance.processDefinition;
+      if (!payload.id && !payload.code) {
+        log.error(options, 'Invalid throw object');
+        return next(new Error('Invalid throw object'));
+      }
+      message = payload.message;
+      var payloadId = payload.id;
+      var messageStartEventFlowObjects = processDefinition.catchEventIndex[payloadId] || [];
+      if (messageStartEventFlowObjects.length === 1) {
+        var messageStartEventFlowObject = messageStartEventFlowObjects[0];
+        if (messageStartEventFlowObject.isStartEvent && messageStartEventFlowObject.isMessageEvent) {
+          if (self.isPending(messageStartEventFlowObject)) {
+            token = self.findToken(messageStartEventFlowObject);
+            self._endFlowObject(options, token, processDefinitionInstance, delta, message, next);
+          }
+        }
+      } else if (messageStartEventFlowObjects.length > 1) {
+        err = new Error('no two message start events should refer to the same message or should have same message name');
+        log.error(options, err);
+        return next(err);
+      } else if (messageStartEventFlowObjects.length === 0) {
+        err = new Error('no matching message found to start the process');
+        log.error(options, err);
+        return next(err);
+      }
+    });
+  };
+
   /**
    * Handling Completion of User
    * @param  {Object}   options          Options
@@ -200,7 +245,16 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
     var delta = new StateDelta();
     delta.setProcessVariables(processVariables);
-
+    var currentFlowObject = processDefinition.getFlowObjectByName(token.name);
+    if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.outputParameters) {
+      var outputParameters = currentFlowObject.inputOutputParameters.outputParameters;
+      var evalOutput = recrevaluatePayload(outputParameters, task.message, self);
+      var outputVariables = {};
+      Object.assign(outputVariables, evalOutput);
+    }
+    if (outputVariables && task.message && typeof task.message === 'object' && typeof outputVariables === 'object') {
+      Object.assign(task.message, outputVariables);
+    }
     // to disable boundary timer event if task is completed beforehand
     self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
     self._endFlowObject(options, token, processDefinition, delta, message, next);
