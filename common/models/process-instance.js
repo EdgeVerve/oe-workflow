@@ -278,7 +278,6 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var currentFlowObjectName = flowObjectToken.name;
     var currentFlowObject = processDefinitionInstance.getFlowObjectByName(currentFlowObjectName);
     var self = this;
-    
     /* storing the processVariables to compare with updated processVariables after updates */
     var oldPV = self._processVariables;
     var tokens = self._processTokens;
@@ -543,17 +542,10 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (!token) {
             break;
           }
-          if (token.isSequential) {
-            token.inVariables = token.inVariables || {};
-            token.inVariables._iteration = 1;
-            if (token.collection && token.elementVariable) {
-              token.inVariables[token.elementVariable] = token.collection[0];
-            }
-          }
           // TODO : why this check token.id !== delta.tokenToRemove
           if (token.isParallel) {
             var loopcount = token.nrOfInstances;
-            if(loopcount > 0) {
+            if (loopcount > 0) {
               var counter = 0;
               while (counter < loopcount) {
                 token.inVariables = token.inVariables || {};
@@ -571,6 +563,21 @@ module.exports = function ProcessInstance(ProcessInstance) {
               let newDelta = new StateDelta();
               let message = {};
               instance._endFlowObject(options, token, processDefinitionInstance, newDelta, message);
+            }
+          } else if (token.isSequential) {
+            if (token.nrOfInstances === 0) {
+              // as collection is empty, marking the token as complete even before emitting
+              token.nrOfActiveInstances = 0;
+              let newDelta = new StateDelta();
+              let message = {};
+              instance._endFlowObject(options, token, processDefinitionInstance, newDelta, message);
+            } else {
+              token.inVariables = token.inVariables || {};
+              token.inVariables._iteration = 1;
+              if (token.collection && token.elementVariable) {
+                token.inVariables[token.elementVariable] = token.collection[0];
+              }
+              ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
             }
           } else {
             // console.log('441 - ', currentFlowObjectName,  ' -> ', token.name);

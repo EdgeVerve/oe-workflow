@@ -32,20 +32,20 @@ describe('Conditional Intermediate Catch tests', function CB() {
       expect(instance).to.exist;
       stateVerifier.isRunning(instance);
       stateVerifier.verifyTokens(instance, ['Start', 'PGIn', {
-      name: 'ConditionalCatch1',
-      status: Status.PENDING
-    }, {
-      name: 'UserTask1',
-      status: Status.PENDING
-    }]);
-    expect(instance._processVariables).to.not.have.property('test1');
-    expect(instance._processVariables).to.not.have.property('test2');
-    task.complete({}, bootstrap.defaultContext, function testFunction(err, task) {
-      expect(err).to.not.exist;
-      expect(task.status).to.equal(Status.COMPLETE);
+        name: 'ConditionalCatch1',
+        status: Status.PENDING
+      }, {
+        name: 'UserTask1',
+        status: Status.PENDING
+      }]);
+      expect(instance._processVariables).to.not.have.property('test1');
+      expect(instance._processVariables).to.not.have.property('test2');
+      task.complete({}, bootstrap.defaultContext, function testFunction(err, task) {
+        expect(err).to.not.exist;
+        expect(task.status).to.equal(Status.COMPLETE);
+      });
+      done();
     });
-    done();
-  });
   });
 
   it('Conditional Intermedaite Catch1 is completed and  Catch2 is waiting for the condition to be satisfied', function testFunction(done) {
@@ -54,40 +54,39 @@ describe('Conditional Intermediate Catch tests', function CB() {
       expect(instance).to.exist;
       stateVerifier.isRunning(instance);
       stateVerifier.verifyTokens(instance, ['Start', 'PGIn', {
-      name: 'ConditionalCatch1', 
-      status: Status.COMPLETE
+        name: 'ConditionalCatch1',
+        status: Status.COMPLETE
       }, 'UserTask1', 'ScriptTask', {
-      name: 'ConditionalCatch2',
-      status: Status.PENDING
-    }, {
-      name: 'UserTask2',
-      status: Status.PENDING
-    }]);
-    expect(instance._processVariables).to.have.property('test1').that.equals(true);
-    expect(instance._processVariables).to.not.have.property('test2');
-    task.complete({
-      pv: {
-        test2: 'done'
-      }
-    }, bootstrap.defaultContext, function testFunction(err, task) {
-      expect(err).to.not.exist;
-      expect(task.status).to.equal(Status.COMPLETE);
+        name: 'ConditionalCatch2',
+        status: Status.PENDING
+      }, {
+        name: 'UserTask2',
+        status: Status.PENDING
+      }]);
+      expect(instance._processVariables).to.have.property('test1').that.equals(true);
+      expect(instance._processVariables).to.not.have.property('test2');
+      task.complete({
+        pv: {
+          test2: 'done'
+        }
+      }, bootstrap.defaultContext, function testFunction(err, task) {
+        expect(err).to.not.exist;
+        expect(task.status).to.equal(Status.COMPLETE);
+      });
+      done();
     });
-    done();
-  });
   });
 
-  it('Conditional Intermediate Catch2 is completed when the condition is satisfied', function testFunction(done){
+  it('Conditional Intermediate Catch2 is completed when the condition is satisfied', function testFunction(done) {
     bootstrap.onComplete(workflowName, function testFunction(err, instance) {
       expect(err).to.not.exist;
       stateVerifier.isComplete(instance);
       stateVerifier.verifyTokens(instance, ['Start', 'PGIn', 'ConditionalCatch1', 'UserTask1', 'ScriptTask', 'UserTask2', {
-      name:'ConditionalCatch2', 
-      status: Status.COMPLETE
+        name: 'ConditionalCatch2',
+        status: Status.COMPLETE
       }, 'PGOut', 'PGOut', 'End']);
       expect(instance._processVariables).to.have.property('test2').that.equals('done');
       done();
     });
   });
-
 });
