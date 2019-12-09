@@ -278,6 +278,10 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var currentFlowObjectName = flowObjectToken.name;
     var currentFlowObject = processDefinitionInstance.getFlowObjectByName(currentFlowObjectName);
     var self = this;
+    
+    /* storing the processVariables to compare with updated processVariables after updates */
+    var oldPV = self._processVariables;
+    var tokens = self._processTokens;
 
     var nextFlowObjects = TokenEmission.getNextFlowObjects(currentFlowObject, message,
       processDefinitionInstance, self, options);
@@ -322,6 +326,11 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
           if (obj.isUserTask) {
             token.isUserTask = true;
+          }
+          /* for now ConditionalEvents implementation is done only for Conditional Intermediate Catch Events */
+          if (obj.isConditionalEvent && obj.isIntermediateCatchEvent) {
+            token.isConditionalEvent = true;
+            if (obj.pvName) token.pvName = obj.pvName;
           }
           if (obj.isParallelGateway) {
             delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
@@ -408,7 +417,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         log.error(options, err.message);
         return next(err);
       }
-
+      var newPV = instance._processVariables;
       if (instance._status === 'complete') {
         instance.parentProcess({}, options, function fetchParentProcess(err, parentProcess) {
           /* istanbul ignore if*/
@@ -419,6 +428,27 @@ module.exports = function ProcessInstance(ProcessInstance) {
           // This is to allow a subprocess to not go to the parent process unless all the subflows have ended
           if (parentProcess) {
             ProcessInstance.emit(SUBPROCESS_END_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
+          }
+        });
+      }
+
+      /* If any of the Conditional Event Token is Pending and if a change is detected in processVariables
+        then only we will trigger the Conditional Events to Evaluate again */
+      var conditionalTokens = Object.keys(tokens).filter(function getConditionalTokens(tokenId) {
+        return tokens[tokenId].isConditionalEvent && tokens[tokenId].status === 'pending';
+      });
+
+      if (conditionalTokens.length) {
+        conditionalTokens.forEach(tokenId => {
+          let pvName = tokens[tokenId].pvName;
+          if (pvName) {
+            // checking for particular process variable change
+            if (newPV.hasOwnProperty(pvName) && newPV[pvName] !== oldPV[pvName]) {
+              ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, tokens[tokenId]);
+            }
+            // when particular process variable name is not specified, check for all processVariable changes
+          } else if (!_.isEqual(instance._processVariables, oldPV)) {
+            ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, tokens[tokenId]);
           }
         });
       }
@@ -523,17 +553,24 @@ module.exports = function ProcessInstance(ProcessInstance) {
           // TODO : why this check token.id !== delta.tokenToRemove
           if (token.isParallel) {
             var loopcount = token.nrOfInstances;
-            var counter = 0;
-            while (counter < loopcount) {
-              token.inVariables = token.inVariables || {};
-              if (token.elementVariable) {
-                token.inVariables[token.elementVariable] = token.collection[counter];
+            if(loopcount > 0) {
+              var counter = 0;
+              while (counter < loopcount) {
+                token.inVariables = token.inVariables || {};
+                if (token.elementVariable) {
+                  token.inVariables[token.elementVariable] = token.collection[counter];
+                }
+                token.inVariables._iteration = counter;
+                var _token = _.cloneDeep(token);
+                // console.log('437 - Parallel ', counter , ' of ', loopcount);
+                ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);
+                counter++;
               }
-              token.inVariables._iteration = counter;
-              var _token = _.cloneDeep(token);
-              // console.log('437 - Parallel ', counter , ' of ', loopcount);
-              ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);
-              counter++;
+            } else {
+              // as collection is empty, marking the token as complete even before emitting
+              let newDelta = new StateDelta();
+              let message = {};
+              instance._endFlowObject(options, token, processDefinitionInstance, newDelta, message);
             }
           } else {
             // console.log('441 - ', currentFlowObjectName,  ' -> ', token.name);
