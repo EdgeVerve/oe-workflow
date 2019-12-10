@@ -336,7 +336,10 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (obj.isMultiInstanceLoop) {
             try {
               if (obj.hasCollection) {
-                var collection = sandbox.evaluateExpression(options, obj.collection, message, self);
+                /* Delta Process Variables that are not yet applied on the process-instance should also be available */
+                let inVariables = Object.assign({}, delta.processVariables);
+
+                var collection = sandbox.evaluateExpression(options, obj.collection, message, self, inVariables);
                 if (typeof collection === 'undefined') {
                   throw new Error('collection in multi instance is undefined.');
                 }
