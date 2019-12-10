@@ -342,6 +342,9 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
           } else {
             index.__compensation.push(flowObject);
           }
+        } else if (flowObject.isConditionalEvent) {
+          // as intermediate conditional event is thrown by itself only
+          index[flowObject.name] = [flowObject];
         }
       }
     });
