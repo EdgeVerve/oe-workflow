@@ -74,7 +74,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
               if (processDef.bpmndataId) {
                 subProcessDef.bpmndataId = processDef.bpmndataId;
               }
-              delete(flowObject.processDefinition);
+              delete flowObject.processDefinition;
 
               ProcessDefinition.create(subProcessDef, ctx.options, createSubProcess);
             } else if (flowObject.isCallActivity) {
