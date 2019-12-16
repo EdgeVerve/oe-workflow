@@ -22,7 +22,7 @@ module.exports =
     'url': 'mongodb://' + mongoHost + ':27017/' + dbName,
     'database': dbName,
     'name': 'db',
-    'connector': 'mongodb',
+    'connector': 'oe-connector-mongodb',
     'connectionTimeout': 500000
   }
 };

@@ -6,7 +6,7 @@
 "database": "oe-workflow",
 "password": "admin",
 "name": "db",
-"connector": "mongodb",
+"connector": "oe-connector-mongodb",
 "user": "admin",
 "connectionTimeout": 50000
 }
