@@ -123,7 +123,8 @@ module.exports = function Task(Task) {
    */
   Task.filtered = function filtered(filter, options, next) {
     let fieldsToRemove = [];
-    if (filter && filter.fields) {
+    filter = filter || {};
+    if (filter.fields) {
       let mandatoryFields = ['candidateUsers', 'excludedUsers', 'candidateRoles', 'excludedRoles', 'candidateGroups', 'excludedGroups'];
       mandatoryFields.forEach(function addMandatoryField(val) {
         if (!filter.fields[val]) {
