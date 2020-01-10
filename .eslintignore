@@ -1,3 +1,7 @@
-/client/
-/coverage/
-/node_modules/
+build/
+client/
+coverage/
+node_modules/
+test/
+drop.js
+Gruntfile.js
