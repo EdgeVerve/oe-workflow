@@ -5,9 +5,9 @@
  *
  */
 var postgresHost = process.env.POSTGRES_HOST || 'localhost';
+var postgresPort = process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT) : 5432;
 var dbName = process.env.DB_NAME || 'oe-workflow-test';
-module.exports =
-{
+module.exports = {
   'memdb': {
     'name': 'memdb',
     'connector': 'memory'
@@ -16,11 +16,10 @@ module.exports =
     'name': 'transient',
     'connector': 'transient'
   },
-
   'db': {
     'host': postgresHost,
-    'port': 5432,
-    'url': 'postgres://postgres:postgres@' + postgresHost + ':5432/' + dbName,
+    'port': postgresPort,
+    'url': 'postgres://postgres:postgres@' + postgresHost + ':' + postgresPort + '/' + dbName,
     'database': dbName,
     'password': 'postgres',
     'name': 'db',
