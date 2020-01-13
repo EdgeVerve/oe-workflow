@@ -74,10 +74,10 @@
       "type": "string",
       "index": true
     },
-    "failedTokenIds": {
-      "type": "array", 
+    "failedTokenIds": [{
+      "type": "string",
       "required": false
-    }
+    }]
   },
   "validations": [],
   "relations": {
