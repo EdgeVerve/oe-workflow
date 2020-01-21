@@ -25,9 +25,6 @@ before_script:
   - if [ ${branch} == "master" ]; then export APP_TAG=latest; else export APP_TAG=${branch}; fi
   - export APP_TAG=$(echo $APP_TAG | tr '[:upper:]' '[:lower:]')
 
-  - export STACK_NAME=${APP_IMAGE_NAME//[^[:alnum:]]/}
-  - export MONGO_HOST=${STACK_NAME}_mongo
-
   - npm config set unsafe-perm true
   - npm config set progress false
   - npm config set registry ${NPM_REGISTRY}
@@ -159,6 +156,8 @@ deployjob-swarm:
   stage: deploy
   # image: ${REGISTRY}/oecloud-executor:k6
   script:
+    - export STACK_NAME=${APP_IMAGE_NAME//[^[:alnum:]]/}
+    - export MONGO_HOST=${STACK_NAME}_mongo
     - export NETWORK_NAME=${APP_IMAGE_NAME}
     - export networkAvailable=$(docker network ls -q --filter name=${NETWORK_NAME} | wc -l)
     - if [ $networkAvailable -eq 0 ]; then docker network create --driver overlay ${NETWORK_NAME}; fi
