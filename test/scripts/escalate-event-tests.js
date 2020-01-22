@@ -141,8 +141,8 @@ describe('Escalate Event Tests', function CB() {
 
     it('Call-Activity is interrupted', function testFunction(done) {
       stateVerifier.isInterrupted(subChildProcess);
-      /* Ignore End1 as it could be completed or interrupted */
-      stateVerifier.verifyTokens(subChildProcess, ['Start', 'UserTask', 'gw', 'Escalate', {
+      /* Ignore Escalate and End1 as it could be completed or interrupted */
+      stateVerifier.verifyTokens(subChildProcess, ['Start', 'UserTask', 'gw', {
         name: 'UserTask2',
         status: Status.INTERRUPTED
       }], true);

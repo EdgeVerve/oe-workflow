@@ -2,7 +2,7 @@ version: "3"
 services:
   web:
     entrypoint: node bin/app.js
-    image: ${REGISTRY}/${APP_IMAGE_NAME}:${TAG}
+    image: ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG}
     deploy:
       mode: replicated
       replicas: 1

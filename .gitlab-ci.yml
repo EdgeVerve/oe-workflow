@@ -145,10 +145,10 @@ buildjob:
   script:
     - echo "Building ${APP_IMAGE_NAME} image..."
     - time npm install --no-optional
-    #- envsubst < Dockerfile  | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -;
-    - sed 's/\${REGISTRY}/'"${REGISTRY}"'/g' Dockerfile | docker image build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${TAG} --build-arg HTTP_PROXY=${http_proxy} --build-arg HTTPS_PROXY=${https_proxy} --pull -f -
-    - docker image push ${REGISTRY}/${APP_IMAGE_NAME}:${TAG}
-    - echo "Image (${REGISTRY}/${APP_IMAGE_NAME}:${TAG}) built and pushed to registry"
+    #- envsubst < Dockerfile  | docker build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG} --build-arg HTTP_PROXY=$http_proxy --build-arg HTTPS_PROXY=$https_proxy --pull -f -;
+    - sed 's/\${REGISTRY}/'"${REGISTRY}"'/g' Dockerfile | docker image build . -t ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG} --build-arg HTTP_PROXY=${http_proxy} --build-arg HTTPS_PROXY=${https_proxy} --pull -f -
+    - docker image push ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG}
+    - echo "Image (${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG}) built and pushed to registry"
   tags:
     - CEP_RUNNER
 
