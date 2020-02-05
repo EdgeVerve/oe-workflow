@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:oecloud="http://oecloud" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="Process_1" name="ScriptNodeTests" isExecutable="false">
+    <bpmn2:startEvent id="StartEvent_1m74pe8" name="Start">
+      <bpmn2:outgoing>SequenceFlow_1pm4fpm</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_1pm4fpm" sourceRef="StartEvent_1m74pe8" targetRef="Task_1pxagq6" />
+    <bpmn2:endEvent id="EndEvent_152s5x3" name="End">
+      <bpmn2:incoming>SequenceFlow_1rae5vs</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:businessRuleTask id="Task_1pxagq6" name="BusinessRule Task" oecloud:mode="DecisionService" camunda:decisionRef="${pv.serviceName}" camunda:decisionRefBinding="custom">
+      <bpmn2:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="ApplicantData">
+            <camunda:script scriptFormat="javascript">{
+        Age: 51,
+        MaritalStatus: 'M',
+        EmploymentStatus: 'EMPLOYED',
+        ExistingCustomer: false,
+        Monthly: {
+          Income: pv('income'),
+          Repayments: 2500,
+          Expenses: 3000
+        }
+}</camunda:script>
+          </camunda:inputParameter>
+          <camunda:inputParameter name="RequestedProduct">
+            <camunda:map>
+              <camunda:entry key="ProductType">STANDARD LOAN</camunda:entry>
+              <camunda:entry key="Rate">0.08</camunda:entry>
+              <camunda:entry key="Amount">100000</camunda:entry>
+              <camunda:entry key="Term">36</camunda:entry>
+            </camunda:map>
+          </camunda:inputParameter>
+          <camunda:inputParameter name="BureauData">
+            <camunda:map>
+              <camunda:entry key="Bankrupt">false</camunda:entry>
+              <camunda:entry key="CreditScore">600</camunda:entry>
+            </camunda:map>
+          </camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_1pm4fpm</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_11pp2es</bpmn2:outgoing>
+    </bpmn2:businessRuleTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_11pp2es" sourceRef="Task_1pxagq6" targetRef="Task_0kwk0gh" />
+    <bpmn2:sequenceFlow id="SequenceFlow_1rae5vs" sourceRef="Task_0kwk0gh" targetRef="EndEvent_152s5x3" />
+    <bpmn2:scriptTask id="Task_0kwk0gh" name="Script Task" scriptFormat="javascript">
+      <bpmn2:incoming>SequenceFlow_11pp2es</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_1rae5vs</bpmn2:outgoing>
+      <bpmn2:script>_setPV("ruleEngineDecision",_msg)</bpmn2:script>
+    </bpmn2:scriptTask>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="StartEvent_1m74pe8_di" bpmnElement="StartEvent_1m74pe8">
+        <dc:Bounds x="202" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="208" y="255" width="25" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pm4fpm_di" bpmnElement="SequenceFlow_1pm4fpm">
+        <di:waypoint x="238" y="230" />
+        <di:waypoint x="290" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_152s5x3_di" bpmnElement="EndEvent_152s5x3">
+        <dc:Bounds x="622" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="630" y="255" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_1gqwjlr_di" bpmnElement="Task_1pxagq6">
+        <dc:Bounds x="290" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_11pp2es_di" bpmnElement="SequenceFlow_11pp2es">
+        <di:waypoint x="390" y="230" />
+        <di:waypoint x="450" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rae5vs_di" bpmnElement="SequenceFlow_1rae5vs">
+        <di:waypoint x="550" y="230" />
+        <di:waypoint x="622" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_19wq2ho_di" bpmnElement="Task_0kwk0gh">
+        <dc:Bounds x="450" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>
