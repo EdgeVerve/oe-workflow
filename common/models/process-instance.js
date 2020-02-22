@@ -133,6 +133,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       timeoutIds: {},
       timerIds: {}
     };
+    this.failedTokenIds = [];
     this._synchronizeFlow = {};
 
     // Check if this is really required.
@@ -1026,9 +1027,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         });
       };
       return next(null, insts.filter(inst => {
-        return Object.values(inst._processTokens).filter(token => {
-          return token.status === 'failed';
-        }).length > 0;
+        return inst.failedTokenIds.length > 0;
       }));
     });
   };

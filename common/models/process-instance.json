@@ -73,7 +73,11 @@
     "correlationId": {
       "type": "string",
       "index": true
-    }
+    },
+    "failedTokenIds": [{
+      "type": "string",
+      "required": false
+    }]
   },
   "validations": [],
   "relations": {

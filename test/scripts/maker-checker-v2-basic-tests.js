@@ -1345,6 +1345,23 @@ describe('Maker Checker V2 Tests', function CB() {
           quantity: 20
         }]
       };
+
+      bootstrap.onUserTask(workflowName, 'Approver', function testFunction(err, approverTask, instance) {
+        expect(err).to.not.exist;
+        expect(approverTask).to.exist;
+        approverTask.complete({
+          __action__: Status.APPROVED
+        }, bootstrap.getContext('usr2'), function testFunction(err, task) {
+          expect(err).to.not.exist;
+          expect(task.status).to.equal(Status.COMPLETE);
+        });
+      });
+      bootstrap.onComplete(workflowName, function testFunction(err, instance) {
+        expect(err).to.not.exist;
+        stateVerifier.isComplete(instance);
+        done();
+      });
+
       StoreV2.createX(storeRecord, bootstrap.getContext('usr1'), function testFunction(err, tkt) {
         expect(err).to.not.exist;
         expect(tkt).to.exist;
@@ -1354,7 +1371,6 @@ describe('Maker Checker V2 Tests', function CB() {
         /* Before Save Hooks are applied for related models */
         expect(tkt.orders[0]._createdBy).to.equal('usr1');
         expect(tkt.orders[0]._version).to.exist;
-        done();
       });
     });
   });
