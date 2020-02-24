@@ -334,6 +334,8 @@ module.exports = function Task(Task) {
 
               if (!data.__action__) {
                 let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+                err.statusCode = err.status = 422;
+                err.code = 'ACTION_REQUIRED';
                 log.error(options, err);
                 return next(err);
               }
@@ -346,6 +348,8 @@ module.exports = function Task(Task) {
               let isValid = (validActArr.indexOf(data.__action__) > -1);
               if (!isValid) {
                 let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+                err.statusCode = err.status = 422;
+                err.code = 'INVALID_ACTION';
                 log.error(options, err);
                 return next(err);
               }
@@ -394,6 +398,8 @@ module.exports = function Task(Task) {
 
               if (!data.__action__) {
                 let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+                err.statusCode = err.status = 422;
+                err.code = 'ACTION_REQUIRED';
                 // log.error(options, err);
                 return next(err);
               }
@@ -406,6 +412,8 @@ module.exports = function Task(Task) {
               let isValid = (validActArr.indexOf(data.__action__) > -1);
               if (!isValid) {
                 let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+                err.statusCode = err.status = 422;
+                err.code = 'INVALID_ACTION';
                 // log.error(options, err);
                 return next(err);
               }
@@ -508,7 +516,10 @@ module.exports = function Task(Task) {
     }
 
     if (self.status !== 'pending') {
-      return next(new Error('Task already completed'));
+      let error = new Error('Task already completed');
+      error.code = 'TASK_ALREADY_COMPLETED';
+      error.status = error.statusCode = 409;
+      return next(error);
     }
     self.processInstance({}, options, function fetchPI(err, processInstance) {
       /* istanbul ignore if*/
