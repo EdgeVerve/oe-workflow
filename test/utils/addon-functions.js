@@ -13,6 +13,12 @@ module.exports = {
     }
     return cb(err);
   },
+  testPostCompletion: function postCompleteFunction(options, taskInstance, cb) {
+    if (this._processVariables.testingHook && this._processVariables.modifyOptions) {
+      options.modifyOptions = this._processVariables.modifyOptions;
+    }
+    return cb(options, taskInstance);
+  },
 
   defaultTaskCreationHook: function defaultTaskCreationHook(options, taskDef, taskData, cb) {
     if (this._processVariables.testingHook) {
@@ -28,5 +34,11 @@ module.exports = {
       err = new Error('Default: Comments must be provided');
     }
     return cb(err);
-  }
+  },
+  defaultTaskPostCompletionHook: function defaultTaskPostCompletionHook(options, taskInstance, cb) {
+    if (this._processVariables.testingHook) {
+      options.modifyOptions = 'defaultModifiedOptions';
+    }
+    return cb(options, taskInstance);
+  },
 };
