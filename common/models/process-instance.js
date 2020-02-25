@@ -256,9 +256,26 @@ module.exports = function ProcessInstance(ProcessInstance) {
     if (outputVariables && task.message && typeof task.message === 'object' && typeof outputVariables === 'object') {
       Object.assign(task.message, outputVariables);
     }
-    // to disable boundary timer event if task is completed beforehand
-    self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
-    self._endFlowObject(options, token, processDefinition, delta, message, next);
+    let taskObj = processDefinition.getFlowObjectByName(token.name);
+    let postCompleteFunction = function postCompleteFunction(options, task, cb) {
+      /* default do-nothing */
+      return cb(options, task);
+    };
+    let workflowAddons = ProcessInstance.app.workflowAddons || {};
+    if (taskObj.postCompletionHook) {
+      if (workflowAddons[taskObj.postCompletionHook]) {
+        postCompleteFunction = workflowAddons[taskObj.postCompletionHook];
+      } else {
+        log.error('postComplete function ' + taskObj.postCompletionHook + ' not defined');
+      }
+    } else if (workflowAddons.defaultTaskPostCompletionHook) {
+      postCompleteFunction = workflowAddons.defaultTaskPostCompletionHook;
+    }
+    postCompleteFunction.call(self, options, task, function postCompleteCallBack(options, task) {
+      // to disable boundary timer event if task is completed beforehand
+      self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
+      self._endFlowObject(options, token, processDefinition, delta, message, next);
+    });
   };
 
   /**

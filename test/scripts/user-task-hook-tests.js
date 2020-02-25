@@ -49,7 +49,8 @@ describe('User Task Hook Tests', function callback() {
     bootstrap.loadAndTrigger(workflowName, {
       processVariables: {
         testingHook: true,
-        sla: 5
+        sla: 5,
+        modifyOptions: 'modifiedOptions'
       }
     }, function testFunction(err) {
       expect(err).to.not.exist;
@@ -66,7 +67,7 @@ describe('User Task Hook Tests', function callback() {
     let date = new Date(Date.now());
     date = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + processInstance._processVariables.sla));
     expect(taskWithHook.dueDate).to.deep.equal(date);
-
+    expect(bootstrap.defaultContext.modifyOptions).to.not.exist;
     taskWithHook.complete({}, bootstrap.defaultContext, function testFunction(err, data) {
       expect(err).to.exist;
       expect(err.message).to.equal('Comments must be provided');
@@ -76,14 +77,18 @@ describe('User Task Hook Tests', function callback() {
         expect(err).to.not.exist;
         expect(data).to.exist;
         expect(data.comments).to.equal('ok');
+        expect(bootstrap.defaultContext.modifyOptions).to.exist;
+        expect(bootstrap.defaultContext.modifyOptions).to.equals('modifiedOptions');
         done();
       });
     });
   });
 
-  it('Task with Hooks', function testFunction(done) {
+  it('Task with Invalid Hooks', function testFunction(done) {
     expect(taskInvalidHook).to.exist;
     expect(taskInvalidHook.dueDate).to.not.exist;
+    expect(bootstrap.defaultContext.modifyOptions).to.exist;
+    expect(bootstrap.defaultContext.modifyOptions).to.equals('modifiedOptions');
     taskInvalidHook.complete({}, bootstrap.defaultContext, function testFunction(err, data) {
       expect(err).to.not.exist;
       done();
@@ -102,6 +107,8 @@ describe('User Task Hook Tests', function callback() {
       done(err);
     });
 
+    expect(bootstrap.defaultContext.modifyOptions).to.exist;
+    expect(bootstrap.defaultContext.modifyOptions).to.equals('modifiedOptions');
     taskNoHook.complete({}, bootstrap.defaultContext, function testFunction(err, data) {
       expect(err).to.exist;
       expect(err.message).to.equal('Default: Comments must be provided');
@@ -111,6 +118,7 @@ describe('User Task Hook Tests', function callback() {
         expect(err).to.not.exist;
         expect(data).to.exist;
         expect(data.comments).to.equal('ok');
+        expect(bootstrap.defaultContext.modifyOptions).to.equals('defaultModifiedOptions');
       });
     });
   });
