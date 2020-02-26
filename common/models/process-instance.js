@@ -649,7 +649,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (token.elementVariable && token.collection) {
             token.inVariables[token.elementVariable] = token.collection[i];
           }
-          token.inVariables._iteration = i;
+          token.inVariables._iteration = i + 1;
           var _token = _.cloneDeep(token);
 
           ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);

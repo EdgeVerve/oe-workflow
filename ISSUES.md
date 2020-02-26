@@ -18,6 +18,15 @@
   * MessageStart seems to be starting even before the message has been received.
   * Designer also seems to be showing invalid editor for MessageStart event
 
+# taskId populated in process-token for the user-task 
+  * contains only one taskId. This works well if it is a normal user task. 
+  * In case of multi-instance tasks, 
+  * Series - works well as it populated one task id after the other.
+  * Parallel - it still contains only one task id even though there are many tasks created. 
+
+# if user task some expression evaluation fails
+previous task remains pending and flow execution stops
+
 # Call-Activity Designer Input/Output-Parameters
   * Call-Activity node in designer does not have means to specify below data and hence this part is not tested fully. (Refer call-activity-main.bpmn: Line#23-26)
   ``` xml
