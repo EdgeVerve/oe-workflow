@@ -56,12 +56,14 @@ module.exports = function WorkflowManager(WorkflowManager) {
 
     if (!data.operation) {
       err = new Error('operation parameter is required');
+      err.statusCode = err.status = 422;
       err.code = 'INVALID_MAPPING_DATA';
       // log.error(options, err);
       return cb(err);
     } else if (!(data.operation === 'create' || data.operation === 'update' ||
       data.operation === 'delete' || data.operation === 'save' || data.operation === 'custom')) {
       err = new Error('operation is not valid');
+      err.statusCode = err.status = 422;
       err.code = 'INVALID_MAPPING_DATA';
       // log.error(options, err);
       return cb(err);
@@ -82,12 +84,14 @@ module.exports = function WorkflowManager(WorkflowManager) {
 
     if (!data.modelName) {
       err = new Error('modelName parameter is required');
+      err.statusCode = err.status = 422;
       err.code = 'INVALID_MAPPING_DATA';
       // log.error(options, err);
       return cb(err);
       // } else if (typeof app.models[data.modelName] === 'undefined') {
     } else if (typeof loopback.findModel(data.modelName, options) === 'undefined') {
       err = new Error('modelName is not valid');
+      err.statusCode = err.status = 422;
       err.code = 'INVALID_MAPPING_DATA';
       // log.error(options, err);
       return cb(err);
@@ -122,18 +126,19 @@ module.exports = function WorkflowManager(WorkflowManager) {
     }
 
     function validateWorkflowDeployment(name, done) {
-      var filter = { 'and': [{ 'name': name }, { 'latest': true }] };
-      app.models.WorkflowDefinition.find({
-        'where': filter
-      }, options, function fetchWD(err, wfDefns) {
+      var filter = {where: { and: [{ name: name }, { latest: true }] }};
+      app.models.WorkflowDefinition.find(filter, options, function fetchWD(err, wfDefns) {
         if (err) {
           return done(err);
         } else if (wfDefns.length === 0) {
           err = new Error('workflow definition not found');
+          err.statusCode = err.status = 422;
           err.code = 'INVALID_MAPPING_DATA';
           return done(err);
         } else if (wfDefns.length > 1) {
-          return done(new Error('multiple workflow definitions found'));
+          err = new Error('multiple workflow definitions found');
+          err.statusCode = err.status = 501;
+          return done(err);
         }
         done(null);
       });

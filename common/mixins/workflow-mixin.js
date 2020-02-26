@@ -185,13 +185,13 @@ function addRemoteHooks(Model) {
       version: 'v0'
     };
 
-    if (operationList.create.indexOf(method) !== -1) {
+    if (operationList.create.indexOf(method) >= 0) {
       operation = 'create';
       filter.operation = { inq: ['save', 'create'] };
-    } else if (operationList.update.indexOf(method) !== -1) {
+    } else if (operationList.update.indexOf(method) >= 0) {
       filter.operation = { inq: ['save', 'update'] };
       operation = 'update';
-    } else if (operationList.delete.indexOf(method) !== -1) {
+    } else if (operationList.delete.indexOf(method) >= 0) {
       operation = 'delete';
       filter.operation = operation;
     } else {
