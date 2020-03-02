@@ -1,7 +1,7 @@
 {
   "name": "oe-workflow",
   "description": "oe-workflow engine written using oecloud.io framework",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "engines": {
     "node": ">=6"
   },
