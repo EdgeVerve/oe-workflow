@@ -82,8 +82,8 @@ describe('Business Rule Node', function CB(){
         stateVerifier.verifyTokens(procInst, ['Start', 'BusinessRule Task', 'Script Task', 'End']);
         expect(procInst._processVariables).to.exist;
         expect(procInst._processVariables.ruleEngineDecision).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body).to.deep.equal({
+        expect(procInst._processVariables.ruleEngineDecision.output).to.exist;
+        expect(procInst._processVariables.ruleEngineDecision.output).to.deep.equal({
           // Customer: 'Private',
           // OrderSize: 25,
           Discount: 0.05,
@@ -170,9 +170,9 @@ describe('Business Rule Node', function CB(){
         stateVerifier.verifyTokens(procInst, ['Start', 'BusinessRule Task', 'Script Task', 'End']);
         expect(procInst._processVariables).to.exist;
         expect(procInst._processVariables.ruleEngineDecision).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body.Routing).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body.Routing).to.deep.equal({
+        expect(procInst._processVariables.ruleEngineDecision.output).to.exist;
+        expect(procInst._processVariables.ruleEngineDecision.output.Routing).to.exist;
+        expect(procInst._processVariables.ruleEngineDecision.output.Routing).to.deep.equal({
           Routing: 'ACCEPT'
         });
         done();
@@ -241,8 +241,8 @@ describe('Business Rule Node', function CB(){
         stateVerifier.verifyTokens(procInst, ['Start', 'BusinessRule Task', 'Script Task', 'End']);
         expect(procInst._processVariables).to.exist;
         expect(procInst._processVariables.ruleEngineDecision).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body).to.exist;
-        expect(procInst._processVariables.ruleEngineDecision.body).to.deep.equal({
+        expect(procInst._processVariables.ruleEngineDecision.output).to.exist;
+        expect(procInst._processVariables.ruleEngineDecision.output).to.deep.equal({
           location: 'US',
           preApproved: false,
           eligibility: 3000
