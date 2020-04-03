@@ -732,7 +732,7 @@ function addOERemoteMethods(Model) {
             // log.error(options, err);
             return next(err);
           }
-        }, data, context);
+        }, data, context.options);
       });
     });
   }

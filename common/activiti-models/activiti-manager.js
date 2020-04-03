@@ -32,7 +32,8 @@ module.exports = function ActivitiManager(ActivitiManager) {
   // ActivitiManager.disableRemoteMethod('deleteWithVersion', true);
 
 
-  ActivitiManager.enable = function enable(baseUrl, options, cb) {
+  ActivitiManager.enable = function enable(payload, options, cb) {
+    let baseUrl = payload.baseUrl;
     var app = ActivitiManager.app;
     helper._enableActiviti(baseUrl, app, options, cb);
   };
@@ -152,10 +153,20 @@ module.exports = function ActivitiManager(ActivitiManager) {
 
   ActivitiManager.remoteMethod('enable', {
     description: 'enable Activiti rest endpoints',
-    accepts: {
-      arg: 'baseUrl',
-      description: 'Activiti server URL to connect',
-      type: 'string'
+    accepts: [{
+      arg: 'payload',
+      type: 'object',
+      http: {
+        source: 'body'
+      },
+      description: 'Activiti server URL to connect'
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
+    http: {
+      verb: 'post'
     },
     returns: {
       type: 'object',
