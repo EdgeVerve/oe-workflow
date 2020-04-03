@@ -345,7 +345,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
             token.isUserTask = true;
           }
           /* for now ConditionalEvents implementation is done only for Conditional Intermediate Catch Events */
-          if (obj.isConditionalEvent && obj.isIntermediateCatchEvent) {
+          if (obj.isConditionalEvent && (obj.isIntermediateCatchEvent || obj.isBoundaryEvent)) {
             token.isConditionalEvent = true;
             if (obj.pvName) token.pvName = obj.pvName;
           }

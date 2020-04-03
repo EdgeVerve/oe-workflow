@@ -10,7 +10,7 @@
       <bpmn2:incoming>SequenceFlow_1gaxaje</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_1gaxaje" sourceRef="ScriptTask_09pmlfa" targetRef="EndEvent_0t7hghm" />
-    <bpmn2:businessRuleTask id="ServiceTask_0yu9g9d" name="BusinessRule Task" oecloud:mode="DecisionTable" camunda:decisionRef="${pv.ruleName}">
+    <bpmn2:businessRuleTask id="ServiceTask_0yu9g9d" name="BusinessRule Task" oecloud:mode="DecisionTable" camunda:decisionRef="${pv.ruleName}" camunda:decisionRefBinding="custom">
       <bpmn2:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="Customer">Private</camunda:inputParameter>
