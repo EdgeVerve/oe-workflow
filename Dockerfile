@@ -1,4 +1,4 @@
-FROM ${REGISTRY}/alpine-node:8.11.4
+FROM ${REGISTRY}/alpine-node:12-alpine
 
 RUN mkdir -p /home/src
 
@@ -12,4 +12,4 @@ WORKDIR /home/src
 
 COPY . /home/src
 
-CMD node bin/index.js
+CMD node bin/app.js

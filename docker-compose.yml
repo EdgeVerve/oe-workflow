@@ -2,26 +2,26 @@ version: "3"
 services:
   web:
     entrypoint: node bin/app.js
-    image: ${REGISTRY}/${APP_IMAGE_NAME}:${TAG}
+    image: ${REGISTRY}/${APP_IMAGE_NAME}:${APP_TAG}
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       update_config:
         delay: 60s
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 512M
+      # resources:
+      #   limits:
+      #     cpus: '0.25'
+      #     memory: 512M
       restart_policy:
         condition: on-failure
         delay: 5s
-        max_attempts: 5
+        max_attempts: 3
         window: 180s
     environment:
       #NODE_TLS_REJECT_UNAUTHORIZED: "0"
       NODE_ENV: "docker"
       MONGO_HOST: ${MONGO_HOST}
-      VIRTUAL_HOST: "https://${APP_IMAGE_NAME}.${DOMAIN_NAME},${APP_IMAGE_NAME}.${DOMAIN_NAME},https://${APP_IMAGE_NAME}.oecloud.com,${APP_IMAGE_NAME}.oecloud.com"
+      VIRTUAL_HOST: ${VIRTUAL_HOST}
       SERVICE_PORTS: "3000"
       LICENSE_KEY: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvZWNsb3VkLmlvIiwiYXVkIjoib2VjbG91ZC5pbyIsImVuZGwiOjE1MTQ3NjQ4MDAwMDAsImlhdCI6MTUxOTAzODMxMX0.X2p2NWle9Fa0OQcqWmuGE8aaLr9coUxTI1AMRxaICPW2n2aVGsfE1ZFJ3DRoCBrZ4L1rIOqGuoceARzHXD3FBZjFET7ZfKnLd3yBvCOhPNEaPu-7dU1cRwS1Rdb-tgQrj_-1dzLWLTqOn7AxLOU1TH5uw2XQ4lg9UyeGzylvM2U"
       LICENSE_PUBLICKEY: "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAqigyzSV+Yo59aA0IOgnG3Ad9VD5iiLJG7xwezarFsApsBZbOFzd++yqG1Tc7bbZO3rTCymjdFmVVB8Kdq8PE5MIb4Tsz97W8IElyX9lwIU7AmPfh/8LV9YLLxTJPVwQMWIrEWNZs4CzMGkMKKcSUcURxG3nXyIc3IKh0HxrHJwIDAQAB-----END PUBLIC KEY-----"

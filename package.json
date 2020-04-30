@@ -1,7 +1,7 @@
 {
   "name": "oe-workflow",
   "description": "oe-workflow engine written using oecloud.io framework",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "engines": {
     "node": ">=6"
   },
@@ -17,17 +17,19 @@
     "lint": "eslint .",
     "fix-lint": "eslint --fix .",
     "grunt-cover": "grunt test-with-coverage",
-    "checks": "eslint . && npm run clean && grunt test-with-coverage"
+    "checks": "eslint . && npm run clean && grunt test-with-coverage",
+    "app": "node bin/app.js"
   },
   "dependencies": {
     "async": "2.6.1",
-    "uuid": "3.3.2",
-    "xml2js": "0.4.17",
-    "loopback-connector-rest": "3.0.0",
+    "iso8601-duration": "^1.2.0",
+    "loopback-connector-rest": "^3.6.0",
     "oe-cloud": "^2.0.0",
     "oe-common-mixins": "^2.0.0",
     "oe-master-job-executor": "^2.0.0",
-    "oe-studio-service": "^2.0.0"
+    "oe-workflow-modeler": "^2.2.0",
+    "uuid": "3.3.2",
+    "xml2js": "0.4.17"
   },
   "devDependencies": {
     "babel-eslint": "7.2.3",
@@ -37,23 +39,18 @@
     "chalk": "1.1.1",
     "eslint": "4.10.0",
     "grunt": "1.0.4",
+    "grunt-cli": "1.3.2",
     "grunt-contrib-clean": "2.0.0",
-    "grunt-contrib-copy": "1.0.0",
-    "grunt-mkdir": "1.0.0",
     "grunt-mocha-istanbul": "5.0.2",
-    "grunt-mocha-test": "0.13.3",
+    "if-env": "1.0.4",
     "istanbul": "0.4.5",
     "mocha": "5.2.0",
-    "superagent-defaults": "0.1.14",
-    "supertest": "3.4.2",
-    "grunt-banner": "0.6.0",
-    "grunt-cli": "1.3.2",
-    "grunt-jsbeautifier": "0.2.13",
-    "if-env": "1.0.4",
     "oe-business-rule": "^2.0.0",
-    "loopback-connector-mongodb": "git+https://github.com/EdgeVerve/loopback-connector-mongodb.git#master",
+    "oe-connector-mongodb": "^2.0.0",
     "oe-connector-oracle": "^2.0.0",
-    "oe-connector-postgresql": "^2.0.0"
+    "oe-connector-postgresql": "^2.0.0",
+    "superagent-defaults": "0.1.14",
+    "supertest": "3.4.2"
   },
   "license": "MIT",
   "repository": {

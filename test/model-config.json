@@ -7,13 +7,7 @@
       "./test/common/models",
       "./models"
     ],
-    "mixins": [
-      "loopback/common/mixins",
-      "loopback/server/mixins",
-      "./common/mixins",
-      "../common/mixins",
-      "./mixins"
-    ]
+    "mixins": []
   },
   "User": {
     "dataSource": "db"

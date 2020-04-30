@@ -25,7 +25,8 @@
   "workflow":{
     "addonModule": "utils/addon-functions",
     "recovery": {
-      "retryInterval": 2000
+      "retryInterval": 600000,
+      "stalePeriod": 30000
     }
   },
   "masterJobExecutor": {

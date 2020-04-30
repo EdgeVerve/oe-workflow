@@ -93,6 +93,7 @@ describe('Step Variables Tests', function CB() {
       key1: 'val1',
       key2: 'val2'
     });
+    expect(userTask.message.scrOutputText).to.deep.equal('scrOutputTextVal');
     done();
   });
 
@@ -106,14 +107,17 @@ describe('Step Variables Tests', function CB() {
       key1: 'val1',
       key2: 'val2'
     });
+    expect(userTask.message.usrOutput).to.not.exist;
     done();
   });
 
   it('workflow completes', function testFunction(done) {
     expect(userTask).to.exist;
+    // when user task completes output parameters are populated as message on task
     userTask.complete({}, bootstrap.defaultContext, function testFunction(err, task) {
       expect(err).to.not.exist;
       expect(task.status).to.equal(Status.COMPLETE);
+      expect(task.message.usrOutput).to.deep.equal(['5', '6']);
       done();
     });
   });

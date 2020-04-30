@@ -25,6 +25,7 @@ var timerEvents = require('../../lib/utils/timeouts.js');
 var processTokens = require('../../lib/utils/process-tokens.js');
 var StateDelta = require('../../lib/utils/process-state-delta.js');
 var sandbox = require('../../lib/workflow-nodes/sandbox.js');
+var recrevaluatePayload = require('../../lib/workflow-nodes/businessruletask-node.js').evaluatePayload;
 
 var subprocessEventHandler = require('../../lib/workflow-eventHandlers/subprocesshandlers.js');
 var catchEventHandler = require('../../lib/workflow-eventHandlers/catcheventhandler.js');
@@ -59,7 +60,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         if (!processDefinitionInstance) {
           return next(new Error('Process definition not present'));
         }
-        var startFlowObject = processDefinitionInstance.getStartEvent();
+        var startFlowObjects = processDefinitionInstance.getStartEvents();
 
         if (!ctx.options) {
           var ctxerr = new Error('Workflow context init failed.');
@@ -69,9 +70,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
         var options = ctx.options;
         instance.init(options);
 
-        var token = processTokens.createToken(startFlowObject.name, startFlowObject.bpmnId, instance.message);
-        instance._processTokens[token.id] = token;
-
+        startFlowObjects && startFlowObjects.forEach(startFlowObject => {
+          let token = processTokens.createToken(startFlowObject.name, startFlowObject.bpmnId, instance.message);
+          if (startFlowObject.isMessageEvent) {
+            token.isMessageStartEvent = true;
+          }
+          instance._processTokens[token.id] = token;
+        });
         instance.processDefinitionBpmnId = processDefinitionInstance.processDefinition.bpmnId;
         instance.unsetAttribute('message');
         instance.unsetAttribute('processVariables');
@@ -91,11 +96,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
       var options = instance._workflowCtx || ctx.options;
 
       var tokenIds = Object.keys(instance._processTokens);
-      if (tokenIds.length === 1) {
-        ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, instance._processTokens[tokenIds[0]]);
+      if (tokenIds && tokenIds.length > 0) {
+        tokenIds.forEach(tokenId => {
+          ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, instance._processTokens[tokenId]);
+        });
       } else {
-        // multiple start events found, or no start event found
-        var err = new Error('multiple start events found, or no start event found');
+        // no start event found
+        var err = new Error('no start event found');
         log.error(ctx.options, err);
         return next(err);
       }
@@ -126,6 +133,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
       timeoutIds: {},
       timerIds: {}
     };
+    this.failedTokenIds = [];
     this._synchronizeFlow = {};
 
     // Check if this is really required.
@@ -177,16 +185,55 @@ module.exports = function ProcessInstance(ProcessInstance) {
     });
   };
 
+  ProcessInstance.prototype._receiveThrownMessage = function _receiveThrownMessage(options, message, payload, next) {
+    next = next || function empty() { };
+    var self = this;
+    this.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
+      /* istanbul ignore if*/
+      if (err) {
+        return next(err);
+      }
+      var token = null;
+      var delta = new StateDelta();
+      var processDefinition = processDefinitionInstance.processDefinition;
+      if (!payload.id && !payload.code) {
+        log.error(options, 'Invalid throw object');
+        return next(new Error('Invalid throw object'));
+      }
+      message = payload.message;
+      var payloadId = payload.id;
+      var messageStartEventFlowObjects = processDefinition.catchEventIndex[payloadId] || [];
+      if (messageStartEventFlowObjects.length === 1) {
+        var messageStartEventFlowObject = messageStartEventFlowObjects[0];
+        if (messageStartEventFlowObject.isStartEvent && messageStartEventFlowObject.isMessageEvent) {
+          if (self.isPending(messageStartEventFlowObject)) {
+            token = self.findToken(messageStartEventFlowObject);
+            self._endFlowObject(options, token, processDefinitionInstance, delta, message, next);
+          }
+        }
+      } else if (messageStartEventFlowObjects.length > 1) {
+        err = new Error('no two message start events should refer to the same message or should have same message name');
+        log.error(options, err);
+        return next(err);
+      } else if (messageStartEventFlowObjects.length === 0) {
+        err = new Error('no matching message found to start the process');
+        log.error(options, err);
+        return next(err);
+      }
+    });
+  };
+
   /**
    * Handling Completion of User
    * @param  {Object}   options          Options
    * @param  {Object}   task             Task
    * @param  {Object}   message          Message
    * @param  {Object}   processVariables ProcessVariables
+   * @param  {Object}   processDefinition Process Definition
    * @param  {Function} next             Callback
    * @returns {void}
    */
-  ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, next) {
+  ProcessInstance.prototype._completeTask = function _completeTask(options, task, message, processVariables, processDefinition, next) {
     var self = this;
     var token = this._processTokens[task.processTokenId];
 
@@ -199,18 +246,19 @@ module.exports = function ProcessInstance(ProcessInstance) {
     }
     var delta = new StateDelta();
     delta.setProcessVariables(processVariables);
-
-    self.processDefinition({}, options, function fetchPD(err, processDefinitionInstance) {
-      /* istanbul ignore if*/
-      if (err) {
-        log.error(options, err);
-        return next(err);
-      }
-
-      // to disable boundary timer event if task is completed beforehand
-      self._clearBoundaryTimerEvents(delta, options, processDefinitionInstance.getFlowObjectByName(token.name));
-      self._endFlowObject(options, token, processDefinitionInstance, delta, message, next);
-    });
+    var currentFlowObject = processDefinition.getFlowObjectByName(token.name);
+    if (currentFlowObject.inputOutputParameters && currentFlowObject.inputOutputParameters.outputParameters) {
+      var outputParameters = currentFlowObject.inputOutputParameters.outputParameters;
+      var evalOutput = recrevaluatePayload(outputParameters, task.message, self);
+      var outputVariables = {};
+      Object.assign(outputVariables, evalOutput);
+    }
+    if (outputVariables && task.message && typeof task.message === 'object' && typeof outputVariables === 'object') {
+      Object.assign(task.message, outputVariables);
+    }
+    // to disable boundary timer event if task is completed beforehand
+    self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
+    self._endFlowObject(options, token, processDefinition, delta, message, next);
   };
 
   /**
@@ -231,6 +279,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var currentFlowObjectName = flowObjectToken.name;
     var currentFlowObject = processDefinitionInstance.getFlowObjectByName(currentFlowObjectName);
     var self = this;
+    /* storing the processVariables to compare with updated processVariables after updates */
+    var oldPV = self._processVariables;
+    var tokens = self._processTokens;
 
     var nextFlowObjects = TokenEmission.getNextFlowObjects(currentFlowObject, message,
       processDefinitionInstance, self, options);
@@ -245,12 +296,18 @@ module.exports = function ProcessInstance(ProcessInstance) {
       for (var i in nextFlowObjects) {
         if (Object.prototype.hasOwnProperty.call(nextFlowObjects, i)) {
           var obj = nextFlowObjects[i];
-          var meta;
+          let meta;
 
           if (obj.isParallelGateway) {
             meta = {
               from: currentFlowObjectName,
               type: 'ParallelGateway',
+              gwId: obj.bpmnId
+            };
+          } else if (obj.isInclusiveGateway) {
+            meta = {
+              from: currentFlowObjectName,
+              type: 'InclusiveGateway',
               gwId: obj.bpmnId
             };
           } else if (obj.isAttachedToEventGateway) {
@@ -262,15 +319,36 @@ module.exports = function ProcessInstance(ProcessInstance) {
 
           var token = processTokens.createToken(obj.name, obj.bpmnId, message, meta);
 
+          /* Mark token to be durable */
+          if (obj.isTimerEvent && obj.timeDate) {
+            token.isDurableTimeout = true;
+          }
+
+          if (obj.isUserTask) {
+            token.isUserTask = true;
+          }
+          /* for now ConditionalEvents implementation is done only for Conditional Intermediate Catch Events */
+          if (obj.isConditionalEvent && obj.isIntermediateCatchEvent) {
+            token.isConditionalEvent = true;
+            if (obj.pvName) token.pvName = obj.pvName;
+          }
           if (obj.isParallelGateway) {
             delta.setPGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
             delta.setPGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
           }
 
+          if (obj.isInclusiveGateway) {
+            delta.setIGSeqsToExpect(obj.bpmnId, obj.expectedInFlows);
+            delta.setIGSeqToFinish(obj.bpmnId, obj.attachedSeqFlow, token.id);
+          }
+
           if (obj.isMultiInstanceLoop) {
             try {
               if (obj.hasCollection) {
-                var collection = sandbox.evaluateExpression(options, obj.collection, message, self);
+                /* Delta Process Variables that are not yet applied on the process-instance should also be available */
+                let inVariables = Object.assign({}, delta.processVariables);
+
+                var collection = sandbox.evaluateExpression(options, obj.collection, message, self, inVariables);
                 if (typeof collection === 'undefined') {
                   throw new Error('collection in multi instance is undefined.');
                 }
@@ -315,7 +393,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
           delta.addToken(token);
         }
       }
-      delta.setTokenToRemove(flowObjectToken.id);
+
+      /** Mark the token complete
+       * Recurring timers would send flowObjectToken.keepActive=true
+      */
+      if (!flowObjectToken.keepActive) {
+        delta.setTokenToRemove(flowObjectToken.id);
+      }
     }
 
     // add boundary event tokens to interrupt for the currentFlowObject that we are completing, if any
@@ -330,13 +414,13 @@ module.exports = function ProcessInstance(ProcessInstance) {
       }
     }
 
-    self.commit(options, delta, function commitCb(err, instance) {
+    self.commit(options, delta, processDefinitionInstance, function commitCb(err, instance) {
       if (err) {
         // If there are no changes to apply then we don't have to emit further events.
         log.error(options, err.message);
         return next(err);
       }
-
+      var newPV = instance._processVariables;
       if (instance._status === 'complete') {
         instance.parentProcess({}, options, function fetchParentProcess(err, parentProcess) {
           /* istanbul ignore if*/
@@ -347,6 +431,27 @@ module.exports = function ProcessInstance(ProcessInstance) {
           // This is to allow a subprocess to not go to the parent process unless all the subflows have ended
           if (parentProcess) {
             ProcessInstance.emit(SUBPROCESS_END_EVENT, options, parentProcess, instance.parentToken, instance._processVariables);
+          }
+        });
+      }
+
+      /* If any of the Conditional Event Token is Pending and if a change is detected in processVariables
+        then only we will trigger the Conditional Events to Evaluate again */
+      var conditionalTokens = Object.keys(tokens).filter(function getConditionalTokens(tokenId) {
+        return tokens[tokenId].isConditionalEvent && tokens[tokenId].status === 'pending';
+      });
+
+      if (conditionalTokens.length) {
+        conditionalTokens.forEach(tokenId => {
+          let pvName = tokens[tokenId].pvName;
+          if (pvName) {
+            // checking for particular process variable change
+            if (newPV.hasOwnProperty(pvName) && newPV[pvName] !== oldPV[pvName]) {
+              ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, tokens[tokenId]);
+            }
+            // when particular process variable name is not specified, check for all processVariable changes
+          } else if (!_.isEqual(instance._processVariables, oldPV)) {
+            ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, tokens[tokenId]);
           }
         });
       }
@@ -441,27 +546,42 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (!token) {
             break;
           }
-          if (token.isSequential) {
-            token.inVariables = token.inVariables || {};
-            token.inVariables._iteration = 1;
-            if (token.collection && token.elementVariable) {
-              token.inVariables[token.elementVariable] = token.collection[0];
-            }
-          }
           // TODO : why this check token.id !== delta.tokenToRemove
           if (token.isParallel) {
             var loopcount = token.nrOfInstances;
-            var counter = 0;
-            while (counter < loopcount) {
-              token.inVariables = token.inVariables || {};
-              if (token.elementVariable) {
-                token.inVariables[token.elementVariable] = token.collection[counter];
+            if (loopcount > 0) {
+              var counter = 0;
+              while (counter < loopcount) {
+                token.inVariables = token.inVariables || {};
+                if (token.elementVariable) {
+                  token.inVariables[token.elementVariable] = token.collection[counter];
+                }
+                token.inVariables._iteration = counter;
+                var _token = _.cloneDeep(token);
+                // console.log('437 - Parallel ', counter , ' of ', loopcount);
+                ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);
+                counter++;
               }
-              token.inVariables._iteration = counter;
-              var _token = _.cloneDeep(token);
-              // console.log('437 - Parallel ', counter , ' of ', loopcount);
-              ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);
-              counter++;
+            } else {
+              // as collection is empty, marking the token as complete even before emitting
+              let newDelta = new StateDelta();
+              let message = {};
+              instance._endFlowObject(options, token, processDefinitionInstance, newDelta, message);
+            }
+          } else if (token.isSequential) {
+            if (token.nrOfInstances === 0) {
+              // as collection is empty, marking the token as complete even before emitting
+              token.nrOfActiveInstances = 0;
+              let newDelta = new StateDelta();
+              let message = {};
+              instance._endFlowObject(options, token, processDefinitionInstance, newDelta, message);
+            } else {
+              token.inVariables = token.inVariables || {};
+              token.inVariables._iteration = 1;
+              if (token.collection && token.elementVariable) {
+                token.inVariables[token.elementVariable] = token.collection[0];
+              }
+              ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token);
             }
           } else {
             // console.log('441 - ', currentFlowObjectName,  ' -> ', token.name);
@@ -478,7 +598,9 @@ module.exports = function ProcessInstance(ProcessInstance) {
     var tokens = self._processTokens;
     var options = self._workflowCtx || {};
     Object.keys(tokens).filter(function filterPendingTokens(tokenId) {
-      return tokens[tokenId].status === 'pending';
+      /** Emit any pending token.
+       * Do not emit durableTimeout tokens as they will be emitted by periodic checks separately */
+      return tokens[tokenId].status === 'pending' && !tokens[tokenId].isDurableTimeout;
     }).forEach(function continueWorkflow(tokenId) {
       self.reemit(tokens[tokenId], options, null);
     });
@@ -548,20 +670,30 @@ module.exports = function ProcessInstance(ProcessInstance) {
             // wait, sub process on its own will complete the token
           }
         });
-      } else if (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration) {
-        var at = token.startTime;
-        if (typeof at === 'string') {
-          at = new Date(at);
-        }
-        var now = Date.now();
-        // calculating again to handle pending timeout
-        var diff = now - at;
-        var recoveryPayload = {
-          _diff: diff,
-          applicableTo: function applicableTo(flowObject) {
-            return (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration);
+      } else if (currentFlowObject.isTimerEvent) {
+        var recoveryPayload;
+        if (currentFlowObject.timeDuration) {
+          var at = token.startTime;
+          if (typeof at === 'string') {
+            at = new Date(at);
           }
-        };
+          var now = Date.now();
+          // calculating again to handle pending timeout
+          var diff = now - at;
+          recoveryPayload = {
+            _diff: diff,
+            applicableTo: function applicableTo(flowObject) {
+              return (currentFlowObject.isTimerEvent && currentFlowObject.timeDuration);
+            }
+          };
+        } else if (currentFlowObject.timeDate) {
+          recoveryPayload = {
+            keepActive: token.keepActive,
+            applicableTo: function applicableTo(flowObject) {
+              return (currentFlowObject.isTimerEvent && currentFlowObject.timeDate);
+            }
+          };
+        }
         ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, token, null, recoveryPayload);
       } else if (currentFlowObject.isUserTask) {
         instance.tasks({
@@ -594,12 +726,16 @@ module.exports = function ProcessInstance(ProcessInstance) {
    * Throws an error if there are no changes to apply.
    * @param  {Object}   options Options
    * @param  {Object}   delta   Process-State-Delta
+   * @param  {Object}   processDefinitionInstance processDefinitionInstance
    * @param  {Function} next    Callback
    * @returns {void}
    */
-  ProcessInstance.prototype.commit = function commitFunction(options, delta, next) {
+  ProcessInstance.prototype.commit = function commitFunction(options, delta, processDefinitionInstance, next) {
+    if (typeof processDefinitionInstance === 'function') {
+      next = processDefinitionInstance;
+    }
     var self = this;
-    var changes = delta.apply(self, options);
+    var changes = delta.apply(self, processDefinitionInstance, options);
     // console.log(delta);
     if (changes === null) {
       var err = new Error('trying to make invalid state change');
@@ -648,7 +784,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
           log.error(options, err);
           return next(err);
         }
-        instance.commit(options, delta, next);
+        instance.commit(options, delta, processDefinitionInstance, next);
       });
     }
   };
@@ -693,26 +829,24 @@ module.exports = function ProcessInstance(ProcessInstance) {
   /**
    * register timer events
    * @param  {Object} options          Options
-   * @param  {String} type             Type
-   * @param  {Object} currentActivity  CurrentActivity
-   * @param  {String} tokenId          Token ID
+   * @param  {Object} currentFlowObject  currentFlowObject
    */
-  ProcessInstance.prototype._registerTimerEvents = function _registerTimerEvents(options, type, currentActivity, tokenId) {
+  ProcessInstance.prototype._registerTimerEvents = function _registerTimerEvents(options, currentFlowObject) {
     var self = this;
     var delta = new StateDelta();
 
-    if (type === 'START') {
-      var startEvent = currentActivity;
+    if (currentFlowObject.isStartEvent) {
+      var startEvent = currentFlowObject;
       log.debug(options, 'Token was put on \'' + startEvent.name);
-      timerEvents.addStartTimerEvent(delta, options, ProcessInstance, self, startEvent, tokenId);
-    } else if (type === 'INTERMEDIATE') {
-      var intermediateEvent = currentActivity;
+      timerEvents.addStartTimerEvent(delta, options, ProcessInstance, self, startEvent);
+    } else if (currentFlowObject.isIntermediateCatchEvent) {
+      var intermediateEvent = currentFlowObject;
       log.debug(options, 'Token was put on \'' + intermediateEvent.name);
-      timerEvents.addIntermediateTimerEvent(delta, options, ProcessInstance, self, intermediateEvent, tokenId);
-    } else if (type === 'BOUNDARY') {
-      var boundaryEvent = currentActivity;
+      timerEvents.addIntermediateTimerEvent(delta, options, ProcessInstance, self, intermediateEvent);
+    } else if (currentFlowObject.isBoundaryEvent) {
+      var boundaryEvent = currentFlowObject;
       log.debug(options, 'Token was put on \'' + boundaryEvent.name);
-      timerEvents.addBoundaryTimerEvent(delta, options, ProcessInstance, self, boundaryEvent, tokenId);
+      timerEvents.addBoundaryTimerEvent(delta, options, ProcessInstance, self, boundaryEvent);
     } else {
       log.error(options, 'Unknown type of Timer Event being requested.');
     }
@@ -893,9 +1027,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
         });
       };
       return next(null, insts.filter(inst => {
-        return Object.values(inst._processTokens).filter(token => {
-          return token.status === 'failed';
-        }).length > 0;
+        return inst.failedTokenIds.length > 0;
       }));
     });
   };

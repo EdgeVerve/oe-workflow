@@ -16,7 +16,7 @@ var logger = require('oe-logger');
 var log = logger('maker-checker-mixin');
 
 module.exports = function MakerCheckerMixin(Model) {
-  // Skip this mixin where ever not applicable.
+  // Skip this mixin whereever not applicable.
   if (skipThisMixinIfNotApplicable(Model)) {
     return;
   }
@@ -46,7 +46,9 @@ module.exports = function MakerCheckerMixin(Model) {
   Model.updateId = uuidv4();
 
   // to enable newly added REST Endpoints on fly
-  Model.app.model(Model);
+  if (Model.app) {
+    Model.app.model(Model);
+  }
 };
 
 // function addBeforeRemotes(Model) {

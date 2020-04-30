@@ -1,12 +1,12 @@
 module.exports = {
-  testCreation: function preCreateFunction(taskDef, taskData, cb) {
+  testCreation: function preCreateFunction(options, taskDef, taskData, cb) {
     if (this._processVariables.testingHook && this._processVariables.sla) {
       let date = new Date(Date.now());
       taskData.dueDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + this._processVariables.sla));
     }
     return cb(null, taskData);
   },
-  testCompletion: function preCompleteFunction(payload, taskInstance, taskDef, cb) {
+  testCompletion: function preCompleteFunction(options, payload, taskInstance, taskDef, cb) {
     let err = null;
     if (this._processVariables.testingHook && !payload.__comments__) {
       err = new Error('Comments must be provided');
@@ -14,7 +14,7 @@ module.exports = {
     return cb(err);
   },
 
-  defaultTaskCreationHook: function defaultTaskCreationHook(taskDef, taskData, cb) {
+  defaultTaskCreationHook: function defaultTaskCreationHook(options, taskDef, taskData, cb) {
     if (this._processVariables.testingHook) {
       let date = new Date(Date.now());
       taskData.dueDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 2));
@@ -22,7 +22,7 @@ module.exports = {
     }
     return cb(null, taskData);
   },
-  defaultTaskCompletionHook: function defaultTaskCompletionHook(payload, taskInstance, taskDef, cb) {
+  defaultTaskCompletionHook: function defaultTaskCompletionHook(options, payload, taskInstance, taskDef, cb) {
     let err = null;
     if (this._processVariables.testingHook && !payload.__comments__) {
       err = new Error('Default: Comments must be provided');

@@ -13,7 +13,7 @@
       <bpmn2:incoming>SequenceFlow_1y2ndgr</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_0g2l3t9</bpmn2:outgoing>
       <bpmn2:timerEventDefinition>
-        <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression">400</bpmn2:timeDuration>
+        <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression">800</bpmn2:timeDuration>
       </bpmn2:timerEventDefinition>
     </bpmn2:intermediateCatchEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_1y2ndgr" sourceRef="ParallelGateway_0ttmixk" targetRef="IntermediateCatchEvent_0t8ya38" />

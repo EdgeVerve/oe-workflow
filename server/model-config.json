@@ -1,18 +1,12 @@
 {
   "_meta": {
     "sources": [
-      "../common/models",
       "loopback/common/models",
       "loopback/server/models",
-      "./models",
+      "../common/models",
       "../common/activiti-models"
     ],
-    "mixins": [
-      "loopback/common/mixins",
-      "loopback/server/mixins",
-      "../common/mixins",
-      "./mixins"
-    ]
+    "mixins": []
   },
   "ProcessDefinition": {
     "dataSource": "db",
@@ -77,5 +71,9 @@
   "ChangeWorkflowRequest" :{
     "dataSource": "db",
     "public":true 
+  },
+  "DurableTimeout": {
+    "dataSource": "db",
+    "public": true
   }
 }

@@ -123,7 +123,8 @@ module.exports = function Task(Task) {
    */
   Task.filtered = function filtered(filter, options, next) {
     let fieldsToRemove = [];
-    if (filter && filter.fields) {
+    filter = filter || {};
+    if (filter.fields) {
       let mandatoryFields = ['candidateUsers', 'excludedUsers', 'candidateRoles', 'excludedRoles', 'candidateGroups', 'excludedGroups'];
       mandatoryFields.forEach(function addMandatoryField(val) {
         if (!filter.fields[val]) {
@@ -216,7 +217,7 @@ module.exports = function Task(Task) {
         var workflowInstanceId;
         var WorkflowManager;
         let taskObj = processDef.getFlowObjectByName(tname);
-        let preCompleteFunction = function preCompleteFunction(payload, taskInstance, taskDef, cb) {
+        let preCompleteFunction = function preCompleteFunction(options, payload, taskInstance, taskDef, cb) {
           /* default do-nothing */
           return cb();
         };
@@ -233,7 +234,7 @@ module.exports = function Task(Task) {
 
         try {
           /* Invoke with process-instance as 'this' */
-          preCompleteFunction.call(process, data, self, taskObj, function preCompleteCallback(err) {
+          preCompleteFunction.call(process, options, data, self, taskObj, function preCompleteCallback(err) {
             if (err) {
               return next(err);
             }
@@ -320,7 +321,7 @@ module.exports = function Task(Task) {
 
                       xdata.msg = pdata.msg;
                       xdata.__comments__ = pdata.__comments__;
-                      return self.complete_(xdata, options, next);
+                      return self.complete_(options, xdata, processDef, next);
                     });
                   });
                 });
@@ -382,7 +383,7 @@ module.exports = function Task(Task) {
                     return handleError(err, options, next);
                   }
                   log.debug(options, 'updated verified by field in change request by checker');
-                  return self.complete_(pdata, options, next);
+                  return self.complete_(options, pdata, processDef, next);
                 });
               });
             } else if (taskObj.isCheckerAutoFinalize) {
@@ -447,7 +448,7 @@ module.exports = function Task(Task) {
                   if (err) {
                     return handleError(err, options, next);
                   }
-                  return self.complete_(pdata, options, next);
+                  return self.complete_(options, pdata, processDef, next);
                 });
               } else {
                 /* Update verificationStatus and Remarks on ChangeRequest and mark the task complete */
@@ -471,12 +472,12 @@ module.exports = function Task(Task) {
                     if (err) {
                       return handleError(err, options, next);
                     }
-                    return self.complete_(pdata, options, next);
+                    return self.complete_(options, pdata, processDef, next);
                   });
                 });
               }
             } else {
-              return self.complete_(data, options, next);
+              return self.complete_(options, data, processDef, next);
             }
           });
         } catch (err) {
@@ -487,12 +488,13 @@ module.exports = function Task(Task) {
   };
   /**
    * REST endpoint for completing User-Task
-   * @param  {Object}   data              Process-Variables & Message data
    * @param  {Object}   options           Options
+   * @param  {Object}   data              Process-Variables & Message data
+   * @param  {Object}   pdef              Process-Definition
    * @param  {Function} next              Callback
    * @returns {void}
    */
-  Task.prototype.complete_ = function complete_(data, options, next) {
+  Task.prototype.complete_ = function complete_(options, data, pdef, next) {
     var self = this;
 
     var message = {};
@@ -514,7 +516,7 @@ module.exports = function Task(Task) {
         return handleError(err, options, next);
       }
       var workflowCtx = processInstance._workflowCtx || options;
-      processInstance._completeTask(workflowCtx, self, message, processVariables, taskCompleteCallback);
+      processInstance._completeTask(workflowCtx, self, message, processVariables, pdef, taskCompleteCallback);
 
       function taskCompleteCallback(err) {
         var status = 'complete';
@@ -529,7 +531,8 @@ module.exports = function Task(Task) {
         var updates = {
           status: status,
           comments: data.__comments__,
-          _version: self._version
+          _version: self._version,
+          message: self.message
         };
         self.updateAttributes(updates, options, function saveTask(saveError, instance) {
           if (err || saveError) {

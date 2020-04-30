@@ -36,3 +36,4 @@ dev
 test/bpmn-files-todo
 test/todo
 *.js1
+oracle-user.sh

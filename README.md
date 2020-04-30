@@ -26,7 +26,7 @@ _oe-workflow_ can be interacted and managed through either function level API's 
 ## Getting Started
 * Clone the git repository for refapp ```git clone https://github.com/EdgeVerve/oe-workflow.git```
 * Install Node modules ``` npm install ```
-* Start the Application ```node . ```
+* Start the Application ```npm run app```
 
 ## Coding Guidelines
 Please refer to [Coding Guidlines](./Coding_Guidelines.md) document.

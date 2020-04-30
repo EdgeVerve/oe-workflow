@@ -34,6 +34,28 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
         }
         var i = 0;
         var flowObjects = processDefinition.flowObjects;
+
+        /* Check for missing names */
+        let missingNames = flowObjects.filter(fo => !fo.name).map(fo => `${fo.type}/${fo.bpmnId}`);
+        if (missingNames.length > 0) {
+          return next({
+            status: 422,
+            message: 'Specify name for all flow nodes'
+          });
+        }
+        /* Check for duplicate names */
+        let nameCount = flowObjects.map(fo => fo.name).reduce((s, foName) => {
+          s[foName] = s[foName] || 0;
+          s[foName] = s[foName] + 1;
+          return s;
+        }, {});
+        if (Object.values(nameCount).find(n => n > 1)) {
+          return next({
+            status: 422,
+            message: 'Flow node names must be unique'
+          });
+        }
+
         var createSubProcess = function createSubProcess(err) {
           if (err) {
             return next(err);
@@ -52,7 +74,7 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
               if (processDef.bpmndataId) {
                 subProcessDef.bpmndataId = processDef.bpmndataId;
               }
-              delete (flowObject.processDefinition);
+              delete flowObject.processDefinition;
 
               ProcessDefinition.create(subProcessDef, ctx.options, createSubProcess);
             } else if (flowObject.isCallActivity) {
@@ -139,20 +161,20 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
    * Get start events
    * @return {Object}     Event
    */
-  ProcessDefinition.prototype.getStartEvent = function getStartEvent() {
-    var startEvents =  this.processDefinition.flowObjects.filter(function iterateFlowObjects(flowObject) {
-      if (!flowObject) {
-        log.error(log.defaultContext(), 'No flowObject found.');
+  ProcessDefinition.prototype.getStartEvents = function getStartEvents() {
+    var startEvents = this.processDefinition.flowObjects.filter(flowObject => flowObject && flowObject.isStartEvent);
+    if (startEvents.length === 0) {
+      log.error(log.defaultContext(), 'No start events found');
+      return null;
+    } else if (startEvents.length !== 1) {
+      /* If more than one start events are found, all should be message-start-event */
+      let messageStartEvents = startEvents.filter(item => item.isMessageEvent);
+      if (messageStartEvents.length !== startEvents.length) {
+        log.error(log.defaultContext(), 'process should have one start event startEvent, to be checked in validation');
         return null;
       }
-      return (flowObject.isStartEvent);
-    });
-
-    if (startEvents.length !== 1) {
-      log.error(log.defaultContext(), 'process should have one start event startEvent, to be checked in validation');
-      return null;
     }
-    return startEvents[0];
+    return startEvents;
   };
 
   /**
@@ -201,25 +223,25 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
         }
       } else {
         log.error(log.defaultContext(), "Cannot find the activity the boundary event '" + boundaryEvent.name +
-                    "' is attached to activity BPMN ID: '" + boundaryEvent.attachedToRef + "'.");
+          "' is attached to activity BPMN ID: '" + boundaryEvent.attachedToRef + "'.");
       }
     });
 
     return index;
   }
   /**
-     * Build boundary Events by attachment Index
-     * @return {object}     IndexMap
-     */
+   * Build boundary Events by attachment Index
+   * @return {object}     IndexMap
+   */
   ProcessDefinition.prototype.buildBoundaryEventsByAttachmentIndex = function buildBoundaryEventsByAttachmentIndexFn() {
     var self = this;
     return buildBoundaryEventsByAttachmentIndex(self);
   };
 
   /**
-     * Fetch all boundary events
-     * @return {[Object]}   FlowObject
-     */
+   * Fetch all boundary events
+   * @return {[Object]}   FlowObject
+   */
   ProcessDefinition.prototype.getBoundaryEvents = function getBoundaryEvents() {
     return this.processDefinition.flowObjects.filter(function filterFlowObjects(flowObject) {
       return (flowObject.isBoundaryEvent);
@@ -227,10 +249,10 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
   };
 
   /**
-     * Find Pool information for the Flow Object
-     * @param  {Object} flowObject  FlowObject
-     * @return {String}             LaneName
-     */
+   * Find Pool information for the Flow Object
+   * @param  {Object} flowObject  FlowObject
+   * @return {String}             LaneName
+   */
   ProcessDefinition.prototype.findPoolInfo = function findPoolInfo(flowObject) {
     var lanes = this.processDefinition.lanes;
     for (var i in lanes) {
@@ -250,11 +272,11 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
   };
 
   /**
-     * Generic Flow Index generator function
-     * @param  {[Object]} flows         SequenceFlows
-     * @param  {String} indexBySource   SourceIndex
-     * @return {Object}                 IndexMap
-     */
+   * Generic Flow Index generator function
+   * @param  {[Object]} flows         SequenceFlows
+   * @param  {String} indexBySource   SourceIndex
+   * @return {Object}                 IndexMap
+   */
   function _buildFlowIndex(flows, indexBySource) {
     var index = {};
     flows.forEach(function iterateFlows(flow) {
@@ -271,10 +293,10 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
   }
 
   /**
-     * Index builder function
-     * @param  {Object} processDefinition   Process-Definition
-     * @return {Object}                     IndexMap
-     */
+   * Index builder function
+   * @param  {Object} processDefinition   Process-Definition
+   * @return {Object}                     IndexMap
+   */
   function _buildIndex(processDefinition) {
     var index = {};
     var processElements = processDefinition.flowObjects;
@@ -286,10 +308,10 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
   }
 
   /**
-     * Name Map builder function
-     * @param  {[Object]} objects FlowObjects
-     * @return {Object}           IndexMap
-     */
+   * Name Map builder function
+   * @param  {[Object]} objects FlowObjects
+   * @return {Object}           IndexMap
+   */
   function _buildNameMap(objects) {
     var map = {};
     objects.forEach(function iterateObjects(object) {
@@ -304,10 +326,10 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
   }
 
   /**
-     * Catch Event Index builder function
-     * @param  {[Object]} flowObjects FlowObjects
-     * @return {Object}               IndexMap
-     */
+   * Catch Event Index builder function
+   * @param  {[Object]} flowObjects FlowObjects
+   * @return {Object}               IndexMap
+   */
   function _buildCatchEventIndex(flowObjects) {
     var index = {};
     flowObjects.forEach(function iterateFlowObjects(flowObject) {
@@ -342,6 +364,9 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
           } else {
             index.__compensation.push(flowObject);
           }
+        } else if (flowObject.isConditionalEvent) {
+          // as intermediate conditional event is thrown by itself only
+          index[flowObject.name] = [flowObject];
         }
       }
     });

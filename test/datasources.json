@@ -7,7 +7,6 @@
     "name": "transient",
     "connector": "transient"
   },
-
   "db": {
     "host": "localhost",
     "port": 27017,
@@ -15,7 +14,7 @@
     "database": "oe-workflow-test",
     "password": "admin",
     "name": "db",
-    "connector": "mongodb",
+    "connector": "oe-connector-mongodb",
     "user": "admin",
     "connectionTimeout": 500000,
     "connectTimeoutMS": 500000,
