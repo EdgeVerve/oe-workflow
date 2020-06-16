@@ -281,7 +281,17 @@ module.exports = function Task(Task) {
                   var instObj = inst.toObject();
                   var operation = instObj.operation;
                   /* For second-maker currentInstance should have partially changed data from change-request */
-                  currentInstance = new Model(instObj.data);
+                  // currentInstance = new Model(instObj.data);
+
+                  /* For update, the currentInstance should not be null */
+                  if (operation === 'update' && !currentInstance) {
+                    let msg = 'Record with id:' + modelId + ' not found.';
+                    let error = new Error(msg);
+                    error.statusCode = error.status = 404;
+                    error.code = 'MODEL_NOT_FOUND';
+                    return next(error);
+                  }
+                  
                   var instx = JSON.parse(JSON.stringify(instObj.data));
                   for (let key in updates) {
                     if (Object.prototype.hasOwnProperty.call(updates, key)) {
