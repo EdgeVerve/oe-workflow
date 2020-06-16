@@ -15,6 +15,7 @@ var log = logger('Task');
 
 var taskEventHandler = require('../../lib/workflow-eventHandlers/taskeventhandler.js');
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
+var dateUtils = require('../../lib/utils/oe-date-utils.js');
 
 module.exports = function Task(Task) {
   Task.disableRemoteMethodByName('create', true);
@@ -654,6 +655,43 @@ module.exports = function Task(Task) {
     });
   };
 
+  /**
+   * REST endpoint for updating followUpDate
+   * @param  {objet}    data          followUpDate
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
+  Task.prototype.updateFollowUpDate = function followUpDate(data, options, next) {
+    if (this.status !== 'pending') {
+      let error = new Error('Task already completed');
+      error.code = 'TASK_ALREADY_COMPLETED';
+      error.status = error.statusCode = 409;
+      return next(error);
+    }
+    if (data && data.followUpDate) {
+      let followUpDate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
+      var updates = {
+        _version: this._version,
+        followUpDate
+      };
+    } else {
+      var error = new Error('follow up date is required');
+      error.code = 'INVALID_DATA';
+      error.status = error.statusCode = 400;
+      return next(error);
+    }
+
+    this.updateAttributes(updates, options, function updateAttributesCbFn(err, data) {
+      if (err) {
+        next(err);
+      } else {
+        next(null, data);
+      }
+    });
+  };
+
+
   Task.remoteMethod('complete', {
     accessType: 'WRITE',
     accepts: [{
@@ -749,6 +787,27 @@ module.exports = function Task(Task) {
     },
     returns: {
       arg: 'data',
+      type: 'object',
+      root: true
+    }
+  });
+
+  Task.remoteMethod('updateFollowUpDate', {
+    accessType: 'WRITE',
+    accepts: {
+      arg: 'data',
+      type: 'object',
+      required: true,
+      description: 'Task instance',
+      http: { source: 'body' }
+    },
+    description: 'Sends a request to update follow up dates',
+    http: {
+      verb: 'put',
+      path: '/updateFollowUpDate/'
+    },
+    isStatic: false,
+    returns: {
       type: 'object',
       root: true
     }
