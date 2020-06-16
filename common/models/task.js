@@ -291,7 +291,7 @@ module.exports = function Task(Task) {
                     error.code = 'MODEL_NOT_FOUND';
                     return next(error);
                   }
-                  
+
                   var instx = JSON.parse(JSON.stringify(instObj.data));
                   for (let key in updates) {
                     if (Object.prototype.hasOwnProperty.call(updates, key)) {
