@@ -672,7 +672,10 @@ module.exports = function Task(Task) {
    * @param  {Function} next              Callback
    * @returns {void}
    */
+
+  // FollowUpDate should be in DD-MM-YYYY format or// any kind of date expressions like tod, tom, 5m, 30d.
   Task.prototype.updateFollowUpDate = function followUpDate(data, options, next) {
+    let newFollowUpdate;
     if (this.status !== 'pending') {
       let error = new Error('Task already completed');
       error.code = 'TASK_ALREADY_COMPLETED';
@@ -680,17 +683,21 @@ module.exports = function Task(Task) {
       return next(error);
     }
     if (data && data.followUpDate) {
-      let followUpDate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
-      var updates = {
-        _version: this._version,
-        followUpDate
-      };
+      newFollowUpdate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
+    } else if (data && data.followUpDate === null) {
+      // followUpdate can be set to null
+      newFollowUpdate = null;
     } else {
       var error = new Error('follow up date is required');
       error.code = 'INVALID_DATA';
       error.status = error.statusCode = 400;
       return next(error);
     }
+
+    var updates = {
+      _version: this._version,
+      followUpDate: newFollowUpdate
+    };
 
     this.updateAttributes(updates, options, function updateAttributesCbFn(err, data) {
       if (err) {
@@ -804,13 +811,19 @@ module.exports = function Task(Task) {
 
   Task.remoteMethod('updateFollowUpDate', {
     accessType: 'WRITE',
-    accepts: {
+    accepts: [{
       arg: 'data',
       type: 'object',
       required: true,
       description: 'Task instance',
-      http: { source: 'body' }
-    },
+      http: {
+        source: 'body'
+      }
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
     description: 'Sends a request to update follow up dates',
     http: {
       verb: 'put',
