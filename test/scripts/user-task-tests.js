@@ -995,6 +995,21 @@ describe('User Task Tests', function callback() {
       });
     });
 
+    it('invalid followUpDate cannot be updated through updateFollowUpDate', function testFunction(done) {
+      let newFollowUpdate = 'invalid-date';
+      let usrContext = getContext('other', ['other'], 'other');
+      expect(userTask).to.exist;
+      expect(userTask.followUpDate).to.not.equal(newFollowUpdate);
+      bootstrap.onComplete(workflowName, done);
+      userTask.updateFollowUpDate({
+        followUpDate: newFollowUpdate
+      }, usrContext, function testFunction(err, task) {
+        expect(err).to.exist;
+        expect(err.statusCode).to.equal(422);
+        done();
+      });
+    });
+
     it('followUpDate can not be updated for completed tasks', function testFunction(done) {
       let newFollowUpdate = '18-06-2020';
       expect(userTask).to.exist;

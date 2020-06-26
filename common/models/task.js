@@ -673,7 +673,7 @@ module.exports = function Task(Task) {
    * @returns {void}
    */
 
-  // FollowUpDate should be in DD-MM-YYYY format or// any kind of date expressions like tod, tom, 5m, 30d.
+  // FollowUpDate should be in DD-MM-YYYY format or any kind of date expressions like tod, tom, 5m, 30d.
   Task.prototype.updateFollowUpDate = function followUpDate(data, options, next) {
     let newFollowUpdate;
     if (this.status !== 'pending') {
@@ -684,6 +684,11 @@ module.exports = function Task(Task) {
     }
     if (data && data.followUpDate) {
       newFollowUpdate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
+      // passing invalid date will make newFollowUpdate as undefined
+      // so making undefined (newFollowUpdate) as empty string to throw inValid Date error
+      if (!newFollowUpdate) {
+        newFollowUpdate = '';
+      }
     } else if (data && data.followUpDate === null) {
       // followUpdate can be set to null
       newFollowUpdate = null;
