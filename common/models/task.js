@@ -675,7 +675,7 @@ module.exports = function Task(Task) {
 
   // FollowUpDate should be in DD-MM-YYYY format or any kind of date expressions like tod, tom, 5m, 30d.
   Task.prototype.updateFollowUpDate = function followUpDate(data, options, next) {
-    let newFollowUpdate;
+    let newFollowUpDate;
     if (this.status !== 'pending') {
       let error = new Error('Task already completed');
       error.code = 'TASK_ALREADY_COMPLETED';
@@ -683,17 +683,19 @@ module.exports = function Task(Task) {
       return next(error);
     }
     if (data && data.followUpDate) {
-      newFollowUpdate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
-      // passing invalid date will make newFollowUpdate as undefined
-      // so making undefined (newFollowUpdate) as empty string to throw inValid Date error
-      if (!newFollowUpdate) {
-        newFollowUpdate = '';
+      newFollowUpDate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
+      // passing invalid date will make newFollowUpDate as undefined
+      if (!newFollowUpDate) {
+        let error = new Error('Invalid date format');
+        error.code = 'INVALID_DATA';
+        error.status = error.statusCode = 422;
+        return next(error);
       }
     } else if (data && data.followUpDate === null) {
-      // followUpdate can be set to null
-      newFollowUpdate = null;
+      // followUpDate can be set to null
+      newFollowUpDate = null;
     } else {
-      var error = new Error('follow up date is required');
+      let error = new Error('follow up date is required');
       error.code = 'INVALID_DATA';
       error.status = error.statusCode = 400;
       return next(error);
@@ -701,7 +703,7 @@ module.exports = function Task(Task) {
 
     var updates = {
       _version: this._version,
-      followUpDate: newFollowUpdate
+      followUpDate: newFollowUpDate
     };
 
     this.updateAttributes(updates, options, function updateAttributesCbFn(err, data) {
