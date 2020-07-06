@@ -21,11 +21,5 @@ module.exports = function recoverWorkflows(app) {
     workflowAddons = require(modulePath);
     /* No try-catch. let it throw error during startup if specified addon-module is not found */
   }
-  if (wfConfig.disableMakerCheckerBeforeSave) {
-    workflowAddons.disableMakerCheckerBeforeSave = wfConfig.disableMakerCheckerBeforeSave;
-  }
-  if (wfConfig.disableMakerCheckerParallelValidations) {
-    workflowAddons.disableMakerCheckerParallelValidations = wfConfig.disableMakerCheckerParallelValidations;
-  }
   app.workflowAddons = workflowAddons;
 };

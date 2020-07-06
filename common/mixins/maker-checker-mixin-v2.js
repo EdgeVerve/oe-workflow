@@ -691,7 +691,8 @@ function addOERemoteMethods(Model) {
       delete context.isNewChangeRequest;
       context.beforeWorkflow = true;
       let observerName = 'before save';
-      if (Model.app.workflowAddons.disableMakerCheckerBeforeSave) {
+      var wfConfig = Model.app.get('workflow') || {};
+      if (wfConfig.disableMakerCheckerBeforeSave) {
         observerName = 'dummy observer';
       }
       // var RootModel = Model;
@@ -748,7 +749,8 @@ function addOERemoteMethods(Model) {
     var relations = [];
     var childData = {};
     var validateFunction = async.map;
-    if (Model.app.workflowAddons.disableMakerCheckerParallelValidations) {
+    var wfConfig = Model.app.get('workflow') || {};
+    if (wfConfig.disableMakerCheckerParallelValidations) {
       validateFunction = async.mapSeries;
     }
     for (let r in Model.relations) {
