@@ -27,7 +27,6 @@
     "oe-cloud": "git+http://evgit/oecloud.io/oe-cloud.git#master",
     "oe-common-mixins": "git+http://evgit/oecloud.io/oe-common-mixins.git#master",
     "oe-master-job-executor": "git+http://evgit/oecloud.io/oe-master-job-executor.git#master",
-    "oe-workflow-modeler": "^0.0.5",
     "uuid": "3.3.2",
     "xml2js": "0.4.17"
   },

@@ -152,7 +152,7 @@ buildjob:
   tags:
     - CEP_RUNNER
 
-deployjob-swarm:
+.deployjob-swarm:
   stage: deploy
   # image: ${REGISTRY}/oecloud-executor:k6
   script:

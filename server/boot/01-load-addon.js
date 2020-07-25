@@ -16,7 +16,7 @@ module.exports = function recoverWorkflows(app) {
   let workflowAddons = {};
   var wfConfig = app.get('workflow') || {};
   if (wfConfig.addonModule) {
-    let modulePath = path.resolve(process.cwd(), wfConfig.addonModule);
+    let modulePath = path.resolve(wfConfig.addonModule);
     log.debug('Trying to load addon module at ' + modulePath);
     workflowAddons = require(modulePath);
     /* No try-catch. let it throw error during startup if specified addon-module is not found */
