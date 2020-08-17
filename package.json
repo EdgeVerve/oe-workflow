@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "async": "2.6.1",
-    "iso8601-duration": "^1.2.0",
-    "loopback-connector-rest": "^3.6.0",
+    "iso8601-duration": "1.2.0",
+    "loopback-connector-rest": "3.7.0",
     "oe-cloud": "git+http://evgit/oecloud.io/oe-cloud.git#2.3.0",
     "oe-common-mixins": "git+http://evgit/oecloud.io/oe-common-mixins.git#2.3.0",
     "oe-master-job-executor": "git+http://evgit/oecloud.io/oe-master-job-executor.git#2.2.0",
