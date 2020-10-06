@@ -49,7 +49,7 @@ describe('Activiti Integration Tests', function CB() {
       let url = activitiHost + '/activiti-rest/service/';
 
 
-      ActivitiManager.enable(url, bootstrap.getContext('usr1'), function cb(err, res) {
+      ActivitiManager.enable({baseUrl:url}, bootstrap.getContext('usr1'), function cb(err, res) {
         expect(err).to.not.exist;
         expect(res).to.exist;
         done();

@@ -1,7 +1,7 @@
 {
   "name": "oe-workflow",
   "description": "oe-workflow engine written using oecloud.io framework",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "engines": {
     "node": ">=6"
   },
@@ -22,12 +22,11 @@
   },
   "dependencies": {
     "async": "2.6.1",
-    "iso8601-duration": "^1.2.0",
-    "loopback-connector-rest": "^3.6.0",
+    "iso8601-duration": "1.2.0",
+    "loopback-connector-rest": "3.7.0",
     "oe-cloud": "^2.0.0",
     "oe-common-mixins": "^2.0.0",
     "oe-master-job-executor": "^2.0.0",
-    "oe-workflow-modeler": "^2.2.0",
     "uuid": "3.3.2",
     "xml2js": "0.4.17"
   },

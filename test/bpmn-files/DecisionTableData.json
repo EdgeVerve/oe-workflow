@@ -1,0 +1,260 @@
+[
+  {
+    "name": "eligibility_USA",
+    "decisionRules": "{\"inputExpressionList\":[\"amount\",\"type\",\"experience\"],\"outputs\":[\"eligibility\",\"preApproved\"],\"hitPolicy\":\"F\",\"ruleList\":[[\"<= 1000\",\"\\\"PERSONAL_LOAN\\\"\",\"> 6\",\"amount\",\"TRUE\"],[\"<=1000\",\"\\\"PERSONAL_LOAN\\\"\",\"-\",\"if amount < (monthlyIncome*6) then amount else (monthlyIncome*6)\",\"FALSE\"],[\"> 1000\",\"\\\"PERSONAL_LOAN\\\"\",\"-\",\"if amount < (monthlyIncome*6) then amount else (monthlyIncome*6)\",\"FALSE\"],[\"-\",\"\\\"HOME_LOAN\\\"\",\"-\",\"if amount < (monthlyIncome*72) then amount else (monthlyIncome*72)\",\"FALSE\"],[\"-\",\"\\\"CAR_LOAN\\\"\",\"-\",\"if amount < (monthlyIncome*12) then amount else (monthlyIncome*12)\",\"FALSE\"]],\"inputValues\":[\"<= 1000,<=1000,> 1000,-\",\"\\\"PERSONAL_LOAN\\\",\\\"HOME_LOAN\\\",\\\"CAR_LOAN\\\"\",\"> 6,-\"],\"outputValues\":[\"amount,if amount < (monthlyIncome*6) then amount else (monthlyIncome*6),if amount < (monthlyIncome*72) then amount else (monthlyIncome*72),if amount < (monthlyIncome*12) then amount else (monthlyIncome*12)\",\"TRUE,FALSE\"],\"context\":null}",
+    "dtDesignerData": {
+      "name": "",
+      "inputExpressionList": [
+        {
+          "label": "amount",
+          "expr": "amount",
+          "type": "string",
+          "values": "<= 1000,<=1000,> 1000,-"
+        },
+        {
+          "label": "type",
+          "expr": "type",
+          "type": "string",
+          "values": "\"PERSONAL_LOAN\",\"HOME_LOAN\",\"CAR_LOAN\""
+        },
+        {
+          "label": "experience",
+          "expr": "experience",
+          "type": "string",
+          "values": "> 6,-"
+        }
+      ],
+      "outputs": [
+        {
+          "label": "eligibility",
+          "expr": "eligibility",
+          "type": "string",
+          "values": "amount,if amount < (monthlyIncome*6) then amount else (monthlyIncome*6),if amount < (monthlyIncome*72) then amount else (monthlyIncome*72),if amount < (monthlyIncome*12) then amount else (monthlyIncome*12)"
+        },
+        {
+          "label": "preApproved",
+          "expr": "preApproved",
+          "type": "string",
+          "values": "TRUE,FALSE"
+        }
+      ],
+      "hitPolicy": "F",
+      "ruleList": [
+        [
+          "<= 1000",
+          "\"PERSONAL_LOAN\"",
+          "> 6",
+          "amount",
+          "TRUE"
+        ],
+        [
+          "<=1000",
+          "\"PERSONAL_LOAN\"",
+          "-",
+          "if amount < (monthlyIncome*6) then amount else (monthlyIncome*6)",
+          "FALSE"
+        ],
+        [
+          "> 1000",
+          "\"PERSONAL_LOAN\"",
+          "-",
+          "if amount < (monthlyIncome*6) then amount else (monthlyIncome*6)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"HOME_LOAN\"",
+          "-",
+          "if amount < (monthlyIncome*72) then amount else (monthlyIncome*72)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"CAR_LOAN\"",
+          "-",
+          "if amount < (monthlyIncome*12) then amount else (monthlyIncome*12)",
+          "FALSE"
+        ]
+      ]
+    },
+    "id": "5e32af1955bfd8ff5423a44a",
+    "_version": "9be0913d-f095-4421-a547-62b0c1487241"
+  },
+  {
+    "name": "eligibility_FR",
+    "decisionRules": "{\"inputExpressionList\":[\"amount\",\"type\",\"experience\",\"employmentType\"],\"outputs\":[\"eligibility\",\"preApproved\"],\"hitPolicy\":\"F\",\"ruleList\":[[\"<= 2000\",\"\\\"PERSONAL_LOAN\\\"\",\"> 6\",\"\\\"FULL_TIME\\\"\",\"amount\",\"TRUE\"],[\"<=2000\",\"\\\"PERSONAL_LOAN\\\"\",\"-\",\"\\\"FULL_TIME\\\"\",\"if amount < (monthlyIncome*6 + totalOtherIncome*2) then amount else (monthlyIncome*6 + totalOtherIncome*2)\",\"FALSE\"],[\"> 2000\",\"\\\"PERSONAL_LOAN\\\"\",\"-\",\"\\\"FULL_TIME\\\"\",\"if amount < (monthlyIncome*6 + totalOtherIncome*2) then amount else (monthlyIncome*6 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"PERSONAL_LOAN\\\"\",\"-\",\"\\\"PART_TIME\\\"\",\"if amount < (monthlyIncome*2 + totalOtherIncome*2) then amount else (monthlyIncome*2 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"PERSONAL_LOAN\\\"\",\"-\",\"\\\"SELF_EMPLOYED\\\"\",\"if amount < (monthlyIncome + totalOtherIncome*2) then amount else (monthlyIncome + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"CAR_LOAN\\\"\",\"-\",\"\\\"FULL_TIME\\\"\",\"if amount < 6*(monthlyIncome*6 + totalOtherIncome*2) then amount else 6*(monthlyIncome*6 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"CAR_LOAN\\\"\",\"-\",\"\\\"PART_TIME\\\"\",\"if amount < 6*(monthlyIncome*4 + totalOtherIncome*2) then amount else 6*(monthlyIncome*4 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"CAR_LOAN\\\"\",\"-\",\"\\\"SELF_EMPLOYED\\\"\",\"if amount < 6*(monthlyIncome*2 + totalOtherIncome*2) then amount else 6*(monthlyIncome*2 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"HOME_LOAN\\\"\",\"-\",\"\\\"FULL_TIME\\\"\",\"if amount < 12*(monthlyIncome*6 + totalOtherIncome*2) then amount else 12*(monthlyIncome*6 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"HOME_LOAN\\\"\",\"-\",\"\\\"PART_TIME\\\"\",\"if amount < 12*(monthlyIncome*4 + totalOtherIncome*2) then amount else 12*(monthlyIncome*4 + totalOtherIncome*2)\",\"FALSE\"],[\"-\",\"\\\"HOME_LOAN\\\"\",\"-\",\"\\\"SELF_EMPLOYED\\\"\",\"if amount < 12*(monthlyIncome*2 + totalOtherIncome*2) then amount else 12*(monthlyIncome*2 + totalOtherIncome*2)\",\"FALSE\"]],\"inputValues\":[\"<= 2000,<=2000,> 2000,-\",\"\\\"PERSONAL_LOAN\\\",\\\"CAR_LOAN\\\",\\\"HOME_LOAN\\\"\",\"> 6,-\",\"\\\"FULL_TIME\\\",\\\"PART_TIME\\\",\\\"SELF_EMPLOYED\\\"\"],\"outputValues\":[\"amount,if amount < (monthlyIncome*6 + totalOtherIncome*2) then amount else (monthlyIncome*6 + totalOtherIncome*2),if amount < (monthlyIncome*2 + totalOtherIncome*2) then amount else (monthlyIncome*2 + totalOtherIncome*2),if amount < (monthlyIncome + totalOtherIncome*2) then amount else (monthlyIncome + totalOtherIncome*2),if amount < 6*(monthlyIncome*6 + totalOtherIncome*2) then amount else 6*(monthlyIncome*6 + totalOtherIncome*2),if amount < 6*(monthlyIncome*4 + totalOtherIncome*2) then amount else 6*(monthlyIncome*4 + totalOtherIncome*2),if amount < 6*(monthlyIncome*2 + totalOtherIncome*2) then amount else 6*(monthlyIncome*2 + totalOtherIncome*2),if amount < 12*(monthlyIncome*6 + totalOtherIncome*2) then amount else 12*(monthlyIncome*6 + totalOtherIncome*2),if amount < 12*(monthlyIncome*4 + totalOtherIncome*2) then amount else 12*(monthlyIncome*4 + totalOtherIncome*2),if amount < 12*(monthlyIncome*2 + totalOtherIncome*2) then amount else 12*(monthlyIncome*2 + totalOtherIncome*2)\",\"TRUE,FALSE\"],\"context\":null}",
+    "dtDesignerData": {
+      "name": "",
+      "inputExpressionList": [
+        {
+          "label": "amount",
+          "expr": "amount",
+          "type": "string",
+          "values": "<= 2000,<=2000,> 2000,-"
+        },
+        {
+          "label": "type",
+          "expr": "type",
+          "type": "string",
+          "values": "\"PERSONAL_LOAN\",\"CAR_LOAN\",\"HOME_LOAN\""
+        },
+        {
+          "label": "experience",
+          "expr": "experience",
+          "type": "string",
+          "values": "> 6,-"
+        },
+        {
+          "label": "employmentType",
+          "expr": "employmentType",
+          "type": "string",
+          "values": "\"FULL_TIME\",\"PART_TIME\",\"SELF_EMPLOYED\""
+        }
+      ],
+      "outputs": [
+        {
+          "label": "eligibility",
+          "expr": "eligibility",
+          "type": "string",
+          "values": "amount,if amount < (monthlyIncome*6 + totalOtherIncome*2) then amount else (monthlyIncome*6 + totalOtherIncome*2),if amount < (monthlyIncome*2 + totalOtherIncome*2) then amount else (monthlyIncome*2 + totalOtherIncome*2),if amount < (monthlyIncome + totalOtherIncome*2) then amount else (monthlyIncome + totalOtherIncome*2),if amount < 6*(monthlyIncome*6 + totalOtherIncome*2) then amount else 6*(monthlyIncome*6 + totalOtherIncome*2),if amount < 6*(monthlyIncome*4 + totalOtherIncome*2) then amount else 6*(monthlyIncome*4 + totalOtherIncome*2),if amount < 6*(monthlyIncome*2 + totalOtherIncome*2) then amount else 6*(monthlyIncome*2 + totalOtherIncome*2),if amount < 12*(monthlyIncome*6 + totalOtherIncome*2) then amount else 12*(monthlyIncome*6 + totalOtherIncome*2),if amount < 12*(monthlyIncome*4 + totalOtherIncome*2) then amount else 12*(monthlyIncome*4 + totalOtherIncome*2),if amount < 12*(monthlyIncome*2 + totalOtherIncome*2) then amount else 12*(monthlyIncome*2 + totalOtherIncome*2)"
+        },
+        {
+          "label": "preApproved",
+          "expr": "preApproved",
+          "type": "string",
+          "values": "TRUE,FALSE"
+        }
+      ],
+      "hitPolicy": "F",
+      "ruleList": [
+        [
+          "<= 2000",
+          "\"PERSONAL_LOAN\"",
+          "> 6",
+          "\"FULL_TIME\"",
+          "amount",
+          "TRUE"
+        ],
+        [
+          "<=2000",
+          "\"PERSONAL_LOAN\"",
+          "-",
+          "\"FULL_TIME\"",
+          "if amount < (monthlyIncome*6 + totalOtherIncome*2) then amount else (monthlyIncome*6 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "> 2000",
+          "\"PERSONAL_LOAN\"",
+          "-",
+          "\"FULL_TIME\"",
+          "if amount < (monthlyIncome*6 + totalOtherIncome*2) then amount else (monthlyIncome*6 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"PERSONAL_LOAN\"",
+          "-",
+          "\"PART_TIME\"",
+          "if amount < (monthlyIncome*2 + totalOtherIncome*2) then amount else (monthlyIncome*2 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"PERSONAL_LOAN\"",
+          "-",
+          "\"SELF_EMPLOYED\"",
+          "if amount < (monthlyIncome + totalOtherIncome*2) then amount else (monthlyIncome + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"CAR_LOAN\"",
+          "-",
+          "\"FULL_TIME\"",
+          "if amount < 6*(monthlyIncome*6 + totalOtherIncome*2) then amount else 6*(monthlyIncome*6 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"CAR_LOAN\"",
+          "-",
+          "\"PART_TIME\"",
+          "if amount < 6*(monthlyIncome*4 + totalOtherIncome*2) then amount else 6*(monthlyIncome*4 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"CAR_LOAN\"",
+          "-",
+          "\"SELF_EMPLOYED\"",
+          "if amount < 6*(monthlyIncome*2 + totalOtherIncome*2) then amount else 6*(monthlyIncome*2 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"HOME_LOAN\"",
+          "-",
+          "\"FULL_TIME\"",
+          "if amount < 12*(monthlyIncome*6 + totalOtherIncome*2) then amount else 12*(monthlyIncome*6 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"HOME_LOAN\"",
+          "-",
+          "\"PART_TIME\"",
+          "if amount < 12*(monthlyIncome*4 + totalOtherIncome*2) then amount else 12*(monthlyIncome*4 + totalOtherIncome*2)",
+          "FALSE"
+        ],
+        [
+          "-",
+          "\"HOME_LOAN\"",
+          "-",
+          "\"SELF_EMPLOYED\"",
+          "if amount < 12*(monthlyIncome*2 + totalOtherIncome*2) then amount else 12*(monthlyIncome*2 + totalOtherIncome*2)",
+          "FALSE"
+        ]
+      ]
+    },
+    "id": "5e32af7c55bfd8ff5423a44c",
+    "_version": "3cb2aaf6-3b45-4922-9642-30bee2fff72e"
+  },
+  {
+    "name": "UserLocation",
+    "decisionRules": "{\"inputExpressionList\":[\"userName\"],\"outputs\":[\"location\"],\"hitPolicy\":\"U\",\"ruleList\":[[\"\\\"user1\\\"\",\"\\\"US\\\"\"],[\"\\\"user2\\\"\",\"\\\"FR\\\"\"]],\"inputValues\":[\"\"],\"outputValues\":[\"\"],\"context\":null}",
+    "dtDesignerData": {
+      "name": "",
+      "inputExpressionList": [
+        {
+          "label": "userName",
+          "expr": "userName",
+          "type": "string",
+          "values": ""
+        }
+      ],
+      "outputs": [
+        {
+          "label": "location",
+          "expr": "location",
+          "type": "string",
+          "values": ""
+        }
+      ],
+      "hitPolicy": "U",
+      "ruleList": [
+        [
+          "\"user1\"",
+          "\"US\""
+        ],
+        [
+          "\"user2\"",
+          "\"FR\""
+        ]
+      ]
+    },
+    "id": "5e3be26b88e4540c0923d769",
+    "_oldVersion": "417966e9-807d-4552-a9b9-eb6b13c28c6b",
+    "_version": "5de5a8ec-3fc7-40c1-b93d-d2db3efd6139"
+  }
+]

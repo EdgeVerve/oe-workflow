@@ -689,6 +689,12 @@ function addOERemoteMethods(Model) {
       }
 
       delete context.isNewChangeRequest;
+      context.beforeWorkflow = true;
+      let observerName = 'before save';
+      var wfConfig = Model.app.get('workflow') || {};
+      if (wfConfig.disableMakerCheckerBeforeSave) {
+        observerName = 'dummy observer';
+      }
       // var RootModel = Model;
       // var beforeSaveArray = Model._observers['before save'] || [];
 
@@ -707,7 +713,8 @@ function addOERemoteMethods(Model) {
       //   return next(err);
       // }
       // dpBeforeSave[0](context, function beforeSaveCb(err) {
-      Model.notifyObserversOf('before save', context, function beforeSaveCb(err) {
+      Model.notifyObserversOf(observerName, context, function beforeSaveCb(err) {
+        delete context.beforeWorkflow;
         if (err) return next(err);
 
         if (context.currentInstance) {
@@ -732,7 +739,7 @@ function addOERemoteMethods(Model) {
             // log.error(options, err);
             return next(err);
           }
-        }, data, context);
+        }, data, context.options);
       });
     });
   }
@@ -741,6 +748,11 @@ function addOERemoteMethods(Model) {
     // get hasOne, hasMany relation metadata
     var relations = [];
     var childData = {};
+    var validateFunction = async.map;
+    var wfConfig = Model.app.get('workflow') || {};
+    if (wfConfig.disableMakerCheckerParallelValidations) {
+      validateFunction = async.mapSeries;
+    }
     for (let r in Model.relations) {
       if (Object.prototype.hasOwnProperty.call(Model.relations, r)) {
         let relation = Model.relations[r];
@@ -774,7 +786,7 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        async.map(relations,
+        validateFunction(relations,
           function validateEach(relation, cb) {
             let Model = relation.Model;
             let data = relation.data;
@@ -810,7 +822,7 @@ function addOERemoteMethods(Model) {
           return next(err);
         }
 
-        async.map(relations,
+        validateFunction(relations,
           function validateEach(relation, cb) {
             let Model = relation.Model;
             let data = relation.data;

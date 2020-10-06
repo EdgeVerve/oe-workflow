@@ -15,6 +15,7 @@ var log = logger('Task');
 
 var taskEventHandler = require('../../lib/workflow-eventHandlers/taskeventhandler.js');
 var TASK_INTERRUPT_EVENT = 'TASK_INTERRUPT_EVENT';
+var dateUtils = require('../../lib/utils/oe-date-utils.js');
 
 module.exports = function Task(Task) {
   Task.disableRemoteMethodByName('create', true);
@@ -280,7 +281,17 @@ module.exports = function Task(Task) {
                   var instObj = inst.toObject();
                   var operation = instObj.operation;
                   /* For second-maker currentInstance should have partially changed data from change-request */
-                  currentInstance = new Model(instObj.data);
+                  // currentInstance = new Model(instObj.data);
+
+                  /* For update, the currentInstance should not be null */
+                  if (operation === 'update' && !currentInstance) {
+                    let msg = 'Record with id:' + modelId + ' not found.';
+                    let error = new Error(msg);
+                    error.statusCode = error.status = 404;
+                    error.code = 'MODEL_NOT_FOUND';
+                    return next(error);
+                  }
+
                   var instx = JSON.parse(JSON.stringify(instObj.data));
                   for (let key in updates) {
                     if (Object.prototype.hasOwnProperty.call(updates, key)) {
@@ -334,6 +345,8 @@ module.exports = function Task(Task) {
 
               if (!data.__action__) {
                 let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+                err.statusCode = err.status = 422;
+                err.code = 'ACTION_REQUIRED';
                 log.error(options, err);
                 return next(err);
               }
@@ -346,6 +359,8 @@ module.exports = function Task(Task) {
               let isValid = (validActArr.indexOf(data.__action__) > -1);
               if (!isValid) {
                 let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+                err.statusCode = err.status = 422;
+                err.code = 'INVALID_ACTION';
                 log.error(options, err);
                 return next(err);
               }
@@ -394,6 +409,8 @@ module.exports = function Task(Task) {
 
               if (!data.__action__) {
                 let err = new Error('__action__ not provided. Checker enabled task requires this field.');
+                err.statusCode = err.status = 422;
+                err.code = 'ACTION_REQUIRED';
                 // log.error(options, err);
                 return next(err);
               }
@@ -406,6 +423,8 @@ module.exports = function Task(Task) {
               let isValid = (validActArr.indexOf(data.__action__) > -1);
               if (!isValid) {
                 let err = new Error('Provided action is not valid. Possible valid actions : ' + JSON.stringify(validActArr));
+                err.statusCode = err.status = 422;
+                err.code = 'INVALID_ACTION';
                 // log.error(options, err);
                 return next(err);
               }
@@ -508,7 +527,10 @@ module.exports = function Task(Task) {
     }
 
     if (self.status !== 'pending') {
-      return next(new Error('Task already completed'));
+      let error = new Error('Task already completed');
+      error.code = 'TASK_ALREADY_COMPLETED';
+      error.status = error.statusCode = 409;
+      return next(error);
     }
     self.processInstance({}, options, function fetchPI(err, processInstance) {
       /* istanbul ignore if*/
@@ -643,6 +665,57 @@ module.exports = function Task(Task) {
     });
   };
 
+  /**
+   * REST endpoint for updating followUpDate
+   * @param  {objet}    data          followUpDate
+   * @param  {Object}   options           Options
+   * @param  {Function} next              Callback
+   * @returns {void}
+   */
+
+  // FollowUpDate should be in DD-MM-YYYY format or any kind of date expressions like tod, tom, 5m, 30d.
+  Task.prototype.updateFollowUpDate = function followUpDate(data, options, next) {
+    let newFollowUpDate;
+    if (this.status !== 'pending') {
+      let error = new Error('Task already completed');
+      error.code = 'TASK_ALREADY_COMPLETED';
+      error.status = error.statusCode = 409;
+      return next(error);
+    }
+    if (data && data.followUpDate) {
+      newFollowUpDate = dateUtils.parseShorthand(data.followUpDate, 'DD-MM-YYYY');
+      // passing invalid date will make newFollowUpDate as undefined
+      if (!newFollowUpDate) {
+        let error = new Error('Invalid date format');
+        error.code = 'INVALID_DATA';
+        error.status = error.statusCode = 422;
+        return next(error);
+      }
+    } else if (data && data.followUpDate === null) {
+      // followUpDate can be set to null
+      newFollowUpDate = null;
+    } else {
+      let error = new Error('follow up date is required');
+      error.code = 'INVALID_DATA';
+      error.status = error.statusCode = 400;
+      return next(error);
+    }
+
+    var updates = {
+      _version: this._version,
+      followUpDate: newFollowUpDate
+    };
+
+    this.updateAttributes(updates, options, function updateAttributesCbFn(err, data) {
+      if (err) {
+        next(err);
+      } else {
+        next(null, data);
+      }
+    });
+  };
+
+
   Task.remoteMethod('complete', {
     accessType: 'WRITE',
     accepts: [{
@@ -738,6 +811,33 @@ module.exports = function Task(Task) {
     },
     returns: {
       arg: 'data',
+      type: 'object',
+      root: true
+    }
+  });
+
+  Task.remoteMethod('updateFollowUpDate', {
+    accessType: 'WRITE',
+    accepts: [{
+      arg: 'data',
+      type: 'object',
+      required: true,
+      description: 'Task instance',
+      http: {
+        source: 'body'
+      }
+    }, {
+      arg: 'options',
+      type: 'object',
+      http: 'optionsFromRequest'
+    }],
+    description: 'Sends a request to update follow up dates',
+    http: {
+      verb: 'put',
+      path: '/updateFollowUpDate/'
+    },
+    isStatic: false,
+    returns: {
       type: 'object',
       root: true
     }

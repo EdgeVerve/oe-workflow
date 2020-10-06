@@ -256,9 +256,26 @@ module.exports = function ProcessInstance(ProcessInstance) {
     if (outputVariables && task.message && typeof task.message === 'object' && typeof outputVariables === 'object') {
       Object.assign(task.message, outputVariables);
     }
-    // to disable boundary timer event if task is completed beforehand
-    self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
-    self._endFlowObject(options, token, processDefinition, delta, message, next);
+    let taskObj = processDefinition.getFlowObjectByName(token.name);
+    let postCompleteFunction = function postCompleteFunction(options, task, cb) {
+      /* default do-nothing */
+      return cb(options, task);
+    };
+    let workflowAddons = ProcessInstance.app.workflowAddons || {};
+    if (taskObj.postCompletionHook) {
+      if (workflowAddons[taskObj.postCompletionHook]) {
+        postCompleteFunction = workflowAddons[taskObj.postCompletionHook];
+      } else {
+        log.error('postComplete function ' + taskObj.postCompletionHook + ' not defined');
+      }
+    } else if (workflowAddons.defaultTaskPostCompletionHook) {
+      postCompleteFunction = workflowAddons.defaultTaskPostCompletionHook;
+    }
+    postCompleteFunction.call(self, options, task, function postCompleteCallBack(options, task) {
+      // to disable boundary timer event if task is completed beforehand
+      self._clearBoundaryTimerEvents(delta, options, processDefinition.getFlowObjectByName(token.name));
+      self._endFlowObject(options, token, processDefinition, delta, message, next);
+    });
   };
 
   /**
@@ -328,7 +345,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
             token.isUserTask = true;
           }
           /* for now ConditionalEvents implementation is done only for Conditional Intermediate Catch Events */
-          if (obj.isConditionalEvent && obj.isIntermediateCatchEvent) {
+          if (obj.isConditionalEvent && (obj.isIntermediateCatchEvent || obj.isBoundaryEvent)) {
             token.isConditionalEvent = true;
             if (obj.pvName) token.pvName = obj.pvName;
           }
@@ -649,7 +666,7 @@ module.exports = function ProcessInstance(ProcessInstance) {
           if (token.elementVariable && token.collection) {
             token.inVariables[token.elementVariable] = token.collection[i];
           }
-          token.inVariables._iteration = i;
+          token.inVariables._iteration = i + 1;
           var _token = _.cloneDeep(token);
 
           ProcessInstance.emit(TOKEN_ARRIVED_EVENT, options, ProcessInstance, instance, _token);

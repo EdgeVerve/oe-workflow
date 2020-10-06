@@ -19,6 +19,13 @@ exports._enableActiviti = function _enableActiviti(baseUrl, app, ctx, done) {
     ctx = {};
   }
 
+  if (!baseUrl) {
+    let err = new Error('Activiti endpoint must be specified');
+    err.statusCode = err.status = 422;
+    err.code = 'INVALID_DATA';
+    return done(err);
+  }
+
   var modelNames = [
     'activiti-deployment',
     'activiti-engine',

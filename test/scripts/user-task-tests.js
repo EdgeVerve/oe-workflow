@@ -968,6 +968,91 @@ describe('User Task Tests', function callback() {
         userTask = task;
       });
     });
+
+    it('followUpDate can be updated through updateFollowUpDate', function testFunction(done) {
+      let newFollowUpDate = '22-11-2020';
+      let usrContext = getContext('other', ['other'], 'other');
+      expect(userTask).to.exist;
+      expect(userTask.followUpDate).to.not.equal(newFollowUpDate);
+      bootstrap.onComplete(workflowName, done);
+      userTask.updateFollowUpDate({}, usrContext, function testFunction(err, task) {
+        /* followUpDate is mandatory */
+        expect(err).to.exist;
+        expect(err.code).to.equal('INVALID_DATA');
+        expect(err.status).to.equal(400);
+
+        userTask.updateFollowUpDate({
+          followUpDate: newFollowUpDate
+        }, usrContext, function testFunction(err, task) {
+          expect(err).to.not.exist;
+          expect(task.status).to.not.equal(Status.COMPLETE);
+          expect(task).to.have.a.property('followUpDate').that.deep.equals(oeDateUtils.parseShorthand(newFollowUpDate));
+          task.complete({}, getContext('other', ['other'], 'other'), function testFunction(err, task) {
+            expect(err).to.not.exist;
+            userTask = task;
+          });
+        });
+      });
+    });
+
+    it('followUpDate can be set to null through updateFollowUpDate', function testFunction(done) {
+      let newFollowUpDate = null;
+      let usrContext = getContext('other', ['other'], 'other');
+      expect(userTask).to.exist;
+      expect(userTask.followUpDate).to.not.equal(newFollowUpDate);
+      bootstrap.onComplete(workflowName, done);
+      userTask.updateFollowUpDate({
+        followUpDate: newFollowUpDate
+      }, usrContext, function testFunction(err, task) {
+        expect(err).to.not.exist;
+        expect(task.status).to.not.equal(Status.COMPLETE);
+        expect(task).to.have.a.property('followUpDate').that.equals(null);
+        task.complete({}, getContext('other', ['other'], 'other'), function testFunction(err, task) {
+          expect(err).to.not.exist;
+          userTask = task;
+        });
+      });
+
+    });
+
+    it('invalid followUpDate cannot be updated through updateFollowUpDate', function testFunction(done) {
+      let newFollowUpDate = 'invalid-date';
+      let usrContext = getContext('other', ['other'], 'other');
+      expect(userTask).to.exist;
+      expect(userTask.followUpDate).to.not.equal(newFollowUpDate);
+      bootstrap.onComplete(workflowName, done);
+      userTask.updateFollowUpDate({
+        followUpDate: newFollowUpDate
+      }, usrContext, function testFunction(err, task) {
+        expect(err).to.exist;
+        expect(err.code).to.equal('INVALID_DATA');
+        expect(err.statusCode).to.equal(422);
+        done();
+      });
+    });
+
+    it('followUpDate cannot be updated for completed tasks', function testFunction(done) {
+      let newFollowUpDate = '18-06-2020';
+      expect(userTask).to.exist;
+      bootstrap.onComplete(workflowName, function testFunction(err, inst) {
+        expect(err).to.not.exist;
+        stateVerifier.isComplete(inst);
+        userTask.updateFollowUpDate({
+          followUpDate: newFollowUpDate
+        }, getContext('other', ['other'], 'other'), function testFunction(err, task) {
+          expect(err).to.exist;
+          expect(err.code).to.equal('TASK_ALREADY_COMPLETED');
+          expect(err.status).to.equal(409);
+          expect(task).to.not.exist;
+          done();
+        });
+      });
+      userTask.complete({}, getContext('other', ['other'], 'other'), function testFunction(err, task) {
+        expect(err).to.not.exist;
+        expect(task.status).to.equal(Status.COMPLETE);
+        userTask = task;
+      });
+    });
   });
 
   describe('Workflow Retry on user-task', function testFunction() {

@@ -44,7 +44,9 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
           });
         }
         /* Check for duplicate names */
-        let nameCount = flowObjects.map(fo => fo.name).reduce((s, foName) => {
+        /* whlie checking for duplicate names, ignore link events */
+        let nonLinkflowObjects = flowObjects.filter(fo => !fo.isLinkEvent);
+        let nameCount = nonLinkflowObjects.map(fo => fo.name).reduce((s, foName) => {
           s[foName] = s[foName] || 0;
           s[foName] = s[foName] + 1;
           return s;
@@ -313,8 +315,10 @@ module.exports = function ProcessDefinition(ProcessDefinition) {
    * @return {Object}           IndexMap
    */
   function _buildNameMap(objects) {
+    /* whlie checking for duplicate names, ignore link events */
+    let nonLinkflowObjects = objects.filter(fo => !fo.isLinkEvent);
     var map = {};
-    objects.forEach(function iterateObjects(object) {
+    nonLinkflowObjects.forEach(function iterateObjects(object) {
       var name = object.name;
       if (map[name]) {
         log.error(log.defaultContext(), "Process element name '" + name + "' must be unique.");
