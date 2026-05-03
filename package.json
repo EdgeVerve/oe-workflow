@@ -27,7 +27,7 @@
     "oe-cloud": "^2.0.0",
     "oe-common-mixins": "^2.0.0",
     "oe-master-job-executor": "^2.0.0",
-    "uuid": "3.3.2",
+    "uuid": "14.0.0",
     "xml2js": "0.4.17"
   },
   "devDependencies": {
